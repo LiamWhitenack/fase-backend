@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  # ------------------------
+  # Postgres for tests
+  # ------------------------
+  db:
+    image: postgres:16
+    container_name: athlete_market_test_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: athlete_market_test
+      POSTGRES_USER: athlete_user
+      POSTGRES_PASSWORD: athlete_password
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    ports:
+      - "6544:5432"
+
+  # ------------------------
+  # Backend for tests
+  # ------------------------
+  backend:
+    build:
+      context: ./backend
+    container_name: athlete_market_test_backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://athlete_user:athlete_password@db:5432/athlete_market_test
+    volumes:
+      - ./backend:/app
+    command: ["pytest", "--maxfail=1", "--disable-warnings", "-q"]
+
+volumes:
+  postgres_test_data:

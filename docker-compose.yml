@@ -1,0 +1,66 @@
+services:
+  # ------------------------
+  # Postgres
+  # ------------------------
+  db:
+    image: postgres:16
+    container_name: athlete_market_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: athlete_market
+      POSTGRES_USER: athlete_user
+      POSTGRES_PASSWORD: athlete_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "6543:5432"
+
+  # ------------------------
+  # Redis (for Celery)
+  # ------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: athlete_market_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # ------------------------
+  # Backend
+  # ------------------------
+  backend:
+    build:
+      context: ./   # Adjust path if your backend repo is somewhere else
+    container_name: athlete_market_backend
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgres://athlete_user:athlete_password@db:5432/athlete_market
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./:/app   # Optional if you want live reload
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # ------------------------
+  # Celery Worker
+  # ------------------------
+  worker:
+    build:
+      context: ./
+    container_name: athlete_market_worker
+    depends_on:
+      - backend
+      - redis
+      - db
+    environment:
+      DATABASE_URL: postgres://athlete_user:athlete_password@db:5432/athlete_market
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./:/app
+    command: ["celery", "-A", "workers.celery_app", "worker", "--loglevel=info"]
+
+volumes:
+  postgres_data:
