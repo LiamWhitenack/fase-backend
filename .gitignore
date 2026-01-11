@@ -1,5 +1,7 @@
 *.env
 
+*spotrac_auth.json
+
 # Created by .ignore support plugin (hsz.mobi)
 ### Diff template
 *.patch
