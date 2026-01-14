@@ -1,9 +1,10 @@
-from typing import Any
-from playwright.sync_api import sync_playwright
 import os
 import time
+from typing import Any
+
 import numpy as np
 from pandas import read_csv
+from playwright.sync_api import sync_playwright
 from playwright.sync_api._context_manager import PlaywrightContextManager
 
 # Load teams
@@ -24,33 +25,33 @@ GAMMA_SCALE = 1.0  # θ
 NAV_TIMEOUT = 30000  # 30 seconds
 CLICK_TIMEOUT = 10000  # 10 seconds max for clicks
 
+
 def start_browser(AUTH_FILE: str, p: Any) -> tuple[Any, Any, Any]:
     browser = p.chromium.launch(headless=False)
 
     # Load or create context
     if os.path.exists(AUTH_FILE):
         print("Loading saved session…")
-        context = browser.new_context(
-            accept_downloads=True,
-            storage_state=AUTH_FILE
-        )
+        context = browser.new_context(accept_downloads=True, storage_state=AUTH_FILE)
     else:
         print("No saved session found. You have 60 seconds to log in manually…")
         context = browser.new_context(accept_downloads=True)
     page = context.new_page()
     return browser, context, page
 
+
 with sync_playwright() as p:
     # Launch browser
     browser, context, page = start_browser(AUTH_FILE, p)
-
 
     # Manual login if no session saved
     if not os.path.exists(AUTH_FILE):
         print("Please log in manually in the browser window.")
         time.sleep(60)
         context.storage_state(path=AUTH_FILE)
-        print(f"Session saved to {AUTH_FILE}. Next runs will use this login automatically.")
+        print(
+            f"Session saved to {AUTH_FILE}. Next runs will use this login automatically."
+        )
 
     # Iterate over years and teams
     for year in range(2011, 2032):
@@ -96,12 +97,11 @@ with sync_playwright() as p:
                     download.save_as(save_path)
                     print(f"Downloaded {new_filename}")
                 except Exception as e:
-                    print(f"Could not click CSV button {i+1}: {e}")
+                    print(f"Could not click CSV button {i + 1}: {e}")
                     continue
 
                 # Human-like delay between clicks
                 time.sleep(np.random.gamma(GAMMA_SHAPE, GAMMA_SCALE))
-
 
     print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")
     browser.close()
