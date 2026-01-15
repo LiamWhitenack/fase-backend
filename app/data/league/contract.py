@@ -38,7 +38,7 @@ class Contract(Base):
     option_2_value: Mapped[int] = mapped_column(Integer, default=0)
 
     # ---- relationships ----
-    player: Mapped[Player] = relationship("Player", back_populates="contracts")
+    player: Mapped[Player] = relationship(argument="Player", back_populates="contracts")
 
     # ---- indexes ----
     __table_args__ = (Index("ix_contract_player_year", "player_id", "start_year"),)

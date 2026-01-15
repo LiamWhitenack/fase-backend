@@ -1,9 +1,13 @@
-from sqlalchemy import Integer, String, ForeignKey, Index
+from typing import TYPE_CHECKING
+
+from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...base import Base
-from .player import Player
-from .team import Team
+
+if TYPE_CHECKING:
+    from .player import Player
+    from .team import Team
 
 
 class TeamPlayerSalary(Base):
@@ -20,7 +24,6 @@ class TeamPlayerSalary(Base):
 
     # ---- relationships ----
     player: Mapped["Player"] = relationship("Player", back_populates="salaries")
-    team: Mapped["Team"] = relationship("Team", back_populates="salaries")
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
@@ -39,10 +42,6 @@ class TeamPlayerBuyout(Base):
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     salary: Mapped[int] = mapped_column(Integer)
-
-    # ---- relationships ----
-    player: Mapped[Player] = relationship("Player", back_populates="buyouts")
-    team: Mapped[Team] = relationship("Team", back_populates="buyouts")
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year

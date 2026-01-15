@@ -1,5 +1,5 @@
-from sqlalchemy import String, Index, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...base import Base  # wherever your Base lives
 
@@ -19,6 +19,15 @@ class Team(Base):
     # ---- organization ----
     conference: Mapped[str] = mapped_column(String, index=True)
     division: Mapped[str] = mapped_column(String, index=True)
+
+    # ---- relationships ----
+    player_seasons: Mapped[list["PlayerSeason"]] = relationship(
+        lambda: __import__(
+            "app.data.league.player", fromlist=["PlayerSeason"]
+        ).PlayerSeason,
+        back_populates="team",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         # Prevent duplicate teams like "Los Angeles Lakers"

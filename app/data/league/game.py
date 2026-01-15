@@ -1,10 +1,11 @@
 from datetime import date
-from sqlalchemy import Integer, String, Date, ForeignKey, Boolean, Index
+
+from sqlalchemy import Boolean, Date, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...base import Base
-from .team import Team
 from .player_game import PlayerGame
+from .team import Team
 
 
 class Game(Base):
@@ -19,11 +20,13 @@ class Game(Base):
 
     home_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     away_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
-    
+
     # ---- scores ----
     home_team_score: Mapped[int] = mapped_column(Integer)
     away_team_score: Mapped[int] = mapped_column(Integer)
-    winning_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True, nullable=True)
+    winning_team_id: Mapped[int] = mapped_column(
+        ForeignKey("teams.id"), index=True, nullable=True
+    )
 
     # ---- optional metadata ----
     attendance: Mapped[int] = mapped_column(Integer, default=0)
@@ -31,17 +34,12 @@ class Game(Base):
     neutral_site: Mapped[bool] = mapped_column(Boolean, default=False)
     game_type: Mapped[str] = mapped_column(String, default="Regular")
 
-    # ---- relationships ----
-    home_team: Mapped[Team] = relationship(
-        "Team", foreign_keys=[home_team_id], back_populates="home_games"
+    winning_team: Mapped[Team] = relationship("Team", foreign_keys=[winning_team_id])
+    player_games = relationship(
+        "PlayerGame",
+        back_populates="game",
+        cascade="all, delete-orphan",
     )
-    away_team: Mapped[Team] = relationship(
-        "Team", foreign_keys=[away_team_id], back_populates="away_games"
-    )
-    winning_team: Mapped[Team] = relationship(
-        "Team", foreign_keys=[winning_team_id]
-    )
-    player_games: Mapped[list["PlayerGame"]] = relationship("PlayerGame", back_populates="game")
 
     __table_args__ = (
         # Prevent duplicate games for same home/away/date

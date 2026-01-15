@@ -1,7 +1,8 @@
-from sqlalchemy import Integer, String, ForeignKey, Index
+from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
+
 from .player import Player
 from .team import Team
 
@@ -28,10 +29,6 @@ class Award(Base):
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     voting_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     voting_points: Mapped[int | None] = mapped_column(Integer, nullable=True)
-
-    # ---- relationships ----
-    player: Mapped[Player | None] = relationship("Player", back_populates="awards")
-    team: Mapped[Team | None] = relationship("Team", back_populates="awards")
 
     __table_args__ = (
         # Prevent duplicate awards for the same recipient in a season
