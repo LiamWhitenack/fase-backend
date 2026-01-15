@@ -1,7 +1,7 @@
 from sqlalchemy import Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ...base import Base  # wherever your Base lives
+from app.base import Base
 
 
 class Team(Base):
@@ -21,7 +21,7 @@ class Team(Base):
     division: Mapped[str] = mapped_column(String, index=True)
 
     # ---- relationships ----
-    player_seasons: Mapped[list["PlayerSeason"]] = relationship(
+    player_seasons = relationship(
         lambda: __import__(
             "app.data.league.player", fromlist=["PlayerSeason"]
         ).PlayerSeason,

@@ -5,7 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Module",
+            "name": "Upload Players",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "app.fill_data.players_nba_api"
+        },
+        {
+            "name": "Upload Teams",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "app.fill_data.teams"
+        },
+        {
+            "name": "Ex",
             "type": "debugpy",
             "request": "launch",
             "module": "app.fill_data.players_nba_api"
