@@ -2,20 +2,11 @@ import os
 import time
 from typing import Any
 
-from pandas import read_csv
+from pandas import DataFrame, Series, read_csv
 from playwright.sync_api import sync_playwright
 
+from app.data.league.payroll import TeamPlayerSalary
 from app.utils.math_utils import delay_seconds
-
-# Load teams
-teams = read_csv("data/teams.csv", index_col=0)
-
-# Download folder
-DOWNLOAD_DIR = os.path.join("data", "by-team")
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-
-# Path to save login/session info
-AUTH_FILE = "spotrac_auth.json"
 
 
 def start_browser(AUTH_FILE: str, p: Any) -> tuple[Any, Any, Any]:
@@ -32,7 +23,7 @@ def start_browser(AUTH_FILE: str, p: Any) -> tuple[Any, Any, Any]:
     return browser, context, page
 
 
-def get_contract_data(
+def get_salary_data(
     page: Any,
     year: int,
     team_name: str,
@@ -84,23 +75,51 @@ def get_contract_data(
         delay_seconds()
 
 
-with sync_playwright() as p:
-    # Launch browser
-    browser, context, page = start_browser(AUTH_FILE, p)
+def get_all_salary_csvs() -> None:
+    # Download folder
+    DOWNLOAD_DIR = os.path.join("data", "by-team")
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    # Manual login if no session saved
-    if not os.path.exists(AUTH_FILE):
-        print("Please log in manually in the browser window.")
-        time.sleep(60)
-        context.storage_state(path=AUTH_FILE)
-        print(
-            f"Session saved to {AUTH_FILE}. Next runs will use this login automatically."
+    # Path to save login/session info
+    AUTH_FILE = "spotrac_auth.json"
+    teams = read_csv("data/teams.csv", index_col=0)
+    with sync_playwright() as p:
+        # Launch browser
+        browser, context, page = start_browser(AUTH_FILE, p)
+
+        # Manual login if no session saved
+        if not os.path.exists(AUTH_FILE):
+            print("Please log in manually in the browser window.")
+            time.sleep(60)
+            context.storage_state(path=AUTH_FILE)
+            print(
+                f"Session saved to {AUTH_FILE}. Next runs will use this login automatically."
+            )
+
+        # Iterate over years and teams
+        for year in range(2011, 2032):
+            for _, row in teams.iterrows():
+                get_salary_data(page, year, row["team_name"], DOWNLOAD_DIR)
+
+        print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")
+        browser.close()
+
+
+def upload_salary_data(df: DataFrame, team_id: int, year: int) -> None:
+    def parse_dollars(value: str | None) -> int | None:
+        if not value or value.strip() in {"'-", ""}:
+            return None
+        return int(value.replace("$", "").replace(",", ""))
+
+    for _, row in df.iterrows():
+        TeamPlayerSalary(
+            year=year,
+            team_id=team_id,
+            player_id=row[""],
+            cap_hit_percent=None,
+            salary=parse_dollars(row["Cap Hit"]),
+            apron_salary=None,
+            luxury_tax=None,
+            cash_total=None,
+            cash_garunteed=None,
         )
-
-    # Iterate over years and teams
-    for year in range(2011, 2032):
-        for _, row in teams.iterrows():
-            get_contract_data(page, year, row["team_name"], DOWNLOAD_DIR)
-
-    print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")
-    browser.close()
