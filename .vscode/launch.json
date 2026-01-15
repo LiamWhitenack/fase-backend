@@ -17,10 +17,10 @@
             "module": "app.fill_data.teams"
         },
         {
-            "name": "Ex",
+            "name": "Upload Payrolls",
             "type": "debugpy",
             "request": "launch",
-            "module": "app.fill_data.players_nba_api"
+            "module": "app.fill_data.upload_contracts"
         }
     ]
 }

@@ -23,12 +23,12 @@ class TeamPlayerSalary(Base):
     year: Mapped[int] = mapped_column(Integer, index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
-    cap_hit_percent: Mapped[int] = mapped_column(Float)
-    salary: Mapped[int] = mapped_column(Integer)
-    apron_salary: Mapped[int] = mapped_column(Integer)
-    luxury_tax: Mapped[int] = mapped_column(Integer)
-    cash_total: Mapped[int] = mapped_column(Integer)
-    cash_garunteed: Mapped[int] = mapped_column(Integer)
+    cap_hit_percent: Mapped[int | None] = mapped_column(Float)
+    salary: Mapped[int | None] = mapped_column(Integer)
+    apron_salary: Mapped[int | None] = mapped_column(Integer)
+    luxury_tax: Mapped[int | None] = mapped_column(Integer)
+    cash_total: Mapped[int | None] = mapped_column(Integer)
+    cash_garunteed: Mapped[int | None] = mapped_column(Integer)
 
     # ---- relationships ----
     player: Mapped["Player"] = relationship("Player", back_populates="salaries")

@@ -43,7 +43,7 @@ class Player(Base):
     )  # convert Y/N → True/False
 
     # ---- relationships ----
-    seasons: Mapped[list["PlayerSeason"]] = relationship(
+    seasons = relationship(
         "PlayerSeason",
         back_populates="player",
         cascade="all, delete-orphan",

@@ -1,11 +1,15 @@
 import os
 import time
+from collections.abc import Iterable
 from typing import Any
 
 from pandas import DataFrame, Series, read_csv
 from playwright.sync_api import sync_playwright
+from sqlalchemy import select
 
+from app.data.connection import get_session
 from app.data.league.payroll import TeamPlayerSalary
+from app.data.league.player import Player
 from app.utils.math_utils import delay_seconds
 
 
@@ -103,23 +107,3 @@ def get_all_salary_csvs() -> None:
 
         print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")
         browser.close()
-
-
-def upload_salary_data(df: DataFrame, team_id: int, year: int) -> None:
-    def parse_dollars(value: str | None) -> int | None:
-        if not value or value.strip() in {"'-", ""}:
-            return None
-        return int(value.replace("$", "").replace(",", ""))
-
-    for _, row in df.iterrows():
-        TeamPlayerSalary(
-            year=year,
-            team_id=team_id,
-            player_id=row[""],
-            cap_hit_percent=None,
-            salary=parse_dollars(row["Cap Hit"]),
-            apron_salary=None,
-            luxury_tax=None,
-            cash_total=None,
-            cash_garunteed=None,
-        )
