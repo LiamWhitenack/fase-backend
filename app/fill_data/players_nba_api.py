@@ -12,7 +12,7 @@ from requests import ReadTimeout
 from app.base import Base
 from app.data.connection import get_session
 from app.data.league.player import Player
-from app.utils.math_utils import delay_time
+from app.utils.math_utils import delay_seconds_count
 
 
 def height_to_inches(height: str | None) -> int | None:
