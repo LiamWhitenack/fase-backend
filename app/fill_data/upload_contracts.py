@@ -1,3 +1,4 @@
+import atexit
 import json
 import os
 from collections.abc import Iterable
@@ -62,23 +63,40 @@ def add_to_existed_list(name: str) -> None:
         res = json.dump(sorted(res), f, indent=4)
 
 
-def get_all_salary_objects() -> Iterable[TeamPlayerSalary]:
-    with get_session() as session:
-        get = select(Player.id, Player.birth_date, Player.name)
-        ids, bdays, names = tuple(zip(*session.execute(get).all()))
-        bdays = list(map(datetime.fromisoformat, bdays))
-        get = select(Team.name, Team.id)
-        team_map: dict[str, int] = dict(session.execute(get).all())  # type: ignore
+class NameMatchFinder:
+    def __init__(self) -> None:
+        with get_session() as session:
+            get = select(Player.id, Player.birth_date, Player.name)
+            self.ids, self.bdays, self.names = tuple(zip(*session.execute(get).all()))
+            self.bdays = list(map(datetime.fromisoformat, self.bdays))
+            get = select(Team.name, Team.id)
+            self.team_map: dict[str, int] = dict(session.execute(get).all())  # type: ignore
+        with open("data/name-map.json") as f:
+            self.data: dict[str, int | None] = json.load(f)
 
-    def get_player_id(name: str, year: int, age: int | None) -> int:
-        if sum([n == name for n in names]) == 1:
-            idx = names.index(name)
-            bday = bdays[idx]
-            return ids[idx]
+        atexit.register(self.save)
+
+    def save(self) -> None:
+        with open("data/name-map.json", "w") as f:
+            json.dump(dict(sorted(self.data.items())), f, indent=4)
+
+    def get_team(self, name: str) -> int:
+        return self.team_map[name.replace("-", " ").title().replace("76Ers", "76ers")]
+
+    def get_player_id(self, name: str, year: int, age: int | None) -> int | None:
+        if name == "Nikola Milutinov":
+            pass
+        if name in self.data:
+            return self.data[name]
+        return self.guess_player_id(name, year, age)
+
+    def guess_player_id(self, name: str, year: int, age: int | None) -> int | None:
+        if sum([n == name for n in self.names]) == 1:
+            self.data[name] = self.ids[self.names.index(name)]
         elif age is not None:
             bday_eligible_players = [
                 player
-                for player, bday in zip(names, bdays)
+                for player, bday in zip(self.names, self.bdays)
                 if bday.year + age - 1 <= year < bday.year + age + 1
             ]
             similar_names = [
@@ -86,31 +104,24 @@ def get_all_salary_objects() -> Iterable[TeamPlayerSalary]:
                 for player in bday_eligible_players
                 if name.split(" ")[1] == (player.split(" ")[1] if " " in player else "")
             ]
-            if name == "Nene Hilario":
-                idx = names.index("Nene")
-                return ids[idx]
             if similar_names:
                 match = get_close_matches(name, similar_names, n=1, cutoff=0.0)[0]
             else:
-                match = get_close_matches(name, names, n=1, cutoff=0.0)[0]
-                with open("data/confident-existed.json", "r") as f:
-                    ignore_names = json.load(f)
-                    if name in ignore_names:
-                        idx = names.index(match)
-                        return ids[idx]
+                match = get_close_matches(name, self.names, n=1, cutoff=0.0)[0]
                 remove = input(
                     f"Scary: matching {match} to {name}, add {name} to never existed?"
                 )
                 if remove == "y":
-                    add_to_never_existed_list(name)
-                elif remove == "n":
-                    add_to_existed_list(name)
+                    self.data[name] = None
+                    return None
 
-            print(f"matching {match} to {name}")
-            idx = names.index(match)
-            return ids[idx]
-        raise Exception(f"Requires manual addition for {name}")
+            self.data[name] = self.ids[self.names.index(match)]
 
+        return self.data[name]
+
+
+def get_all_salary_objects() -> Iterable[TeamPlayerSalary]:
+    name_finder = NameMatchFinder()
     for file in sorted(os.listdir("data/payroll-team-year")):
         path = f"data/payroll-team-year/{file}"
         year = int(file[-10:-6])
@@ -119,25 +130,27 @@ def get_all_salary_objects() -> Iterable[TeamPlayerSalary]:
             continue
         team = file[:-11]
         df = read_csv(path)
-        player_col = next(col for col in df if "Player" in col)  # type: ignore
+        player_col: str = next(col for col in df if "Player" in col)  # type: ignore
         for _, row in df.iterrows():
-            with open("data/never-existed.json", "r") as f:
-                ignore_names = json.load(f)
-            if row[player_col] != row[player_col] or "Round" in row[player_col]:
+            if (
+                row["\xa0"] == "Incomplete Roster Charge"
+                or row[player_col] != row[player_col]
+                or "Round" in row[player_col]
+            ):
                 continue
             name = row[player_col].split("   ")[-1]
-            if name in ignore_names:
-                continue
-            if row["\xa0"] == "Incomplete Roster Charge":
-                continue
-            yield get_salary_object(
-                row,
-                team_map[team.replace("-", " ").title().replace("76Ers", "76ers")],
-                get_player_id(
+            if not (
+                player_id := name_finder.get_player_id(
                     name,
                     year,
                     int(row["Age"]) if row["Age"] == row["Age"] else None,
-                ),
+                )
+            ):
+                continue
+            yield get_salary_object(
+                row,
+                name_finder.get_team(team),
+                player_id,
                 year,
             )
 
