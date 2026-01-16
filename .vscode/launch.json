@@ -20,6 +20,12 @@
             "name": "Upload Payrolls",
             "type": "debugpy",
             "request": "launch",
+            "module": "app.fill_data.upload_payrolls"
+        },
+        {
+            "name": "Upload Contracts",
+            "type": "debugpy",
+            "request": "launch",
             "module": "app.fill_data.upload_contracts"
         }
     ]

@@ -28,6 +28,11 @@ class Team(Base):
         back_populates="team",
         cascade="all, delete-orphan",
     )
+    contracts = relationship(
+        "Contract",
+        back_populates="team",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         # Prevent duplicate teams like "Los Angeles Lakers"

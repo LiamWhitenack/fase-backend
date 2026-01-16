@@ -1,23 +1,72 @@
-import atexit
-import json
 import os
 from collections.abc import Iterable
-from datetime import datetime, timedelta
-from difflib import get_close_matches
 
-from pandas import DataFrame, Series, read_csv
+import requests
+from bs4 import BeautifulSoup
+from bs4._typing import _SomeTags
+from pandas import read_csv
 from sqlalchemy import and_, select
-from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
-from app.data.league.payroll import TeamPlayerSalary
-from app.data.league.player import Player
-from app.data.league.team import Team
+from app.data.league.contract import Contract
+from app.fill_data.upload_payrolls import player_exists
+from app.utils.name_matcher import NameMatchFinder
 
 
-def get_salary_object(
-    row: Series, team_id: int, player_id: int, year: int
-) -> TeamPlayerSalary:
+def get_options_table() -> _SomeTags:
+    url = "https://www.basketball-reference.com/contracts/players.html"
+
+    # Request the HTML (some sites block non-browser agents)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "lxml")
+
+    # Find the main contracts table
+    table = soup.find("table")
+
+    if not table:
+        raise ValueError("Could not find the contracts table on page")
+
+    tag = table.find("tbody")
+    assert tag is not None
+    return tag.find_all("tr")
+
+
+def write_down_options() -> None:
+    with open("data/options.csv", "w") as options_csv:
+        options_csv.write("name,player,team\n")
+        for row in get_options_table():
+            try:
+                player_name = str(row.find_all("a")[1].string)
+            except IndexError:
+                continue
+            options_csv.write(
+                f"{player_name}, {str(row).count('salary-pl')}, {str(row).count('salary-tm')}\n"
+            )
+
+
+def listpathdir(dir: str) -> Iterable[str]:
+    for file in os.listdir(dir):
+        yield os.path.join(dir, file)
+
+
+def get_options() -> dict[int, tuple[int, int]]:
+    res: dict[int, tuple[int, int]] = {}
+    name_finder = NameMatchFinder()
+    for _, row in read_csv("data/options.csv").iterrows():
+        name = name_finder.get_player_id(row["name"], 2025, None)
+        assert name is not None
+        res[name] = row["player"], row["team"]
+    return res
+
+
+def get_all_contract_objects() -> Iterable[Contract]:
     def parse_dollars(value: str | None) -> int | None:
         if not value or value.strip() in {"'-", ""}:
             return None
@@ -25,143 +74,49 @@ def get_salary_object(
             return None
         return int(value.replace("$", "").replace(",", ""))
 
-    def parse_percent(value: str | None) -> float | None:
-        if not value or value.strip() in {"'-", ""}:
-            return None
-        return float(value.replace("%", "").replace(",", ""))
-
-    return TeamPlayerSalary(
-        year=year,
-        team_id=team_id,
-        player_id=player_id,
-        cap_hit_percent=parse_percent(
-            row["Cap Hit Pct                         League Cap"]
-        ),
-        salary=parse_dollars(row["Cap Hit"]),
-        apron_salary=parse_dollars(row.get("Apron Salary")),
-        luxury_tax=parse_dollars(row.get("Luxury Tax")),
-        cash_total=parse_dollars(row.get("Cash                         Total")),
-        cash_garunteed=parse_dollars(
-            row.get("Cash                         Guaranteed")
-        ),
-    )
-
-
-def add_to_never_existed_list(name: str) -> None:
-    with open("data/never-existed.json", "r") as f:
-        res = json.load(f)
-    res.append(name)
-    with open("data/never-existed.json", "w") as f:
-        res = json.dump(sorted(res), f, indent=4)
-
-
-def add_to_existed_list(name: str) -> None:
-    with open("data/confident-existed.json", "r") as f:
-        res = json.load(f)
-    res.append(name)
-    with open("data/confident-existed.json", "w") as f:
-        res = json.dump(sorted(res), f, indent=4)
-
-
-class NameMatchFinder:
-    def __init__(self) -> None:
-        with get_session() as session:
-            get = select(Player.id, Player.birth_date, Player.name)
-            self.ids, self.bdays, self.names = tuple(zip(*session.execute(get).all()))
-            self.bdays = list(map(datetime.fromisoformat, self.bdays))
-            get = select(Team.name, Team.id)
-            self.team_map: dict[str, int] = dict(session.execute(get).all())  # type: ignore
-        with open("data/name-map.json") as f:
-            self.data: dict[str, int | None] = json.load(f)
-
-        atexit.register(self.save)
-
-    def save(self) -> None:
-        with open("data/name-map.json", "w") as f:
-            json.dump(dict(sorted(self.data.items())), f, indent=4)
-
-    def get_team(self, name: str) -> int:
-        return self.team_map[name.replace("-", " ").title().replace("76Ers", "76ers")]
-
-    def get_player_id(self, name: str, year: int, age: int | None) -> int | None:
-        if name == "Nikola Milutinov":
-            pass
-        if name in self.data:
-            return self.data[name]
-        return self.guess_player_id(name, year, age)
-
-    def guess_player_id(self, name: str, year: int, age: int | None) -> int | None:
-        if sum([n == name for n in self.names]) == 1:
-            self.data[name] = self.ids[self.names.index(name)]
-        elif age is not None:
-            bday_eligible_players = [
-                player
-                for player, bday in zip(self.names, self.bdays)
-                if bday.year + age - 1 <= year < bday.year + age + 1
-            ]
-            similar_names = [
-                player
-                for player in bday_eligible_players
-                if name.split(" ")[1] == (player.split(" ")[1] if " " in player else "")
-            ]
-            if similar_names:
-                match = get_close_matches(name, similar_names, n=1, cutoff=0.0)[0]
-            else:
-                match = get_close_matches(name, self.names, n=1, cutoff=0.0)[0]
-                remove = input(
-                    f"Scary: matching {match} to {name}, add {name} to never existed?"
-                )
-                if remove == "y":
-                    self.data[name] = None
-                    return None
-
-            self.data[name] = self.ids[self.names.index(match)]
-
-        return self.data[name]
-
-
-def get_all_salary_objects() -> Iterable[TeamPlayerSalary]:
     name_finder = NameMatchFinder()
-    for file in sorted(os.listdir("data/payroll-team-year")):
-        path = f"data/payroll-team-year/{file}"
-        year = int(file[-10:-6])
-        copy = file[-5]
-        if copy != "0":
-            continue
-        team = file[:-11]
-        df = read_csv(path)
-        player_col: str = next(col for col in df if "Player" in col)  # type: ignore
+    options = get_options()
+    for year, df in enumerate(map(read_csv, listpathdir("data/contracts")), start=2011):
         for _, row in df.iterrows():
-            if (
-                row["\xa0"] == "Incomplete Roster Charge"
-                or row[player_col] != row[player_col]
-                or "Round" in row[player_col]
-            ):
+            if row["Yrs"] != row["Yrs"]:
                 continue
-            name = row[player_col].split("   ")[-1]
-            if not (
-                player_id := name_finder.get_player_id(
-                    name,
-                    year,
-                    int(row["Age"]) if row["Age"] == row["Age"] else None,
-                )
-            ):
+            age = row["Age                     At Signing"]
+            player_id = name_finder.get_player_id(
+                row["Player"], year, age=int(age) if age == age else None
+            )
+            if player_id is None:
                 continue
-            yield get_salary_object(
-                row,
-                name_finder.get_team(team),
-                player_id,
-                year,
+            player_options, team_options = options.get(player_id, (0, 0))
+            option_1, option_2 = None, None
+            if player_options > 0:
+                option_1 = "Player"
+            if player_options == 2:
+                option_2 = "Player"
+            if team_options > 0:
+                option_1 = "Team"
+            if team_options == 2:
+                option_2 = "Team"
+            team = row["Team                     Signed With"][:3]
+            yield Contract(
+                player_id=player_id,
+                team_id=name_finder.get_team(team),
+                value=parse_dollars(row["Value"])
+                if row["Value"] == row["Value"]
+                else None,
+                start_year=year,
+                duration=int(row["Yrs"]),
+                option_1=option_1,
+                option_2=option_2,
             )
 
 
-def player_exists(session: Session, obj: TeamPlayerSalary) -> bool:
+def contract_exists(session: Session, obj: Contract) -> bool:
     res = session.execute(
-        select(TeamPlayerSalary).where(
+        select(Contract).where(
             and_(
-                TeamPlayerSalary.team_id == obj.team_id,
-                TeamPlayerSalary.player_id == obj.player_id,
-                TeamPlayerSalary.year == obj.year,
+                Contract.id == obj.id,
+                Contract.player_id == obj.player_id,
+                Contract.team_id == obj.team_id,
             )
         )
     ).all()
@@ -169,11 +124,11 @@ def player_exists(session: Session, obj: TeamPlayerSalary) -> bool:
 
 
 if __name__ == "__main__":
+    # write_down_options()
     with get_session() as session:
         # session.query(Player).delete()
-        for i, player in enumerate(get_all_salary_objects()):
-            if player_exists(session, player):
+        for i, contract in enumerate(get_all_contract_objects()):
+            if contract_exists(session, contract):
                 continue
-            session.add(player)
+            session.add(contract)
             session.commit()
-    pass
