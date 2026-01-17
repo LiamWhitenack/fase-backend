@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
 from app.data.league.contract import Contract
-from app.fill_data.upload_payrolls import player_exists
+from app.fill_data.upload_payrolls import salary_exists
 from app.utils.name_matcher import NameMatchFinder
 
 

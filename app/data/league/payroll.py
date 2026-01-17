@@ -49,7 +49,7 @@ class TeamPlayerBuyout(Base):
     year: Mapped[int] = mapped_column(Integer, index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
-    salary: Mapped[int] = mapped_column(Integer)
+    salary: Mapped[int | None] = mapped_column(Integer)
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
