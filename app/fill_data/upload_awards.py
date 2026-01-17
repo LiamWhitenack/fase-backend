@@ -131,7 +131,7 @@ def get_all_award_objects() -> Iterable[Award]:
                 continue
 
             season = parse_season(season_cell.text.strip())
-            team_n = row.find_all("a")[4].text
+            team_n = row.find_all()[4].text
             for name in row.find_all("a")[3:8]:
                 player_id = name_finder.get_player_id(
                     name.text,  # type: ignore
