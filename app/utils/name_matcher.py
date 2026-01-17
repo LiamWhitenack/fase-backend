@@ -43,12 +43,16 @@ class NameMatchFinder:
             return self.team_abbr_map[name.replace("NOH", "NOP").replace("NJN", "BKN")]
         return self.team_map[name.replace("-", " ").title().replace("76Ers", "76ers")]
 
-    def get_player_id(self, name: str, year: int, age: int | None) -> int | None:
+    def get_player_id(
+        self, name: str, year: int, age: int | None, assume_match_exists: bool = False
+    ) -> int | None:
         if name in self.data:
             return self.data[name]
-        return self.guess_player_id(name, year, age)
+        return self.guess_player_id(name, year, age, assume_match_exists)
 
-    def guess_player_id(self, name: str, year: int, age: int | None) -> int | None:
+    def guess_player_id(
+        self, name: str, year: int, age: int | None, assume_match_exists: bool = False
+    ) -> int | None:
         if sum([n == name for n in self.names]) == 1:
             self.data[name] = self.ids[self.names.index(name)]
         else:
@@ -67,7 +71,7 @@ class NameMatchFinder:
             ]
             if similar_names:
                 match = get_close_matches(name, similar_names, n=1, cutoff=0.0)[0]
-            else:
+            elif not assume_match_exists:
                 match = get_close_matches(name, self.names, n=1, cutoff=0.0)[0]
                 remove = input(
                     f"Scary: matching {match} to {name}, add {name} to never existed?"
