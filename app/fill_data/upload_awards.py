@@ -127,18 +127,17 @@ def get_all_award_objects() -> Iterable[Award]:
             if not season_cell:
                 continue
 
-            if row.find_all()[1].text != "NBA":
-                continue
-
-            player_link = row.find("a")
-            if not player_link:
+            if row.find_all("a")[1].text != "NBA":
                 continue
 
             season = parse_season(season_cell.text.strip())
-            team_n = row.find_all()[1].text
+            team_n = row.find_all("a")[4].text
             for name in row.find_all("a")[3:8]:
                 player_id = name_finder.get_player_id(
-                    player_name, season, None, assume_match_exists=True
+                    name.text,  # type: ignore
+                    season,
+                    None,
+                    assume_match_exists=True,
                 )
                 assert player_id
                 yield Award(

@@ -71,14 +71,15 @@ class NameMatchFinder:
             ]
             if similar_names:
                 match = get_close_matches(name, similar_names, n=1, cutoff=0.0)[0]
-            elif not assume_match_exists:
+            else:
                 match = get_close_matches(name, self.names, n=1, cutoff=0.0)[0]
-                remove = input(
-                    f"Scary: matching {match} to {name}, add {name} to never existed?"
-                )
-                if remove == "y":
-                    self.data[name] = None
-                    return None
+                if not assume_match_exists:
+                    remove = input(
+                        f"Scary: matching {match} to {name}, add {name} to never existed?"
+                    )
+                    if remove == "y":
+                        self.data[name] = None
+                        return None
 
             self.data[name] = self.ids[self.names.index(match)]
 

@@ -44,7 +44,7 @@ class Player(Base):
 
     # ---- relationships ----
     seasons = relationship(
-        "PlayerSeason",
+        "PlayerSeasonTeam",
         back_populates="player",
         cascade="all, delete-orphan",
     )
@@ -66,8 +66,8 @@ class Player(Base):
     )
 
 
-class PlayerSeason(Base):
-    __tablename__ = "player_seasons"
+class PlayerSeasonTeam(Base):
+    __tablename__ = "player_season_teams"
 
     # ---- identifiers ----
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -109,25 +109,19 @@ class PlayerSeason(Base):
     defensive_rating: Mapped[float] = mapped_column(Float, default=0.0)
     win_shares: Mapped[float] = mapped_column(Float, default=0.0)
 
-    # ---- awards (season-scoped) ----
-    is_mvp: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_all_nba: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_all_defensive: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_all_rookie: Mapped[bool] = mapped_column(Boolean, default=False)
-
     # ---- relationships ----
     player: Mapped["Player"] = relationship("Player", back_populates="seasons")
-    team: Mapped["Team"] = relationship("Team", back_populates="player_seasons")
+    team: Mapped["Team"] = relationship("Team", back_populates="player_season_teams")
     games = relationship(
         "PlayerGame",
-        back_populates="player_season",
+        back_populates="player_season_team",
         cascade="all, delete-orphan",
     )
 
     __table_args__ = (
         # Enforce exactly one row per player/team/season
         Index(
-            "ix_player_season_unique",
+            "ix_player_season_team_unique",
             "player_id",
             "team_id",
             "season",

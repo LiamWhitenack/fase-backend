@@ -21,10 +21,10 @@ class Team(Base):
     division: Mapped[str] = mapped_column(String, index=True)
 
     # ---- relationships ----
-    player_seasons = relationship(
+    player_season_teams = relationship(
         lambda: __import__(
-            "app.data.league.player", fromlist=["PlayerSeason"]
-        ).PlayerSeason,
+            "app.data.league.player", fromlist=["PlayerSeasonTeam"]
+        ).PlayerSeasonTeam,
         back_populates="team",
         cascade="all, delete-orphan",
     )
