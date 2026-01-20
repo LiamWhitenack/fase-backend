@@ -33,6 +33,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "app.fill_data.upload_awards"
+        },
+        {
+            "name": "Upload Player Seasons",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "app.fill_data.upload_player_seasons"
         }
     ]
 }

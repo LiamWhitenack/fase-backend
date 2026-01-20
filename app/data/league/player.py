@@ -44,7 +44,7 @@ class Player(Base):
 
     # ---- relationships ----
     seasons = relationship(
-        "PlayerSeasonTeam",
+        "PlayerSeason",
         back_populates="player",
         cascade="all, delete-orphan",
     )
@@ -66,8 +66,8 @@ class Player(Base):
     )
 
 
-class PlayerSeasonTeam(Base):
-    __tablename__ = "player_season_teams"
+class PlayerSeason(Base):
+    __tablename__ = "player_seasons"
 
     # ---- identifiers ----
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -75,53 +75,62 @@ class PlayerSeasonTeam(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
 
-    season: Mapped[int] = mapped_column(Integer, index=True)  # e.g. 2023 for 2023–24
+    season: Mapped[int] = mapped_column(Integer, index=True)
 
-    # ---- roster info ----
-    jersey_number: Mapped[int | None] = mapped_column(Integer)
-    position: Mapped[str | None] = mapped_column()
-    is_two_way: Mapped[bool] = mapped_column(Boolean, default=False)
+    # ---- basic context ----
+    age: Mapped[float | None] = mapped_column(Float)
+    games_played: Mapped[int] = mapped_column(Integer)
+    wins: Mapped[int] = mapped_column(Integer)
+    losses: Mapped[int] = mapped_column(Integer)
+    win_pct: Mapped[float] = mapped_column(Float)
+    minutes_per_game: Mapped[float] = mapped_column(Float)
 
-    # ---- season totals ----
-    games_played: Mapped[int] = mapped_column(Integer, default=0)
-    minutes: Mapped[float] = mapped_column(Float, default=0.0)
-    points: Mapped[int] = mapped_column(Integer, default=0)
-    assists: Mapped[int] = mapped_column(Integer, default=0)
-    rebounds: Mapped[int] = mapped_column(Integer, default=0)
-    steals: Mapped[int] = mapped_column(Integer, default=0)
-    blocks: Mapped[int] = mapped_column(Integer, default=0)
-    turnovers: Mapped[int] = mapped_column(Integer, default=0)
-    personal_fouls: Mapped[int] = mapped_column(Integer, default=0)
+    # ---- ratings ----
+    offensive_rating: Mapped[float] = mapped_column(Float)
+    defensive_rating: Mapped[float] = mapped_column(Float)
+    net_rating: Mapped[float] = mapped_column(Float)
 
-    # ---- shooting ----
-    field_goals_made: Mapped[int] = mapped_column(Integer, default=0)
-    field_goals_attempted: Mapped[int] = mapped_column(Integer, default=0)
-    three_pointers_made: Mapped[int] = mapped_column(Integer, default=0)
-    three_pointers_attempted: Mapped[int] = mapped_column(Integer, default=0)
-    free_throws_made: Mapped[int] = mapped_column(Integer, default=0)
-    free_throws_attempted: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_offensive_rating: Mapped[float | None] = mapped_column(Float)
+    estimated_defensive_rating: Mapped[float | None] = mapped_column(Float)
+    estimated_net_rating: Mapped[float | None] = mapped_column(Float)
 
-    # ---- advanced season metrics ----
-    player_efficiency_rating: Mapped[float] = mapped_column(Float, default=0.0)
-    true_shooting_percentage: Mapped[float] = mapped_column(Float, default=0.0)
-    usage_rate: Mapped[float] = mapped_column(Float, default=0.0)
-    offensive_rating: Mapped[float] = mapped_column(Float, default=0.0)
-    defensive_rating: Mapped[float] = mapped_column(Float, default=0.0)
-    win_shares: Mapped[float] = mapped_column(Float, default=0.0)
+    # ----  percentages ----
+    assist_percentage: Mapped[float] = mapped_column(Float)
+    assist_to_turnover: Mapped[float] = mapped_column(Float)
+    assist_ratio: Mapped[float] = mapped_column(Float)
+
+    offensive_rebound_pct: Mapped[float] = mapped_column(Float)
+    defensive_rebound_pct: Mapped[float] = mapped_column(Float)
+    rebound_pct: Mapped[float] = mapped_column(Float)
+
+    turnover_pct: Mapped[float] = mapped_column(Float)
+    effective_fg_pct: Mapped[float] = mapped_column(Float)
+    true_shooting_pct: Mapped[float] = mapped_column(Float)
+    usage_pct: Mapped[float] = mapped_column(Float)
+
+    # ---- pace & impact ----
+    pace: Mapped[float] = mapped_column(Float)
+    pace_per_40: Mapped[float] = mapped_column(Float)
+    estimated_pace: Mapped[float | None] = mapped_column(Float)
+
+    possessions: Mapped[int] = mapped_column(Integer)
+    pie: Mapped[float] = mapped_column(Float)
+
+    # ---- shooting volume ----
+    field_goals_made: Mapped[int] = mapped_column(Integer)
+    field_goals_attempted: Mapped[int] = mapped_column(Integer)
+    field_goal_pct: Mapped[float] = mapped_column(Float)
+
+    field_goals_made_pg: Mapped[float] = mapped_column(Float)
+    field_goals_attempted_pg: Mapped[float] = mapped_column(Float)
 
     # ---- relationships ----
-    player: Mapped["Player"] = relationship("Player", back_populates="seasons")
-    team: Mapped["Team"] = relationship("Team", back_populates="player_season_teams")
-    games = relationship(
-        "PlayerGame",
-        back_populates="player_season_team",
-        cascade="all, delete-orphan",
-    )
+    player: Mapped["Player"] = relationship(back_populates="seasons")
+    team: Mapped["Team"] = relationship(back_populates="player_seasons")
 
     __table_args__ = (
-        # Enforce exactly one row per player/team/season
         Index(
-            "ix_player_season_team_unique",
+            "ix_player_season_unique",
             "player_id",
             "team_id",
             "season",

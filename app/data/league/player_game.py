@@ -20,7 +20,7 @@ class PlayerGame(Base):
     game_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("games.id"), index=True, nullable=False
     )
-    player_season_team_id: Mapped[int] = mapped_column(
+    player_season_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("player_seasons.id"), index=True, nullable=False
     )
     team_id: Mapped[int] = mapped_column(
@@ -87,19 +87,17 @@ class PlayerGame(Base):
 
     # ---- relationships ----
     game = relationship("Game", back_populates="player_games")
-    # foreign key linking to PlayerSeasonTeam
-    player_season_team_id: Mapped[int] = mapped_column(
-        ForeignKey("player_season_teams.id"), index=True
+    # foreign key linking to PlayerSeason
+    player_season_id: Mapped[int] = mapped_column(
+        ForeignKey("player_seasons.id"), index=True
     )
 
-    # relationship back to PlayerSeasonTeam
-    player_season_team = relationship("PlayerSeasonTeam", back_populates="games")
-
+    # relationship back to PlayerSeason
     __table_args__ = (
         Index(
             "ix_player_game_unique",
             "game_id",
-            "player_season_team_id",
+            "player_season_id",
             unique=True,
         ),
     )
@@ -110,7 +108,7 @@ class PlayerGame(Base):
         cls,
         row: dict,
         game_id: int,
-        player_season_team_id: int,
+        player_season_id: int,
         team_id: int,
         season: str,
         game_date: str,
@@ -128,7 +126,7 @@ class PlayerGame(Base):
 
         return cls(
             game_id=game_id,
-            player_season_team_id=player_season_team_id,
+            player_season_id=player_season_id,
             team_id=team_id,
             season=season,
             game_date=game_date,

@@ -4,7 +4,6 @@ from sqlalchemy import Boolean, Date, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...base import Base
-from .player_game import PlayerGame
 from .team import Team
 
 
