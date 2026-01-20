@@ -1,0 +1,11 @@
+{
+    // Auto-formatting including import sorting
+    "emeraldwalk.runonsave": { 
+        "commands": [
+            {
+                "match": "\\.py$",
+                "cmd":  ".venv/bin/python -m ruff check --select I --fix \"${file}\" && .venv/bin/python -m ruff format \"${file}\""
+            }
+        ]
+    },
+}
