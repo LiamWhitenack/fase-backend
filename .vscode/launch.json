@@ -39,6 +39,12 @@
             "type": "debugpy",
             "request": "launch",
             "module": "app.fill_data.upload_player_seasons"
+        },
+        {
+            "name": "Upload Prospects",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "app.fill_data.upload_prospects"
         }
     ]
 }

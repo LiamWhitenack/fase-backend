@@ -1,6 +1,8 @@
 *.env
 test.py
 
+*.pkl
+
 *spotrac_auth.json
 
 # Created by .ignore support plugin (hsz.mobi)
