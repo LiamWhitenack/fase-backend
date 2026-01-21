@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from datetime import date, datetime, timezone
 from typing import Any
@@ -12,6 +13,7 @@ from sqlalchemy import (
     Float,
     Integer,
     String,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,8 +38,40 @@ def safe_untyped_int(value: str | None) -> Any:
     return int(value)
 
 
+def parse_measurements(text: str) -> tuple[float | None, float | None]:
+    """
+    Parses a string like '6\'1.5" (6\'5.5" wingspan)' and returns height and wingspan in inches.
+    """
+    # Regex to match feet, inches (with optional decimal)
+    if not text:
+        return None, None
+    pattern = r"(\d+)\'(\d+(?:\.\d+)?)\""
+
+    matches = re.findall(pattern, text)
+
+    if not matches:
+        raise ValueError(f"Could not parse height/wingspan from '{text}'")
+
+    # First match is height
+    height_ft, height_in = matches[0]
+    height_in_total = int(height_ft) * 12 + float(height_in)
+
+    # Second match (if present) is wingspan
+    if len(matches) > 1:
+        wingspan_ft, wingspan_in = matches[1]
+        wingspan_in_total = int(wingspan_ft) * 12 + float(wingspan_in)
+    else:
+        wingspan_in_total = None  # wingspan missing
+
+    return height_in_total, wingspan_in_total
+
+
 class DraftProspect(Base):
     __tablename__ = "draft_prospects"
+
+    __table_args__ = (
+        UniqueConstraint("name", "uploaded", name="uq_draft_prospect_name_uploaded"),
+    )
 
     # -------------------------------------------------
     # Primary Key
@@ -47,20 +81,17 @@ class DraftProspect(Base):
     # -------------------------------------------------
     # Metadata
     # -------------------------------------------------
-    date_uploaded: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    uploaded: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     # -------------------------------------------------
     # Profile / Identity
     # -------------------------------------------------
-    name: Mapped[str | None] = mapped_column(String(128))
-    tankathon_slug: Mapped[str | None] = mapped_column(
-        String(128), unique=True, index=True
-    )
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    tankathon_slug: Mapped[str | None] = mapped_column(String(128))
     primary_position: Mapped[str | None] = mapped_column(String(2))
     secondary_position: Mapped[str | None] = mapped_column(String(2))
-    height: Mapped[int | None] = mapped_column(Integer)
+    height: Mapped[float | None] = mapped_column(Float)
+    wingspan: Mapped[float | None] = mapped_column(Float)
     weight: Mapped[int | None] = mapped_column(Integer)
 
     team: Mapped[str | None] = mapped_column(String(64))
@@ -71,8 +102,6 @@ class DraftProspect(Base):
     espn_big_board_rank: Mapped[int | None] = mapped_column(Integer)
     year: Mapped[int | None] = mapped_column(Integer)
     age_at_draft: Mapped[Float | None] = mapped_column(Float)
-
-    season: Mapped[int | None] = mapped_column(Integer, index=True)
 
     # -------------------------------------------------
     # Per Game Stats
@@ -143,11 +172,12 @@ class DraftProspect(Base):
     @classmethod
     def from_beautiful_soup(
         cls,
+        uploaded: datetime,
         soup: BeautifulSoup,
         *,
         tankathon_slug: str | None = None,
     ) -> DraftProspect:
-        data = cls()
+        data = cls(uploaded=uploaded)
 
         if tankathon_slug is not None:
             data.tankathon_slug = tankathon_slug
@@ -171,41 +201,9 @@ class DraftProspect(Base):
                 class_="stats-header",
             ):
                 sibling = header_tag.find_next_sibling("div", class_="stats")  # pyright: ignore[reportArgumentType]
-                table_methods.get(header_tag.text, print)(sibling)
+                table_methods.get(header_tag.text, print)(sibling)  # pyright: ignore[reportArgumentType]
 
         return data
-        # for cell in soup.select(
-        #     "div.content div.stats div.stat-row div.stat-container"
-        # ):
-        #     label = row.find("div", class_="stat-label")
-        #     value = row.find("div", class_="stat-data")
-        #     if label is None or value is None:
-        #         continue
-
-        #     elif table_type == "Advanced":
-        #         match label:
-        #             case "TS%":
-        #                 data["true_shooting_pct"] = safe_untyped_float(value)
-        #             case "eFG%":
-        #                 data["effective_fg_pct"] = safe_untyped_float(value)
-        #             case "USG%":
-        #                 data["usage_pct"] = safe_untyped_float(value)
-        #             case "AST%":
-        #                 data["assist_rate"] = safe_untyped_float(value)
-        #             case "TOV%":
-        #                 data["turnover_rate"] = safe_untyped_float(value)
-        #             case "ORtg":
-        #                 data["offensive_rating"] = safe_untyped_float(value)
-        #             case "DRtg":
-        #                 data["defensive_rating"] = safe_untyped_float(value)
-        #             case "OBPM":
-        #                 data["offensive_bpm"] = safe_untyped_float(value)
-        #             case "DBPM":
-        #                 data["defensive_bpm"] = safe_untyped_float(value)
-        #             case "BPM":
-        #                 data["bpm"] = safe_untyped_float(value)
-
-        # return cls(**data)
 
     def update_summary_data(self, soup: bs4.BeautifulSoup) -> None:
         bio_table = soup.find("div", class_="player-info")
@@ -220,15 +218,15 @@ class DraftProspect(Base):
                 (div.text for div in player_info_values),
             )
         )
-        years = ["Freshman", "Sophomore", "Jnuior", "Senior"]
+        years = ["Freshman", "Sophomore", "Junior", "Senior"]
         self.team = data["Team"]
-        self.high_school = data["High School"]
-        self.year = years.index(data["Year"]) + 1
+        self.high_school = data.get("High School")
+        self.year = years.index(data["Year"]) + 1 if data["Year"] in years else None
         if "/" in data["Position"]:
             self.primary_position, self.secondary_position = data["Position"].split("/")
         else:
             self.primary_position = data["Position"]
-        self.height = int(data["Height"][0]) * 12 + int(data["Height"][2:-1])
+        self.height, self.wingspan = parse_measurements(data.get("Height", ""))
         self.weight = safe_untyped_int(
             data["Weight"].replace("lbs", "").replace("lb", "").strip()
         )
@@ -237,7 +235,9 @@ class DraftProspect(Base):
         self.birthdate = date.strptime(data["Birthdate"], "%b %d, %Y")  # type: ignore
         self.age_at_draft = safe_untyped_float(data["Age at Draft"][:-4])
         self.tankathon_big_board_rank = safe_untyped_int(data["Big Board"])
-        self.espn_big_board_rank = safe_untyped_int(data["ESPN 100"].split(" |")[0][1:])
+        self.espn_big_board_rank = safe_untyped_int(
+            data.get("ESPN 100", "").split(" |")[0][1:]
+        )
 
     def parse_per_game_averages(self, tag: bs4.element.Tag) -> None:
         stat_labels = [div.text for div in tag.find_all("div", class_="stat-label")]
