@@ -52,6 +52,8 @@ this will require an absurd amount of calls to the `nba_api` and can probably wa
 
 ### Build a draft prospect schema and upload Tankathon's big board / mock draft
 
+IN PROGRESS
+
 including a few features for stats, possibly built off of tankathon's stat accumulation, with note of the date.
 
 ### Upload Player Career Statistics
