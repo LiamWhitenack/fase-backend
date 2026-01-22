@@ -59,7 +59,7 @@ def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, set[str]]:
 
 def fetch_player_page(slug: str) -> BeautifulSoup:
     url = f"https://www.tankathon.com/players/{slug}"
-    response = requests.get(url, timeout=30)
+    response = requests.get(url, timeout=120)
     response.raise_for_status()
     return BeautifulSoup(response.text, "lxml")
 
@@ -73,7 +73,9 @@ if __name__ == "__main__":
     print(dt)
 
     with get_session() as session:
-        seen_players = set(session.execute(select(DraftProspect.tankathon_slug)).all())
+        seen_players = set(
+            s[0] for s in session.execute(select(DraftProspect.tankathon_slug)).all()
+        )
         for player in players:
             if player in seen_players:
                 continue
@@ -84,4 +86,4 @@ if __name__ == "__main__":
                 )
             )
             session.commit()
-            delay_seconds(120, var=60)
+            delay_seconds(120, var=120)
