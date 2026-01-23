@@ -11,6 +11,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Float,
+    ForeignKey,
     Integer,
     String,
     UniqueConstraint,
@@ -87,6 +88,7 @@ class DraftProspect(Base):
     # Profile / Identity
     # -------------------------------------------------
     name: Mapped[str] = mapped_column(String(128), nullable=False)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
     tankathon_slug: Mapped[str | None] = mapped_column(String(128))
     primary_position: Mapped[str | None] = mapped_column(String(2))
     secondary_position: Mapped[str | None] = mapped_column(String(2))
