@@ -176,6 +176,7 @@ class DraftProspect(Base):
         soup: BeautifulSoup,
         *,
         tankathon_slug: str | None = None,
+        year: int = 2026,
     ) -> DraftProspect:
         data = cls(uploaded=uploaded)
 
@@ -189,7 +190,7 @@ class DraftProspect(Base):
         data.update_summary_data(soup)
 
         table_methods: dict[str, Callable[[bs4.element.Tag], None]] = {
-            "2025-26 PER GAME AVERAGES": data.parse_per_game_averages,
+            f"20{year % 2000 - 1}-{year % 2000} PER GAME AVERAGES": data.parse_per_game_averages,
             "PER 36 MINUTES": data.parse_per_36_averages,
             "ADVANCED STATS I HOVER FOR DESCRIPTION TAP LABEL FOR DESCRIPTION": data.parse_advanced_stats_i,
             "ADVANCED STATS II HOVER FOR DESCRIPTION TAP LABEL FOR DESCRIPTION": data.parse_advanced_stats_ii,
@@ -230,11 +231,11 @@ class DraftProspect(Base):
         self.weight = safe_untyped_int(
             data["Weight"].replace("lbs", "").replace("lb", "").strip()
         )
-        self.hometown = data["Hometown"]
+        self.hometown = data.get("Hometown")
         self.nation = data["Nation"].strip()
         self.birthdate = date.strptime(data["Birthdate"], "%b %d, %Y")  # type: ignore
         self.age_at_draft = safe_untyped_float(data["Age at Draft"][:-4])
-        self.tankathon_big_board_rank = safe_untyped_int(data["Big Board"])
+        self.tankathon_big_board_rank = safe_untyped_int(data.get("Big Board"))
         self.espn_big_board_rank = safe_untyped_int(
             data.get("ESPN 100", "").split(" |")[0][1:]
         )

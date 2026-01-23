@@ -1,5 +1,6 @@
 import pickle
 import re
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -7,9 +8,10 @@ from typing import Any
 import joblib
 import requests
 from bs4 import BeautifulSoup
-from sqlalchemy import select
+from sqlalchemy import and_, select
 
 from app.data.connection import get_session
+from app.data.league.player import Player
 from app.data.league.prospect import DraftProspect
 from app.utils.math_utils import delay_seconds
 
@@ -64,15 +66,31 @@ def fetch_player_page(slug: str) -> BeautifulSoup:
     return BeautifulSoup(response.text, "lxml")
 
 
+def normalize_latin_letters(text: str) -> str:
+    normalized = unicodedata.normalize("NFD", text)
+    stripped = "".join(char for char in normalized if not unicodedata.combining(char))
+    return stripped.lower()
+
+
 if __name__ == "__main__":
     soup = get_soup()
 
-    dt, players = parse_big_board(soup)
+    dt = datetime(2025, 6, 25, 20)
 
     print("\nLast updated:")
     print(dt)
 
     with get_session() as session:
+        YEAR = 2025
+        players = session.execute(
+            select(Player.name).where(
+                and_(Player.draft_year == YEAR, Player.draft_round != None)
+            )
+        )
+        players = [
+            normalize_latin_letters(p[0]).lower().replace(" ", "-").replace(".", "")
+            for p in players
+        ]
         seen_players = set(
             s[0] for s in session.execute(select(DraftProspect.tankathon_slug)).all()
         )
@@ -82,7 +100,7 @@ if __name__ == "__main__":
             print(player)
             session.add(
                 DraftProspect.from_beautiful_soup(
-                    dt, fetch_player_page(player), tankathon_slug=player
+                    dt, fetch_player_page(player), tankathon_slug=player, year=YEAR
                 )
             )
             session.commit()
