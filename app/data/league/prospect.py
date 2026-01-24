@@ -179,8 +179,9 @@ class DraftProspect(Base):
         *,
         tankathon_slug: str | None = None,
         year: int = 2026,
+        player_id: int | None = None,
     ) -> DraftProspect:
-        data = cls(uploaded=uploaded)
+        data = cls(uploaded=uploaded, player_id=player_id)
 
         if tankathon_slug is not None:
             data.tankathon_slug = tankathon_slug

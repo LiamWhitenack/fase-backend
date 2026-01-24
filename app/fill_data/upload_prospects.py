@@ -14,6 +14,7 @@ from app.data.connection import get_session
 from app.data.league.player import Player
 from app.data.league.prospect import DraftProspect
 from app.utils.math_utils import delay_seconds
+from app.utils.name_matcher import NameMatchFinder
 
 
 def get_soup(
@@ -23,8 +24,9 @@ def get_soup(
     Fetches the Tankathon Big Board page and returns a BeautifulSoup object.
     Optionally loads/saves the soup from/to a pickle file.
     """
-    if use_cache and Path("tankathon_big_board_soup.pkl").exists():
-        with Path("tankathon_big_board_soup.pkl").open("rb") as file:
+    name = url.split(".com/")[-1].replace("/", "_")
+    if use_cache and Path(f"{name}.pkl").exists():
+        with Path(f"{name}.pkl").open("rb") as file:
             print("Loading BeautifulSoup from cache...")
             return pickle.load(file)
 
@@ -35,7 +37,7 @@ def get_soup(
     soup = BeautifulSoup(response.text, "html.parser")
 
     if use_cache:
-        with Path("tankathon_big_board_soup.pkl").open("wb") as file:
+        with Path(f"{name}.pkl").open("wb") as file:
             pickle.dump(soup, file)
             print("Saved BeautifulSoup to cache.")
 
@@ -59,6 +61,20 @@ def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, set[str]]:
     return datetime.fromisoformat(dt_tag["datetime"]), players  # pyright: ignore[reportArgumentType]
 
 
+def parse_tankathon_past_draft(soup: BeautifulSoup) -> set[str]:
+    players: set[str] = set()
+
+    # Each player seems to be inside a div with text like "Cooper Flagg SF/PF | Duke"
+    for player_div in soup.find_all("a", class_="primary-hover"):
+        if "players/" not in player_div["href"]:
+            continue
+        text = player_div["href"].split("/")[-1]  # type: ignore
+        # Keep only the player name before the position
+        players.add(text)
+
+    return players
+
+
 def fetch_player_page(slug: str) -> BeautifulSoup:
     url = f"https://www.tankathon.com/players/{slug}"
     response = requests.get(url, timeout=120)
@@ -75,33 +91,35 @@ def normalize_latin_letters(text: str) -> str:
 if __name__ == "__main__":
     soup = get_soup()
 
-    dt = datetime(2025, 6, 25, 20)
-
-    print("\nLast updated:")
-    print(dt)
+    dt = datetime(2024, 4, 25, 20)
+    soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
+    draft = parse_tankathon_past_draft(soup)
 
     with get_session() as session:
-        YEAR = 2025
-        players = session.execute(
-            select(Player.name).where(
-                and_(Player.draft_year == YEAR, Player.draft_round != None)
-            )
-        )
-        players = [
-            normalize_latin_letters(p[0]).lower().replace(" ", "-").replace(".", "")
-            for p in players
-        ]
+        name_finder = NameMatchFinder()
+
         seen_players = set(
             s[0] for s in session.execute(select(DraftProspect.tankathon_slug)).all()
         )
-        for player in players:
+        for player in draft:
+            name = player.replace("-", " ").title()
+            player_id = name_finder.get_player_id(name, 2024, age=None)
+            actual_name = session.execute(
+                select(Player.name).where(Player.id == player_id)
+            ).first()
+            if player_id is None or actual_name is None or actual_name[0] != name:
+                continue
             if player in seen_players:
                 continue
             print(player)
             session.add(
                 DraftProspect.from_beautiful_soup(
-                    dt, fetch_player_page(player), tankathon_slug=player, year=YEAR
+                    dt,
+                    fetch_player_page(player),
+                    tankathon_slug=player,
+                    year=dt.year,
+                    player_id=player_id,
                 )
             )
             session.commit()
-            delay_seconds(120, var=120)
+            delay_seconds(30, 4)
