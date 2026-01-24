@@ -38,8 +38,6 @@ The above method does have some fatal flaws, though. There are years where the #
 
 Another concern is the obvious limitations of a player's body compared with their stats. For example, Zion Williamson was the best college player and rookie I've ever seen, but it was clear even in college that his body was going to be in so many collisions and high-impact falls that he may not see a long career of max contracts. Compare that to Cooper Flagg, who has a prototypical all-star build and frame and doesn't seem to put his body in compromising positions when finishing at the rim or defending the paint. Given that players like Zion, Flagg, or even Wemby will likely be seeing a lot of attention in the stock market, this does seem important.
 
-One major limitation is that there is no clear source of NCAA men's basketball data which can be scraped (Basketball Reference hates being scraped).
-
 ## Initial Setup
 
 ### Upload Team Seasons
@@ -48,13 +46,11 @@ Each team should have a season's associated data, including the win-loss record,
 
 ### Upload Games / Player Games
 
-this will require an absurd amount of calls to the `nba_api` and can probably wait.
+this will require an absurd amount of calls to the `nba_api` and will make our db much, much bigger. So let's hold off on it! It's more of a nice-to-have, anyway. Until we add these, we can easily just upload and download copies of the db to github
 
-### Build a draft prospect schema and upload Tankathon's big board / mock draft
+### Continue downloading big board stats (2023 and earlier)
 
-IN PROGRESS
-
-including a few features for stats, possibly built off of tankathon's stat accumulation, with note of the date.
+I am very happy to learn that quite a bit of data is available on tankathon, it just requires scraping. I'm trying to take it easy to avoid getting blocked. Let me know if you can help.
 
 ### Upload Player Career Statistics
 

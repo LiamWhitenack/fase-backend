@@ -91,12 +91,18 @@ def normalize_latin_letters(text: str) -> str:
 if __name__ == "__main__":
     soup = get_soup()
 
-    dt = datetime(2024, 4, 25, 20)
+    dt = datetime(2022, 6, 3, 20)
     soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
     draft = parse_tankathon_past_draft(soup)
+    name_finder = NameMatchFinder()
 
     with get_session() as session:
-        name_finder = NameMatchFinder()
+        for player in draft:
+            name = player.replace("-", " ").title()
+            player_id = name_finder.get_player_id(name, 2024, age=None)
+            actual_name = session.execute(
+                select(Player.name).where(Player.id == player_id)
+            ).first()
 
         seen_players = set(
             s[0] for s in session.execute(select(DraftProspect.tankathon_slug)).all()
