@@ -26,7 +26,7 @@ def get_soup(
     Optionally loads/saves the soup from/to a pickle file.
     """
     name = url.split(".com/")[-1].replace("/", "_")
-    if use_cache and Path(f"{name}.pkl").exists():
+    if use_cache and Path(f"pickles/{name}.pkl").exists():
         with Path(f"pickles/{name}.pkl").open("rb") as file:
             print("Loading BeautifulSoup from cache...")
             return pickle.load(file)
@@ -38,7 +38,7 @@ def get_soup(
     soup = BeautifulSoup(response.text, "html.parser")
 
     if use_cache:
-        with Path(f"{name}.pkl").open("wb") as file:
+        with Path(f"pickles/{name}.pkl").open("wb") as file:
             pickle.dump(soup, file)
             print("Saved BeautifulSoup to cache.")
 
