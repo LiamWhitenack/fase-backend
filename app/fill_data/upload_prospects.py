@@ -27,7 +27,7 @@ def get_soup(
     """
     name = url.split(".com/")[-1].replace("/", "_")
     if use_cache and Path(f"{name}.pkl").exists():
-        with Path(f"{name}.pkl").open("rb") as file:
+        with Path(f"pickles/{name}.pkl").open("rb") as file:
             print("Loading BeautifulSoup from cache...")
             return pickle.load(file)
 
