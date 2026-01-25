@@ -235,7 +235,7 @@ class DraftProspect(Base):
             data["Weight"].replace("lbs", "").replace("lb", "").strip()
         )
         self.hometown = data.get("Hometown")
-        self.nation = data["Nation"].strip()
+        self.nation = data["Nation"].strip() if "Nation" in data else None
         self.birthdate = date.strptime(data["Birthdate"], "%b %d, %Y")  # type: ignore
         self.age_at_draft = safe_untyped_float(data["Age at Draft"][:-4])
         self.tankathon_big_board_rank = safe_untyped_int(data.get("Big Board"))

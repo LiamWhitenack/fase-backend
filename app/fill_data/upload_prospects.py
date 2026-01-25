@@ -1,8 +1,9 @@
 import pickle
 import re
 import unicodedata
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
+from time import sleep
 from typing import Any
 
 import joblib
@@ -89,43 +90,46 @@ def normalize_latin_letters(text: str) -> str:
 
 
 if __name__ == "__main__":
-    soup = get_soup()
+    for year in range(2006, 2026):
+        if not (6 < datetime.now().hour < 22):
+            sleep(12 * 60 * 60)
+        dt = datetime(year, 6, 22, 19)
+        soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
+        draft = parse_tankathon_past_draft(soup)
+        name_finder = NameMatchFinder()
 
-    dt = datetime(2022, 6, 3, 20)
-    soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
-    draft = parse_tankathon_past_draft(soup)
-    name_finder = NameMatchFinder()
+        with get_session() as session:
+            for player in draft:
+                name = player.replace("-", " ").title()
+                player_id = name_finder.get_player_id(name, 2024, age=None)
+                actual_name = session.execute(
+                    select(Player.name).where(Player.id == player_id)
+                ).first()
 
-    with get_session() as session:
-        for player in draft:
-            name = player.replace("-", " ").title()
-            player_id = name_finder.get_player_id(name, 2024, age=None)
-            actual_name = session.execute(
-                select(Player.name).where(Player.id == player_id)
-            ).first()
-
-        seen_players = set(
-            s[0] for s in session.execute(select(DraftProspect.tankathon_slug)).all()
-        )
-        for player in draft:
-            name = player.replace("-", " ").title()
-            player_id = name_finder.get_player_id(name, 2024, age=None)
-            actual_name = session.execute(
-                select(Player.name).where(Player.id == player_id)
-            ).first()
-            if player_id is None or actual_name is None or actual_name[0] != name:
-                continue
-            if player in seen_players:
-                continue
-            print(player)
-            session.add(
-                DraftProspect.from_beautiful_soup(
-                    dt,
-                    fetch_player_page(player),
-                    tankathon_slug=player,
-                    year=dt.year,
-                    player_id=player_id,
-                )
+            seen_players = set(
+                s[0]
+                for s in session.execute(select(DraftProspect.tankathon_slug)).all()
             )
-            session.commit()
-            delay_seconds(30, 4)
+            for player in draft:
+                name = player.replace("-", " ").title()
+                player_id = name_finder.get_player_id(name, 2024, age=None)
+                actual_name = session.execute(
+                    select(Player.name).where(Player.id == player_id)
+                ).first()
+                if player_id is None or actual_name is None or actual_name[0] != name:
+                    continue
+                if player in seen_players:
+                    continue
+                print(player)
+                session.add(
+                    DraftProspect.from_beautiful_soup(
+                        dt,
+                        fetch_player_page(player),
+                        tankathon_slug=player,
+                        year=dt.year,
+                        player_id=player_id,
+                    )
+                )
+                session.commit()
+                delay_seconds(10, 12)
+            delay_seconds(1, 3600)

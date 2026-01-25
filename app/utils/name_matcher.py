@@ -74,10 +74,10 @@ class NameMatchFinder:
             else:
                 match = get_close_matches(name, self.names, n=1, cutoff=0.0)[0]
                 if not assume_match_exists:
-                    remove = input(
-                        f"Scary: matching {match} to {name}, add {name} to never existed?"
+                    correct = input(
+                        f"Scary: matching {match} to {name}, is this correct?"
                     )
-                    if remove == "y":
+                    if correct != "y":
                         self.data[name] = None
                         return None
 
