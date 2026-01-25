@@ -6,6 +6,7 @@ from app.data.league.player import Player, PlayerSeason
 from app.data.league.player_game import PlayerGame
 from app.data.league.prospect import DraftProspect
 from app.data.league.team import Team
+from app.data.league.team_season import *
 
 __all__ = [
     "Player",
@@ -18,4 +19,8 @@ __all__ = [
     "PlayerSeason",
     "TeamPlayerSalary",
     "TeamPlayerBuyout",
+    "TeamSeason",
+    "TeamSeasonFinance",
+    "TeamSeasonPlayoffs",
+    "DraftPick",
 ]
