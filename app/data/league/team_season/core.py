@@ -1,8 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
 from app.data.league.team import Team
+
+if TYPE_CHECKING:
+    from app.data.league.team_season.draft_picks import DraftPick
+    from app.data.league.team_season.finances import TeamSeasonFinance
+    from app.data.league.team_season.playoffs import TeamSeasonPlayoffs
 
 
 class TeamSeason(Base):
@@ -19,19 +28,19 @@ class TeamSeason(Base):
 
     team: Mapped[Team] = relationship(back_populates="seasons")
 
-    finance = relationship(
+    finance: Mapped[TeamSeasonFinance] = relationship(
         back_populates="team_season",
         uselist=False,
         cascade="all, delete-orphan",
     )
 
-    playoffs = relationship(
+    playoffs: Mapped[TeamSeasonPlayoffs] = relationship(
         back_populates="team_season",
         uselist=False,
         cascade="all, delete-orphan",
     )
 
-    draft_picks = relationship(
+    draft_picks: Mapped[DraftPick] = relationship(
         back_populates="team_season",
         cascade="all, delete-orphan",
     )
