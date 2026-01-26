@@ -21,8 +21,10 @@ The maximum number of years is 4
 
 ## Supermax
 
-If you've been appointed the honors of all-NBA, DPOY, MVP, or all-NBA the last two seasons, you're eligible for the supermax:
+If you've been appointed the honors of all-NBA, DPOY, MVP, or all-NBA the last two seasons, and been on the same team you were with on your rookie contract for 7 years, you're eligible for the supermax:
 
-35% of the cap, max 5 years.
+Player who has played seven or eight seasons with two years left on contract can earn a four-year supermax
+Player who has played seven or eight seasons with one year left on contract can earn a five-year supermax
+A free agent who has completed eight or nine years in the NBA can sign a five-year supermax
 
 There can only be 3 supermax players on the same team.
