@@ -90,7 +90,8 @@ def normalize_latin_letters(text: str) -> str:
 
 
 if __name__ == "__main__":
-    for year in range(2006, 2026):
+    for year in range(2008, 2026):
+        player_uploaded = False
         if not (6 < datetime.now().hour < 22):
             sleep(12 * 60 * 60)
         dt = datetime(year, 6, 22, 19)
@@ -120,7 +121,7 @@ if __name__ == "__main__":
                     continue
                 if player in seen_players:
                     continue
-                print(player)
+                player_uploaded = True
                 session.add(
                     DraftProspect.from_beautiful_soup(
                         dt,
@@ -132,4 +133,5 @@ if __name__ == "__main__":
                 )
                 session.commit()
                 delay_seconds(10, 12)
-            delay_seconds(1, 3600)
+            if player_uploaded:
+                delay_seconds(1, 3600)
