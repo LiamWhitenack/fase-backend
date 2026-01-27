@@ -1,50 +1,74 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Upload Players",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.players_nba_api"
-        },
-        {
-            "name": "Upload Teams",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.teams"
-        },
-        {
-            "name": "Upload Payrolls",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.upload_payrolls"
-        },
-        {
-            "name": "Upload Contracts",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.upload_contracts"
-        },
-        {
-            "name": "Upload Awards",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.upload_awards"
-        },
-        {
-            "name": "Upload Player Seasons",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.upload_player_seasons"
-        },
-        {
-            "name": "Upload Prospects",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "app.fill_data.upload_prospects"
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Upload Players",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.players_nba_api"
+    },
+    {
+      "name": "Upload Teams",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.teams"
+    },
+    {
+      "name": "Upload Payrolls",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_payrolls"
+    },
+    {
+      "name": "Upload Contracts",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_contracts"
+    },
+    {
+      "name": "Upload Awards",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_awards"
+    },
+    {
+      "name": "Upload Player Seasons",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_player_seasons"
+    },
+    {
+      "name": "Upload Prospects",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_prospects"
+    },
+    {
+      "name": "Upload Team Seasons",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_team_seasons"
+    },
+    {
+      "name": "Upload Team Finances",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_team_finances"
+    },
+    {
+      "name": "Upload Team Playoff Rounds",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_team_playoffs"
+    },
+    {
+      "name": "Upload Draft Picks",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.upload_draft_picks"
+    }
+  ]
 }

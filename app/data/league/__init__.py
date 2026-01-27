@@ -21,6 +21,6 @@ __all__ = [
     "TeamPlayerBuyout",
     "TeamSeason",
     "TeamSeasonFinance",
-    "TeamSeasonPlayoffs",
+    "TeamSeasonPlayoffRound",
     "DraftPick",
 ]

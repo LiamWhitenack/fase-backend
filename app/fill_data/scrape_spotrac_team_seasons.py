@@ -8,14 +8,10 @@ from typing import Any
 from pandas import DataFrame, read_html
 from playwright.sync_api import sync_playwright
 
-# ---------------- configuration ----------------
-
 START_YEAR = 2011
 END_YEAR = 2031  # inclusive
 BASE_URL = "https://www.spotrac.com/nba/cap/_/year"
 DATA_DIR = os.path.join("data", "cap-by-year")
-
-# ---------------- utilities ----------------
 
 
 def delay_seconds(mean: float = 4.0, var: float = 1.5) -> None:
@@ -65,9 +61,6 @@ def get_cap_data_for_year(page: Any, year: int, output_dir: str) -> None:
     except Exception as exc:
         print(f"Failed to parse HTML for {year}: {exc}")
         return
-
-
-# ---------------- main runner ----------------
 
 
 def main() -> None:

@@ -9,6 +9,8 @@ from typing import Any
 import joblib
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from sqlalchemy import and_, select
 
 from app.data.connection import get_session
@@ -78,7 +80,19 @@ def parse_tankathon_past_draft(soup: BeautifulSoup) -> set[str]:
 
 def fetch_player_page(slug: str) -> BeautifulSoup:
     url = f"https://www.tankathon.com/players/{slug}"
-    response = requests.get(url, timeout=120)
+
+    # Set up session with retries
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=3,  # Number of retries
+        backoff_factor=1,  # Wait 1s, 2s, 4s between retries
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("https://", adapter)
+
+    response = session.get(url, timeout=120)
     response.raise_for_status()
     return BeautifulSoup(response.text, "lxml")
 
@@ -92,8 +106,8 @@ def normalize_latin_letters(text: str) -> str:
 if __name__ == "__main__":
     for year in range(2008, 2026):
         player_uploaded = False
-        if not (6 < datetime.now().hour < 22):
-            sleep(12 * 60 * 60)
+        # if not (6 < datetime.now().hour < 22):
+        #     sleep(12 * 60 * 60)
         dt = datetime(year, 6, 22, 19)
         soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
         draft = parse_tankathon_past_draft(soup)
@@ -132,6 +146,6 @@ if __name__ == "__main__":
                     )
                 )
                 session.commit()
-                delay_seconds(10, 12)
+                delay_seconds(5, 12)
             if player_uploaded:
                 delay_seconds(1, 3600)
