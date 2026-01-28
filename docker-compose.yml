@@ -28,10 +28,10 @@ services:
   # ------------------------
   # Backend
   # ------------------------
-  backend:
+  app:
     build:
-      context: ./   # Adjust path if your backend repo is somewhere else
-    container_name: athlete_market_backend
+      context: ./   # Adjust path if your app repo is somewhere else
+    container_name: athlete_market_app
     depends_on:
       - db
       - redis
@@ -52,7 +52,7 @@ services:
       context: ./
     container_name: athlete_market_worker
     depends_on:
-      - backend
+      - app
       - redis
       - db
     environment:
