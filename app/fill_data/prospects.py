@@ -214,6 +214,6 @@ def upload_previous_draft(year: int, *, collect_only_missing: bool = True) -> bo
 
 
 if __name__ == "__main__":
-    # for year in range(2020, 2026):
-    #     upload_previous_draft(year, collect_only_missing=True)
-    upload_current_big_board()
+    for year in range(2020, 2026):
+        upload_previous_draft(year, collect_only_missing=True)
+    # upload_current_big_board()

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from app.base import Base
 from app.data.league import *
 
-DATABASE_URL = "postgresql+psycopg://athlete_user:athlete_password@localhost:6543/athlete_market_test"
+DATABASE_URL = "postgresql+psycopg://athlete_user:athlete_password@localhost:6544/athlete_market_test"
 
 engine = create_engine(
     DATABASE_URL, echo=True

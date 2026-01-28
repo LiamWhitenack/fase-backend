@@ -20,6 +20,13 @@
     "reportAttributeAccessIssue": "none",
     "reportArgumentType": "none",
     "reportCallIssue": "none",
+    "reportReturnType": "none",
+    "reportRedeclaration": "none",
   },
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
 
 }
