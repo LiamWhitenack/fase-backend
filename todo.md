@@ -48,10 +48,6 @@ Each team should have a season's associated data, including the win-loss record,
 
 this will require an absurd amount of calls to the `nba_api` and will make our db much, much bigger. So let's hold off on it! It's more of a nice-to-have, anyway. Until we add these, we can easily just upload and download copies of the db to github
 
-### Continue downloading big board stats (2023 and earlier)
-
-I am very happy to learn that quite a bit of data is available on tankathon, it just requires scraping. I'm trying to take it easy to avoid getting blocked. Let me know if you can help.
-
 ### Upload Player Career Statistics
 
 this could be appended to the player table, I should have taken care of that earlier. Whoops.

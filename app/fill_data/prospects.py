@@ -128,7 +128,7 @@ def get_slugs(soup) -> list[str]:
     for player_div in soup.find_all("a", class_="primary-hover"):
         if "players/" not in player_div["href"]:
             continue
-        text = player_div["href"].split("/")[-1]  # type: ignore
+        text = player_div["href"].split("/")[-1]
         # Keep only the player name before the position
         draft.add(text)
     return list(draft)

@@ -134,7 +134,7 @@ def get_all_award_objects() -> Iterable[Award]:
             team_n = row.find_all()[4].text
             for name in row.find_all("a")[3:8]:
                 player_id = name_finder.get_player_id(
-                    name.text,  # type: ignore
+                    name.text,
                     season,
                     None,
                     assume_match_exists=True,
@@ -160,10 +160,14 @@ def award_exists(session: Session, award: Award) -> bool:
     return res is not None
 
 
+def upload_awards(session: Session) -> None:
+    for award in get_all_award_objects():
+        if award_exists(session, award):
+            continue
+        session.add(award)
+        session.commit()
+
+
 if __name__ == "__main__":
     with get_session() as session:
-        for award in get_all_award_objects():
-            if award_exists(session, award):
-                continue
-            session.add(award)
-            session.commit()
+        upload_awards(session)

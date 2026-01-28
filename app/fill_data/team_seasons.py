@@ -1,12 +1,13 @@
 from collections.abc import Iterable
 
+import sqlalchemy
 from nba_api.stats.endpoints import leaguestandings
 from nba_api.stats.static import teams as static_teams
 from pandas import DataFrame
 from sqlalchemy.orm import Session
 
 from app.data.connection import Team, TeamSeason, get_session
-from app.fill_data.scrape_spotrac_team_seasons import delay_seconds
+from app.fill_data.save_to_csv.scrape_spotrac_team_seasons import delay_seconds
 from app.utils.team_id_map import TEAM_ID
 
 
@@ -44,10 +45,14 @@ def create_team_seasons(
         yield TeamSeason.from_league_standings_row(team.id, season, row)
 
 
+def upload_team_seasons(session: Session) -> None:
+    for year in range(2000, 2026):
+        for team_season in create_team_seasons(session, year):
+            session.add(team_season)
+            session.commit()
+        delay_seconds(0.5, 2)
+
+
 if __name__ == "__main__":
     with get_session() as session:
-        for year in range(2000, 2026):
-            for team_season in create_team_seasons(session, year):
-                session.add(team_season)
-                session.commit()
-            delay_seconds(0.5, 2)
+        upload_team_seasons(session)

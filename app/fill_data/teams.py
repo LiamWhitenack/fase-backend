@@ -1,4 +1,5 @@
 from pandas import Series, read_csv
+from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
 from app.data.league.team import Team
@@ -55,13 +56,14 @@ def team_from_row(id: int, row: Series) -> Team:
     )
 
 
-def upload_teams() -> None:
+def upload_teams(session: Session) -> None:
     df = read_csv("data/teams.csv")
     with get_session() as session:
-        for team in map(lambda row: team_from_row(*row), df.iterrows()):  # type: ignore
+        for team in map(lambda row: team_from_row(*row), df.iterrows()):
             session.add(team)
         session.commit()
 
 
 if __name__ == "__main__":
-    upload_teams()
+    with get_session() as session:
+        upload_teams(session)

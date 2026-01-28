@@ -1,16 +1,24 @@
 {
-    // Auto-formatting including import sorting
-    "emeraldwalk.runonsave": { 
-        "commands": [
-            {
-                "match": "\\.py$",
-                "cmd":  ".venv/bin/python -m ruff check --select I --fix \"${file}\" && .venv/bin/python -m ruff format \"${file}\""
-            }
-        ]
-    },
-    "ty.completions.autoImport": false,
-    "ty.disableLanguageServices": true,
-    "ty.inlayHints.variableTypes": false,
-    "ty.inlayHints.callArgumentNames": false,
-    "ruff.lint.enable": false,
+  // Auto-formatting including import sorting
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.py$",
+        "cmd": ".venv/bin/python -m ruff check --select I --fix \"${file}\" && .venv/bin/python -m ruff format \"${file}\""
+      }
+    ]
+  },
+  "ty.completions.autoImport": false,
+  "ty.disableLanguageServices": true,
+  "ty.inlayHints.variableTypes": false,
+  "ty.inlayHints.callArgumentNames": false,
+  "ruff.lint.enable": false,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportAttributeAccessIssue": "none",
+    "reportArgumentType": "none",
+  },
+
 }

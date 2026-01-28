@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
 from app.data.league.contract import Contract
-from app.fill_data.upload_payrolls import salary_exists
+from app.fill_data.payrolls import salary_exists
 from app.utils.name_matcher import NameMatchFinder
 
 
@@ -123,12 +123,15 @@ def contract_exists(session: Session, obj: Contract) -> bool:
     return len(res) > 0
 
 
+def upload_contracts(session: Session) -> None:
+    # session.query(Player).delete()
+    for i, contract in enumerate(get_all_contract_objects()):
+        if contract_exists(session, contract):
+            continue
+        session.add(contract)
+        session.commit()
+
+
 if __name__ == "__main__":
-    # write_down_options()
     with get_session() as session:
-        # session.query(Player).delete()
-        for i, contract in enumerate(get_all_contract_objects()):
-            if contract_exists(session, contract):
-                continue
-            session.add(contract)
-            session.commit()
+        upload_contracts(session)

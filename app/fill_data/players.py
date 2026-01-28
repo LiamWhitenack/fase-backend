@@ -8,6 +8,7 @@ from nba_api.stats.endpoints.commonplayerinfo import CommonPlayerInfo
 from nba_api.stats.static import players
 from pandas import DataFrame
 from requests import ReadTimeout
+from sqlalchemy.orm import Session
 
 from app.base import Base
 from app.data.connection import get_session
@@ -105,10 +106,13 @@ def get_all_players() -> Iterable[Player]:
         time.sleep(5)
 
 
+def upload_players(session: Session) -> None:
+    # session.query(Player).delete()
+    for i, player in enumerate(get_all_players()):
+        session.add(player)
+        session.commit()
+
+
 if __name__ == "__main__":
     with get_session() as session:
-        # session.query(Player).delete()
-        for i, player in enumerate(get_all_players()):
-            session.add(player)
-            session.commit()
-    pass
+        upload_players(session)

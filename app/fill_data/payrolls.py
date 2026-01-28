@@ -137,14 +137,18 @@ def buyout_exists(session: Session, obj: TeamPlayerBuyout) -> bool:
     return len(res) > 0
 
 
+def upload_payrolls(session: Session) -> None:
+    # session.query(Player).delete()
+    for i, player in enumerate(get_all_salary_objects()):
+        if isinstance(player, TeamPlayerSalary) and salary_exists(session, player):
+            continue
+        if isinstance(player, TeamPlayerBuyout) and buyout_exists(session, player):
+            continue
+        session.add(player)
+        session.commit()
+
+
 if __name__ == "__main__":
     with get_session() as session:
-        # session.query(Player).delete()
-        for i, player in enumerate(get_all_salary_objects()):
-            if isinstance(player, TeamPlayerSalary) and salary_exists(session, player):
-                continue
-            if isinstance(player, TeamPlayerBuyout) and buyout_exists(session, player):
-                continue
-            session.add(player)
-            session.commit()
+        upload_payrolls(session)
     pass
