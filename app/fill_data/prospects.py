@@ -23,12 +23,6 @@ from app.utils.math_utils import delay_seconds
 from app.utils.name_matcher import NameMatchFinder
 
 
-@dataclass
-class DraftProspectParams:
-    slug: str
-    player_id: int | None = None
-
-
 def get_soup(
     url: str = "https://www.tankathon.com/big_board", use_cache: bool = True
 ) -> BeautifulSoup:
@@ -61,9 +55,8 @@ def parse_tankathon_past_draft(
     soup: BeautifulSoup,
     *,
     collect_only_missing: bool = True,
-) -> list[DraftProspectParams]:
-    slugs = get_slugs(soup)
-    player_ids = get_player_ids_from_slugs(session, slugs)
+) -> list[str]:
+    slugs = set(get_slugs(soup))
 
     if collect_only_missing:
         stmt = select(DraftProspect.tankathon_slug)
@@ -71,14 +64,10 @@ def parse_tankathon_past_draft(
     else:
         ignore_players = set()
 
-    return [
-        DraftProspectParams(n, p_id)
-        for n, p_id in zip(slugs, player_ids)
-        if n not in ignore_players
-    ]
+    return list(slugs - ignore_players)
 
 
-def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, list[DraftProspectParams]]:
+def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, list[str]]:
     players: set[str] = set()
 
     # The table rows usually contain the rank and player link
@@ -91,9 +80,7 @@ def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, list[DraftProspectPa
     if dt_tag is None:
         raise Exception("No <time> tag found on page")
 
-    return datetime.fromisoformat(dt_tag["datetime"]), [
-        DraftProspectParams(p) for p in players
-    ]
+    return datetime.fromisoformat(dt_tag["datetime"]), list(players)
 
 
 def fetch_player_page(slug: str) -> BeautifulSoup:
@@ -152,21 +139,18 @@ def get_player_ids_from_slugs(session: Session, slugs: list[str]) -> list[int | 
     return res
 
 
-def get_prospect_from_tankathon(
-    dt: datetime, player_slug: str, player_id: int | None
-) -> DraftProspect:
+def get_prospect_from_tankathon(dt: datetime, player_slug: str) -> DraftProspect:
     return DraftProspect.from_beautiful_soup(
         dt,
         fetch_player_page(player_slug),
         tankathon_slug=player_slug,
         year=dt.year,
-        player_id=player_id,
     )
 
 
 def get_previous_year_params(
     session: Session, year: int, collect_only_missing: bool = True
-) -> tuple[datetime, list[DraftProspectParams]]:
+) -> tuple[datetime, list[str]]:
     dt = datetime(year, 6, 22, 19)
     soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
     return dt, parse_tankathon_past_draft(
@@ -178,10 +162,10 @@ def upload_current_big_board() -> None:
     dt, big_board = parse_big_board(get_soup(use_cache=False))
 
     with get_session() as session:
-        for params in big_board:
-            if prospect_at_date_exists(session, dt, params.slug):
+        for slug in big_board:
+            if prospect_at_date_exists(session, dt, slug):
                 continue
-            session.add(get_prospect_from_tankathon(dt, params.slug, params.player_id))
+            session.add(get_prospect_from_tankathon(dt, slug))
             session.commit()
             delay_seconds(5, 12)
 
@@ -200,20 +184,45 @@ def prospect_at_date_exists(session: Session, dt: datetime, slug: str) -> bool:
 
 
 def upload_previous_draft(year: int, *, collect_only_missing: bool = True) -> bool:
+    name_finder = NameMatchFinder()
     any_uploaded = False
     with get_session() as session:
-        dt, paramss = get_previous_year_params(
+        dt, slugs = get_previous_year_params(
             session, year, collect_only_missing=collect_only_missing
         )
-        for params in paramss:
+        for slug in slugs:
             any_uploaded = True
-            session.add(get_prospect_from_tankathon(dt, params.slug, params.player_id))
+            dp = get_prospect_from_tankathon(dt, slug)
+            dp.player_id = name_finder.get_player_id(dp.name, year, dp.age_at_draft)  # type: ignore
+            session.add(dp)
             session.commit()
             delay_seconds(5, 12)
     return any_uploaded
 
 
+def add_missing_player_ids() -> None:
+    name_finder = NameMatchFinder()
+    with get_session() as session:
+        dps = (
+            session.execute(
+                select(DraftProspect)
+                .where(DraftProspect.player_id == None)
+                .where(DraftProspect.tankathon_big_board_rank == None)
+            )
+            .scalars()
+            .all()
+        )
+        for dp in dps:
+            dp.player_id = name_finder.get_player_id(  # type: ignore[invalid-assignment]
+                dp.name,
+                dp.uploaded.year,
+                dp.age_at_draft,  # type: ignore[invalid-assignment]
+            )
+            session.commit()
+
+
 if __name__ == "__main__":
-    for year in range(2020, 2026):
-        upload_previous_draft(year, collect_only_missing=True)
+    add_missing_player_ids()
+    # for year in range(2020, 2026):
+    #     upload_previous_draft(year, collect_only_missing=True)
     # upload_current_big_board()

@@ -44,14 +44,22 @@ class NameMatchFinder:
         return self.team_map[name.replace("-", " ").title().replace("76Ers", "76ers")]
 
     def get_player_id(
-        self, name: str, year: int, age: int | None, assume_match_exists: bool = False
+        self,
+        name: str,
+        year: int,
+        age: int | float | None,
+        assume_match_exists: bool = False,
     ) -> int | None:
         if name in self.data:
             return self.data[name]
         return self.guess_player_id(name, year, age, assume_match_exists)
 
     def guess_player_id(
-        self, name: str, year: int, age: int | None, assume_match_exists: bool = False
+        self,
+        name: str,
+        year: int,
+        age: int | float | None,
+        assume_match_exists: bool = False,
     ) -> int | None:
         if sum([n == name for n in self.names]) == 1:
             self.data[name] = self.ids[self.names.index(name)]
