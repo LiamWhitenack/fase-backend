@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5uKkVMD67FI9wbKRWN7f3nGRKXTRgJnyFtAm7K89hnOZd3qEa39R5RPIywvdfrX
+\restrict EiWpYZXdRJdMi1rn7X2RfB4m2606Bc2rIql9fsYh2EZUIPvNfItJEvpkdfFTEQC
 
 -- Dumped from database version 16.10 (Debian 16.10-1.pgdg13+1)
 -- Dumped by pg_dump version 16.10 (Homebrew)
@@ -25,6 +25,18 @@ SET row_security = off;
 CREATE TYPE public.contractoption AS ENUM (
     'Player',
     'Team'
+);
+
+
+--
+-- Name: playoff_round; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.playoff_round AS ENUM (
+    'FIRST_ROUND',
+    'CONF_SEMIS',
+    'CONF_FINALS',
+    'FINALS'
 );
 
 
@@ -107,6 +119,42 @@ CREATE SEQUENCE public.contracts_id_seq
 --
 
 ALTER SEQUENCE public.contracts_id_seq OWNED BY public.contracts.id;
+
+
+--
+-- Name: draft_picks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.draft_picks (
+    id integer NOT NULL,
+    team_season_id integer NOT NULL,
+    year integer NOT NULL,
+    round integer NOT NULL,
+    original_team character varying(64) NOT NULL,
+    via_trade boolean NOT NULL,
+    protected boolean NOT NULL,
+    protection_notes character varying(255)
+);
+
+
+--
+-- Name: draft_picks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.draft_picks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: draft_picks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.draft_picks_id_seq OWNED BY public.draft_picks.id;
 
 
 --
@@ -481,6 +529,124 @@ CREATE SEQUENCE public.team_player_salaries_id_seq
 
 
 --
+-- Name: team_season_finances; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.team_season_finances (
+    id integer NOT NULL,
+    team_season_id integer NOT NULL,
+    total_salary numeric(14,2) NOT NULL,
+    luxury_tax_paid numeric(14,2) NOT NULL,
+    over_first_apron boolean NOT NULL,
+    over_second_apron boolean NOT NULL
+);
+
+
+--
+-- Name: team_season_finances_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.team_season_finances_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_season_finances_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.team_season_finances_id_seq OWNED BY public.team_season_finances.id;
+
+
+--
+-- Name: team_season_playoff_rounds; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.team_season_playoff_rounds (
+    id integer NOT NULL,
+    team_season_id integer NOT NULL,
+    round public.playoff_round NOT NULL,
+    wins integer NOT NULL,
+    losses integer NOT NULL,
+    won_round boolean NOT NULL,
+    eliminated_by_team_id integer
+);
+
+
+--
+-- Name: team_season_playoff_rounds_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.team_season_playoff_rounds_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_season_playoff_rounds_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.team_season_playoff_rounds_id_seq OWNED BY public.team_season_playoff_rounds.id;
+
+
+--
+-- Name: team_seasons; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.team_seasons (
+    id integer NOT NULL,
+    team_id integer NOT NULL,
+    season integer NOT NULL,
+    wins integer NOT NULL,
+    losses integer NOT NULL,
+    win_pct double precision NOT NULL,
+    league_rank integer,
+    playoff_rank integer,
+    conference_record character varying(7),
+    division_record character varying(7),
+    home_record character varying(7),
+    road_record character varying(7),
+    last_10_record character varying(7),
+    conference_games_back double precision,
+    division_games_back double precision,
+    points_per_game double precision,
+    opp_points_per_game double precision,
+    point_diff_per_game double precision,
+    clinched_conference_title boolean,
+    clinched_division_title boolean,
+    clinched_playoff_birth boolean
+);
+
+
+--
+-- Name: team_seasons_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.team_seasons_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_seasons_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.team_seasons_id_seq OWNED BY public.team_seasons.id;
+
+
+--
 -- Name: teams; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -530,6 +696,13 @@ ALTER TABLE ONLY public.contracts ALTER COLUMN id SET DEFAULT nextval('public.co
 
 
 --
+-- Name: draft_picks id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_picks ALTER COLUMN id SET DEFAULT nextval('public.draft_picks_id_seq'::regclass);
+
+
+--
 -- Name: draft_prospects id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -569,6 +742,27 @@ ALTER TABLE ONLY public.players ALTER COLUMN id SET DEFAULT nextval('public.play
 --
 
 ALTER TABLE ONLY public.team_player_buyouts ALTER COLUMN id SET DEFAULT nextval('public.team_player_buyouts_id_seq'::regclass);
+
+
+--
+-- Name: team_season_finances id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_finances ALTER COLUMN id SET DEFAULT nextval('public.team_season_finances_id_seq'::regclass);
+
+
+--
+-- Name: team_season_playoff_rounds id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_playoff_rounds ALTER COLUMN id SET DEFAULT nextval('public.team_season_playoff_rounds_id_seq'::regclass);
+
+
+--
+-- Name: team_seasons id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_seasons ALTER COLUMN id SET DEFAULT nextval('public.team_seasons_id_seq'::regclass);
 
 
 --
@@ -10619,11 +10813,18 @@ COPY public.contracts (id, player_id, team_id, value, start_year, duration, opti
 
 
 --
+-- Data for Name: draft_picks; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.draft_picks (id, team_season_id, year, round, original_team, via_trade, protected, protection_notes) FROM stdin;
+\.
+
+
+--
 -- Data for Name: draft_prospects; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_position, secondary_position, height, wingspan, weight, team, hometown, birthdate, tankathon_big_board_rank, espn_big_board_rank, year, age_at_draft, games, minutes_per_game, fgm, fga, fg_pct, tpm, tpa, three_pct, ftm, fta, ft_pct, rebounds, assists, steals, blocks, turnovers, fouls, points, p36_fgm, p36_fga, p36_tpm, p36_tpa, p36_ftm, p36_fta, p36_rebounds, p36_assists, p36_steals, p36_blocks, p36_turnovers, p36_fouls, p36_points, true_shooting_pct, effective_fg_pct, three_pa_rate, ft_rate, proj_nba_3p_pct, usage_pct, ast_to_usg, ast_to_to, per_game_performance_rating, ows_per_40, dws_per_40, ws_per_40, offensive_rating, defensive_rating, offensive_bpm, defensive_bpm, bpm, player_id) FROM stdin;
-1	2026-01-05 20:23:00	Dame Sarr	dame-sarr	SG	SF	79	\N	181	Duke	Oderzo, Italy	2006-06-04	30	\N	1	20.04	18	20.2	2	5.2	0.387	1.2	3.4	0.344	0.9	1.9	0.5	3.3	0.9	1.2	0.3	1.1	1.8	6.1	3.6	9.2	2.1	6	1.7	3.4	5.9	1.6	2.2	0.6	2	3.2	10.9	0.504	0.5	0.656	0.366	0.327	17.4	0.4	0.8	11.2	0.011	0.11	0.132	101.4	92.3	-0.2	5.1	4.9	\N
 2	2026-01-05 20:23:00	Thomas Haugh	thomas-haugh	PF	\N	81	\N	215	Florida	New Oxford, PA	2003-07-07	15	\N	3	22.95	19	34.1	5.6	11.9	0.467	1.8	5.3	0.337	3.9	5.3	0.75	6.5	2.1	1.1	0.8	1.7	2.2	16.9	5.9	12.6	1.9	5.6	4.2	5.6	6.8	2.2	1.1	0.8	1.8	2.3	17.9	0.585	0.542	0.445	0.441	0.357	21.2	0.5	1.21	19.5	0.117	0.08	0.198	127.9	101.6	6	3.9	10	\N
 3	2026-01-05 20:23:00	AJ Dybantsa	aj-dybantsa	SF	\N	81	\N	210	BYU	Brockton, MA	2007-01-29	3	1	1	19.39	18	31.8	7.7	14.1	0.547	0.9	2.9	0.302	6.2	8.1	0.76	6.8	3.6	1.4	0.4	2.8	1.2	22.5	8.7	16	1	3.3	7	9.2	7.7	4	1.6	0.5	3.1	1.3	25.5	0.626	0.579	0.209	0.575	0.342	31.1	0.7	1.28	28.8	0.168	0.091	0.259	126	98.2	8.5	3.6	12.2	\N
 4	2026-01-05 20:23:00	Nate Ament	nate-ament	SF	\N	82	\N	207	Tennessee	Manassas, VA	2006-12-10	6	4	1	19.53	18	28.2	4.6	11.1	0.412	1.1	4	0.278	5.2	6.8	0.764	6.3	2.4	1.4	0.4	2.6	2.3	15.4	5.8	14.1	1.4	5.1	6.7	8.7	8.1	3.1	1.8	0.5	3.3	2.9	19.7	0.54	0.462	0.362	0.618	0.349	28.5	0.55	0.94	19.4	0.087	0.094	0.181	113.9	96.9	2.9	3.6	6.4	\N
@@ -10699,61 +10900,63 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 75	2026-01-05 20:23:00	Cayden Boozer	cayden-boozer	PG	\N	76	\N	205	Duke	Westchester, FL	2007-07-18	41	16	1	18.92	18	20.6	2.2	4.6	0.47	0.6	1.8	0.333	1.5	2.1	0.73	2	3.2	0.9	0.1	1.4	1.6	6.4	3.8	8.1	1.1	3.2	2.6	3.6	3.5	5.5	1.6	0.2	2.4	2.8	11.3	0.577	0.536	0.398	0.446	0.34	16.5	1.5	2.28	13.5	0.065	0.097	0.162	117	97	0.7	3.9	4.6	\N
 76	2026-01-05 20:23:00	Michael Ruzic	michael-ruzic	PF	\N	84.25	84.75	221	Joventut (Spain)	Zadar, Croatia	2006-10-04	67	\N	\N	19.71	11	14.2	1.5	2.8	0.548	0.4	1	0.364	0.8	1.3	0.643	2.2	0.5	0.1	0.3	0.3	1.5	4.3	3.9	7.2	0.9	2.5	2.1	3.2	5.5	1.2	0.2	0.7	0.7	3.7	10.8	0.624	0.613	0.355	0.452	\N	\N	\N	1.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 77	2026-01-05 20:23:00	Aday Mara	aday-mara	C	\N	87	\N	255	Michigan	Zaragoza, Spain	2005-04-07	33	\N	3	21.2	18	22.4	4.5	6.7	0.675	0	0.2	0	1.9	4.4	0.443	7.2	2.4	0.4	2.6	1.9	2.2	10.9	7.2	10.7	0	0.4	3.1	7	11.5	3.8	0.7	4.2	3.1	3.5	17.6	0.625	0.675	0.033	0.658	0.282	22.1	0.81	1.23	24	0.089	0.139	0.218	117.1	86.3	4.1	8.3	12.4	\N
-80	2025-06-25 20:00:00	Ace Bailey	ace-bailey	SF	\N	80.75	84.5	203	Rutgers	Chattanooga, TN	2006-08-13	\N	2	1	18.85	30	33.3	6.8	14.7	0.46	1.6	4.5	0.346	2.5	3.6	0.692	7.2	1.3	1	1.3	2	2.8	17.6	7.3	15.9	1.7	4.9	2.7	3.9	7.7	1.4	1.1	1.4	2.2	3	19	0.536	0.514	0.308	0.243	0.346	27.5	0.3	0.62	19.9	0.068	0.044	0.112	108.2	109.1	3.7	0.8	4.5	\N
-81	2025-06-25 20:00:00	Brooks Barnhizer	brooks-barnhizer	SF	\N	78	\N	215	Northwestern	South Bend, IN	2002-03-02	\N	\N	4	23.3	17	36.9	6.1	14.6	0.414	1	3.8	0.266	4	5.2	0.764	8.8	4.2	2.3	1.1	2.8	1.7	17.1	5.9	14.3	1	3.7	3.9	5.1	8.6	4.1	2.2	1.1	2.7	1.7	16.7	0.5	0.448	0.257	0.357	0.341	28.1	0.85	1.53	21.6	0.051	0.089	0.14	103.8	96.2	4.8	4.9	9.7	\N
-82	2025-06-25 20:00:00	Joan Beringer	joan-beringer	C	\N	82	\N	230	KK Cedevita Junior (Croatia)	Strasbourg, France	2006-11-11	\N	\N	\N	18.61	64	18.8	2.2	3.4	0.644	0	0	0	1	1.8	0.566	4.9	0.5	0.5	1.4	0.7	2.3	5.4	4.2	6.6	0	0	1.9	3.4	9.4	0.9	1	2.7	1.3	4.5	10.4	0.634	0.644	0.005	0.516	0.299	12.3	0.34	0.7	16.2	\N	\N	\N	125.6	103.4	\N	\N	\N	\N
-83	2025-06-25 20:00:00	Koby Brea	koby-brea	SG	\N	79	77.25	202	Kentucky	Bronx, NY	2002-11-06	\N	\N	4	22.62	36	28.1	4.1	8.7	0.47	2.6	5.9	0.435	0.9	1	0.914	3.2	1.3	0.5	0.3	0.5	1.3	11.6	5.2	11.2	3.3	7.6	1.1	1.2	4.1	1.7	0.6	0.4	0.6	1.7	14.9	0.636	0.618	0.684	0.112	0.405	16.7	0.48	2.82	16.1	0.099	0.032	0.131	130.1	112.4	5.8	1.3	7.1	\N
-84	2025-06-25 20:00:00	Johni Broome	johni-broome	PF	C	82.5	84.25	249	Auburn	Plant City, FL	2002-07-19	\N	\N	4	22.92	36	30.2	7.3	14.3	0.51	0.7	2.5	0.278	3.3	5.6	0.587	10.8	2.9	0.9	2.1	1.6	2.1	18.6	8.7	17.1	0.8	3	3.9	6.7	12.9	3.4	1.1	2.5	1.9	2.5	22.1	0.547	0.534	0.174	0.39	0.315	30.4	0.64	1.82	30.9	0.154	0.096	0.25	121.7	94.8	9.6	4.7	14.3	\N
-85	2025-06-25 20:00:00	Carter Bryant	carter-bryant	SF	PF	79.75	83.75	215	Arizona	Riverside, CA	2005-11-26	\N	20	1	19.56	37	19.3	2.2	4.8	0.46	1.1	2.8	0.371	1.1	1.6	0.695	4.1	1	0.9	1	1	2.3	6.5	4.1	8.9	2	5.3	2.1	3	7.7	1.8	1.8	1.9	1.9	4.3	12.2	0.593	0.571	0.597	0.335	0.352	16.4	0.51	0.97	16.6	0.067	0.078	0.14	116.5	100.1	3.5	5.3	8.8	\N
-86	2025-06-25 20:00:00	Walter Clayton Jr.	walter-clayton-jr	PG	\N	75.25	76	199	Florida	Lake Wales, FL	2003-03-06	\N	\N	4	22.29	39	32.6	6	13.4	0.448	3	7.8	0.386	3.2	3.7	0.875	3.7	4.2	1.2	0.5	2.4	1.9	18.3	6.7	14.8	3.3	8.6	3.6	4.1	4.1	4.6	1.3	0.6	2.7	2.1	20.2	0.602	0.56	0.578	0.275	0.398	25.6	0.91	1.73	21.6	0.138	0.066	0.205	124.4	102.4	7.8	3.4	11.2	\N
-87	2025-06-25 20:00:00	Nique Clifford	nique-clifford	SG	SF	78.5	80	202	Colorado State	Colorado Springs, CO	2002-02-09	\N	\N	4	23.36	36	35.4	6.6	13.3	0.496	1.8	4.9	0.377	3.9	5	0.777	9.6	4.4	1.2	0.6	2.6	2.4	18.9	6.7	13.6	1.9	4.9	3.9	5.1	9.8	4.5	1.2	0.6	2.6	2.5	19.2	0.603	0.565	0.365	0.373	0.361	27.7	0.97	1.72	25.1	0.129	0.091	0.22	119.2	96.1	7.2	3.8	11.1	\N
-88	2025-06-25 20:00:00	Cedric Coward	cedric-coward	SG	SF	78.5	86.25	213	Washington State	Fresno, CA	2003-09-11	\N	\N	4	21.77	6	33	5.7	10.2	0.557	2	5	0.4	4.3	5.2	0.839	7	3.7	0.8	1.7	2.2	2.7	17.7	6.2	11.1	2.2	5.5	4.7	5.6	7.6	4	0.9	1.8	2.4	2.9	19.3	0.7	0.656	0.492	0.508	0.375	22.1	0.94	1.69	26	0.162	0.04	0.202	135.2	108.9	7	2.2	9.3	\N
-89	2025-06-25 20:00:00	Mohamed Diawara	mohamed-diawara	PF	\N	80	\N	200	Cholet (France)	Paris, France	2005-04-29	\N	\N	\N	20.14	49	19.6	2.3	5.3	0.439	0.6	2.2	0.282	0.8	1.4	0.557	3.2	1.3	0.7	0.1	0.9	2.1	6.1	4.3	9.8	1.2	4.1	1.5	2.6	5.8	2.4	1.2	0.2	1.6	3.8	11.3	0.508	0.498	0.42	0.267	0.317	16.1	0.63	1.52	10.4	\N	\N	\N	106.9	107.7	\N	\N	\N	\N
-90	2025-06-25 20:00:00	Egor Demin	egor-demin	PG	SG	81.5	82.25	199	BYU	Moscow, Russia	2006-03-03	\N	\N	1	19.3	33	27.5	3.8	9.3	0.412	1.3	4.7	0.273	1.7	2.5	0.695	3.9	5.5	1.2	0.4	2.9	1.2	10.6	5	12.1	1.7	6.1	2.3	3.3	5.1	7.1	1.5	0.5	3.8	1.6	13.9	0.509	0.48	0.503	0.268	0.344	24.5	1.41	1.86	15.6	0.048	0.057	0.101	103.9	105.6	3.1	2.2	5.3	\N
-92	2025-06-25 20:00:00	Noa Essengue	noa-essengue	SF	PF	81	\N	194	Ratiopharm Ulm (Germany)	Orleans, France	2006-12-18	\N	\N	\N	18.5	60	22.8	3.4	6.4	0.521	0.6	2.1	0.276	3.4	4.8	0.707	5	1.2	0.9	0.5	1.1	2.7	10.7	5.3	10.2	0.9	3.3	5.4	7.6	7.8	1.8	1.4	0.8	1.7	4.2	16.9	0.613	0.566	0.329	0.751	0.332	19.4	0.44	1.08	18.4	\N	\N	\N	125.9	107.3	\N	\N	\N	\N
-93	2025-06-25 20:00:00	Jeremiah Fears	jeremiah-fears	PG	\N	75.75	77.25	180	Oklahoma	Joliet, IL	2006-10-14	\N	40	1	18.68	34	30.2	5.3	12.2	0.434	1.1	3.9	0.284	5.4	6.3	0.851	4.1	4.1	1.6	0.1	3.4	1.9	17.1	6.3	14.5	1.3	4.7	6.4	7.5	4.9	4.9	2	0.1	4.1	2.2	20.4	0.562	0.48	0.323	0.518	0.36	31.5	0.91	1.21	20.7	0.082	0.047	0.132	108.2	107.5	4.2	1.7	5.9	\N
-94	2025-06-25 20:00:00	Cooper Flagg	cooper-flagg	SF	PF	81	84	221	Duke	Newport, ME	2006-12-21	\N	1	1	18.5	37	30.7	6.5	13.4	0.481	1.4	3.6	0.385	4.8	5.8	0.84	7.5	4.2	1.4	1.4	2.1	1.9	19.2	7.6	15.8	1.6	4.3	5.7	6.8	8.8	4.9	1.6	1.6	2.5	2.2	22.5	0.593	0.533	0.272	0.429	0.367	30.9	0.87	2	30.4	0.18	0.116	0.296	126.3	89.5	9.7	6.7	16.3	\N
-95	2025-06-25 20:00:00	Rasheer Fleming	rasheer-fleming	PF	\N	81.5	89.25	232	Saint Joseph's	Camden, NJ	2004-07-10	\N	\N	3	20.95	35	31.3	5.4	10.1	0.531	1.8	4.5	0.39	2.1	2.9	0.743	8.5	1.3	1.4	1.5	1.5	2.5	14.7	6.2	11.6	2	5.2	2.5	3.3	9.8	1.4	1.6	1.8	1.8	2.9	16.9	0.638	0.619	0.449	0.285	0.36	21.2	0.4	0.81	24.1	0.11	0.095	0.205	123.9	95	4.5	3.1	7.7	\N
-96	2025-06-25 20:00:00	Hugo González	hugo-gonzalez	SF	\N	78	\N	207	Real Madrid (Spain)	Madrid, Spain	2006-02-05	\N	\N	\N	19.37	69	10.7	1.2	2.8	0.408	0.4	1.3	0.284	0.7	1	0.758	1.8	0.6	0.3	0.3	0.6	1.8	3.4	3.9	9.5	1.2	4.3	2.4	3.2	5.9	1.9	1	1	2	6.1	11.4	0.517	0.472	0.449	0.337	0.345	17	0.49	0.95	9.8	\N	\N	\N	104.6	108.2	\N	\N	\N	\N
-97	2025-06-25 20:00:00	Dylan Harper	dylan-harper	PG	SG	77.75	82.5	213	Rutgers	Franklin Lakes, NJ	2006-03-02	\N	4	1	19.3	29	32.6	6.7	13.8	0.484	1.7	5.2	0.333	4.3	5.8	0.75	4.6	4	1.4	0.6	2.4	1.9	19.4	7.4	15.3	1.9	5.7	4.8	6.4	5.1	4.5	1.6	0.6	2.7	2.1	21.5	0.587	0.546	0.374	0.419	0.357	29	0.93	1.67	24.6	0.127	0.038	0.165	118.1	110.1	7	2.1	9.2	\N
-98	2025-06-25 20:00:00	Kasparas Jakucionis	kasparas-jakucionis	PG	SG	78	79.75	205	Illinois	Vilnius, Lithuania	2006-05-29	\N	\N	1	19.06	33	31.8	4.5	10.3	0.44	1.6	5.2	0.318	4.3	5.1	0.845	5.7	4.7	0.9	0.3	3.7	2.7	15	5.1	11.6	1.8	5.8	4.9	5.8	6.4	5.3	1	0.3	4.2	3	16.9	0.59	0.519	0.501	0.496	0.369	24.2	1.07	1.27	17.4	0.084	0.057	0.141	112.1	105.2	4	2.6	6.6	\N
-99	2025-06-25 20:00:00	Sion James	sion-james	SF	\N	77.75	78.5	218	Duke	Sugar Hill, GA	2002-12-04	\N	\N	4	22.54	39	25.5	2.9	5.6	0.516	0.8	1.9	0.413	2.1	2.6	0.81	4.2	2.9	0.8	0.3	1.2	2	8.6	4	7.8	1.1	2.7	2.9	3.6	5.9	4.2	1.2	0.4	1.7	2.9	12.1	0.635	0.588	0.346	0.461	0.355	16.2	1.17	2.45	17.9	0.116	0.088	0.205	131.1	96.8	4.3	4.9	9.3	\N
-100	2025-06-25 20:00:00	Tre Johnson	tre-johnson	SG	\N	78	82.25	190	Texas	Dallas, TX	2006-03-07	\N	5	1	19.29	33	34.7	6.8	15.9	0.427	2.7	6.8	0.397	3.7	4.2	0.871	3.1	2.7	0.9	0.3	1.8	2.1	19.9	7	16.5	2.8	7	3.8	4.4	3.2	2.8	1	0.3	1.9	2.2	20.7	0.557	0.511	0.427	0.265	0.39	29.1	0.57	1.5	19.7	0.105	0.038	0.147	115.1	109.9	6.5	1.2	7.7	\N
-101	2025-06-25 20:00:00	Kam Jones	kam-jones	PG	SG	76.5	78	202	Marquette	Memphis, TN	2002-02-25	\N	\N	4	23.32	34	33.8	7.8	16.2	0.483	1.9	6.1	0.311	1.7	2.6	0.648	4.5	5.9	1.4	0.3	1.9	2.2	19.2	8.3	17.3	2	6.5	1.8	2.8	4.8	6.3	1.5	0.3	2	2.3	20.5	0.551	0.541	0.374	0.16	0.345	28.9	1.32	3.17	24.5	0.136	0.066	0.202	119.4	103	7.3	3.3	10.6	\N
-102	2025-06-25 20:00:00	Ryan Kalkbrenner	ryan-kalkbrenner	C	\N	86.25	90	257	Creighton	Florissant, MO	2002-01-17	\N	\N	4	23.42	35	34.5	7.7	11.9	0.653	0.6	1.7	0.344	3.1	4.6	0.681	8.7	1.5	0.5	2.7	1.5	1.4	19.2	8.1	12.4	0.6	1.8	3.3	4.8	9	1.6	0.6	2.8	1.5	1.5	20.1	0.684	0.678	0.147	0.386	0.326	23.6	0.42	1.06	29.1	0.159	0.08	0.235	132.7	99.4	7.7	4.4	12.2	\N
-103	2025-06-25 20:00:00	Kon Knueppel	kon-knueppel	SG	SF	78.25	78.25	219	Duke	Milwaukee, WI	2005-08-03	\N	18	1	19.88	39	30.5	4.6	9.7	0.479	2.2	5.3	0.406	3	3.3	0.914	4	2.7	1	0.2	1.4	2.1	14.4	5.5	11.4	2.5	6.3	3.5	3.9	4.7	3.2	1.2	0.2	1.6	2.5	17	0.642	0.59	0.548	0.339	0.392	21.4	0.73	2.02	21.3	0.151	0.081	0.232	133.7	98.8	6.9	3.9	10.8	\N
-104	2025-06-25 20:00:00	Chaz Lanier	chaz-lanier	SG	\N	77	81	206	Tennessee	Nashville, TN	2001-12-19	\N	\N	4	23.5	38	31.4	6.4	14.8	0.431	3.2	8.2	0.395	2	2.6	0.758	3.9	1.1	0.9	0.1	1.1	1.6	18	7.3	17	3.7	9.4	2.3	3	4.5	1.2	1	0.2	1.3	1.8	20.7	0.56	0.54	0.551	0.176	0.389	28.8	0.27	0.95	19.5	0.107	0.067	0.174	117.2	102.4	6.1	2.7	8.9	\N
-105	2025-06-25 20:00:00	Khaman Maluach	khaman-maluach	C	\N	86	90.75	253	Duke	Kawempe, Uganda	2006-09-14	\N	\N	1	18.76	39	21.2	3.5	4.9	0.712	0.1	0.4	0.25	1.5	2	0.766	6.6	0.5	0.2	1.3	0.8	2.1	8.6	5.9	8.3	0.2	0.7	2.6	3.3	11.2	0.9	0.3	2.2	1.3	3.5	14.6	0.736	0.723	0.084	0.403	0.325	16.1	0.27	0.67	25.5	0.164	0.097	0.261	147.3	94.3	6.2	3.6	9.9	\N
-106	2025-06-25 20:00:00	Alijah Martin	alijah-martin	SG	\N	74.75	79.5	208	Florida	Summit, MS	2001-12-26	\N	\N	4	23.48	38	30.4	5	11	0.452	2.1	5.9	0.35	2.3	3.1	0.761	4.5	2.2	1.5	0.2	1.4	1.4	14.4	5.9	13	2.5	7	2.8	3.6	5.3	2.6	1.7	0.2	1.7	1.7	17	0.576	0.547	0.541	0.28	0.368	21.7	0.57	1.49	19.4	0.114	0.073	0.184	123.8	101.2	5.8	3.9	9.8	\N
-107	2025-06-25 20:00:00	Liam McNeeley	liam-mcneeley	SF	\N	80	80.5	215	UConn	Richardson, TX	2005-10-10	\N	9	1	19.69	27	32.1	4.4	11.5	0.381	1.7	5.4	0.317	4.1	4.7	0.866	6	2.3	0.6	0.2	1.9	2	14.5	4.9	12.9	1.9	6	4.6	5.3	6.7	2.5	0.6	0.2	2.1	2.2	16.3	0.529	0.455	0.468	0.41	0.373	25.6	0.51	1.22	16.1	0.083	0.051	0.134	112.5	107.1	2.6	0.8	3.4	\N
-108	2025-06-25 20:00:00	Collin Murray-Boyles	collin-murray-boyles	PF	\N	79.75	84.75	239	South Carolina	Columbia, SC	2005-06-10	\N	64	2	20.03	32	30.6	6.2	10.6	0.586	0.3	1.1	0.265	4.2	5.9	0.707	8.3	2.4	1.5	1.3	2.4	2.6	16.8	7.3	12.4	0.3	1.2	4.9	6.9	9.7	2.8	1.7	1.6	2.9	3	19.8	0.63	0.599	0.101	0.556	0.321	26.7	0.79	0.99	27.8	0.127	0.073	0.2	119.6	100.4	6.9	5	11.9	\N
-109	2025-06-25 20:00:00	Asa Newell	asa-newell	PF	\N	82.25	83.25	224	Georgia	Destin, FL	2005-10-05	\N	12	1	19.71	33	29	5.8	10.7	0.543	0.8	2.7	0.292	3.1	4.1	0.748	6.9	0.9	1	1	1.1	2.4	15.4	7.2	13.2	1	3.3	3.8	5.1	8.5	1.1	1.2	1.2	1.4	3	19.1	0.612	0.58	0.253	0.384	0.339	23.5	0.29	0.78	26.1	0.159	0.058	0.217	131.5	104.2	7.6	2	9.6	\N
-110	2025-06-25 20:00:00	Yanic Konan Niederhauser	yanic-konan-niederhauser	C	\N	84.5	87.25	243	Penn State	Fraschels, Switzerland	2003-03-14	\N	\N	3	22.27	29	25.1	4.9	8.1	0.611	0	0.4	0.091	3	4.5	0.664	6.3	0.8	0.7	2.3	1.7	2.5	12.9	7.1	11.6	0	0.5	4.3	6.5	9.1	1.1	0.9	3.3	2.4	3.6	18.5	0.631	0.613	0.047	0.56	0.313	23.5	0.26	0.46	24.3	0.104	0.077	0.181	118.9	100.2	2.9	3.1	6.1	\N
-111	2025-06-25 20:00:00	Lachlan Olbrich	lachlan-olbrich	PF	\N	82	83.25	230	Illawarra (NBL)	Adelaide, Australia	2003-12-30	\N	\N	\N	21.47	40	16.9	3.7	6	0.619	0.1	0.4	0.2	1.5	2.7	0.546	3.9	1.8	0.5	0.5	1	2.4	9	7.9	12.8	0.2	0.8	3.2	5.8	8.2	3.7	1	1	2.1	5	19.1	0.617	0.626	0.063	0.452	0.299	19.9	0.73	1.75	20.2	\N	\N	\N	125.5	112.5	\N	\N	\N	\N
-112	2025-06-25 20:00:00	Micah Peavy	micah-peavy	SG	SF	79.5	79.25	212	Georgetown	Cibolo, TX	2001-07-16	\N	36	4	23.93	32	37	6.8	14.2	0.481	1.6	4.1	0.4	1.9	2.8	0.659	5.8	3.6	2.3	0.5	2.6	2.9	17.2	6.7	13.8	1.6	4	1.8	2.8	5.6	3.5	2.3	0.5	2.5	2.9	16.7	0.552	0.538	0.286	0.2	0.342	24.7	0.81	1.37	19.7	0.071	0.071	0.142	109.8	101.1	3.1	3.2	6.3	\N
-113	2025-06-25 20:00:00	Noah Penda	noah-penda	SF	\N	79	\N	225	Le Mans Sarthe (France)	\N	2005-01-07	\N	\N	\N	20.45	37	27.3	3.5	7.9	0.447	1	3.1	0.322	2.2	3.3	0.667	5.5	2.7	1.2	0.9	1.6	2	10.2	4.6	10.4	1.3	4.1	2.9	4.4	7.3	3.5	1.6	1.2	2.2	2.7	13.5	0.542	0.51	0.395	0.423	0.335	18.4	0.83	1.62	16.2	\N	\N	\N	115.9	110	\N	\N	\N	\N
-114	2025-06-25 20:00:00	Taelon Peter	taelon-peter	SG	\N	76	\N	210	Liberty	Russellville, AR	2002-02-27	\N	\N	4	23.31	35	22.7	4.8	8.3	0.578	2.2	4.9	0.453	1.9	2.5	0.773	4	1	0.9	0.1	0.6	2	13.7	7.6	13.1	3.5	7.7	3.1	4	6.4	1.6	1.5	0.2	1	3.2	21.7	0.724	0.711	0.588	0.304	0.389	24.1	0.4	1.71	27.2	0.166	0.101	0.267	136.6	93.6	6.8	2.2	9	\N
-115	2025-06-25 20:00:00	Drake Powell	drake-powell	SG	\N	78.5	84	200	North Carolina	Pittsboro, NC	2005-09-08	\N	13	1	19.78	37	25.6	2.8	5.7	0.483	1	2.6	0.379	0.9	1.5	0.648	3.4	1.1	0.7	0.7	0.7	1.8	7.4	3.9	8	1.4	3.6	1.3	2.1	4.8	1.5	1	1	1	2.5	10.5	0.581	0.569	0.45	0.256	0.336	13.8	0.51	1.48	12.9	0.059	0.046	0.106	118	107.9	2.8	3.3	6.1	\N
-116	2025-06-25 20:00:00	Tyrese Proctor	tyrese-proctor	PG	\N	77.5	79.25	183	Duke	Sydney, Australia	2004-04-01	\N	\N	3	21.22	38	29.9	4.3	9.6	0.452	2.3	5.8	0.405	1.3	2	0.68	3	2.2	0.8	0.1	1.1	1.9	12.4	5.2	11.6	2.8	7	1.6	2.4	3.6	2.7	0.9	0.1	1.3	2.3	14.9	0.587	0.574	0.603	0.205	0.364	20.1	0.64	2.12	16.1	0.102	0.074	0.176	123.1	100.6	4.4	3.1	7.4	\N
-117	2025-06-25 20:00:00	Derik Queen	derik-queen	C	\N	82.5	84.5	248	Maryland	Baltimore, MD	2004-12-27	\N	8	1	20.48	36	30.4	5.8	11.1	0.526	0.2	1	0.2	4.6	6.1	0.766	9	1.9	1.1	1.1	2.4	2.1	16.5	6.9	13.1	0.2	1.2	5.5	7.2	10.6	2.2	1.3	1.3	2.8	2.5	19.6	0.591	0.535	0.088	0.546	0.324	26.6	0.44	0.79	24.7	0.113	0.102	0.216	117	92.4	5.1	4.2	9.2	\N
-118	2025-06-25 20:00:00	Maxime Raynaud	maxime-raynaud	C	\N	85.5	85.25	237	Stanford	Paris, France	2003-04-07	\N	\N	4	22.2	35	33.5	7.5	16.1	0.467	1.9	5.5	0.347	3.3	4.2	0.77	10.6	1.7	0.9	1.4	2.4	2	20.2	8.1	17.3	2.1	5.9	3.5	4.5	11.4	1.8	0.9	1.5	2.6	2.2	21.7	0.558	0.527	0.343	0.263	0.363	31.5	0.38	0.69	25.6	0.102	0.068	0.171	112.2	101.9	6.2	0.8	7	\N
-119	2025-06-25 20:00:00	Will Richard	will-richard	SG	\N	76	\N	206	Florida	Fairburn, GA	2002-12-24	\N	\N	4	22.49	40	31.6	4.6	9.5	0.487	2	5.6	0.359	2	2.4	0.844	4.6	1.9	1.7	0.3	1.6	2.3	13.3	5.3	10.8	2.3	6.3	2.3	2.7	5.2	2.1	1.9	0.4	1.8	2.6	15.1	0.624	0.592	0.587	0.253	0.377	18.3	0.54	1.19	18.3	0.104	0.076	0.18	126.8	100.3	4.9	4.7	9.6	\N
-120	2025-06-25 20:00:00	Jase Richardson	jase-richardson	SG	PG	73.75	78	178	Michigan State	Denver, CO	2005-10-16	\N	25	1	19.68	36	25.3	4	8.1	0.493	1.3	3.2	0.412	2.8	3.4	0.836	3.3	1.9	0.8	0.3	0.8	1.5	12.1	5.7	11.5	1.9	4.5	4	4.8	4.7	2.7	1.2	0.4	1.2	2.2	17.3	0.624	0.574	0.39	0.418	0.37	20.6	0.7	2.27	20.7	0.136	0.075	0.211	132	100.3	6.5	5.1	11.6	\N
-121	2025-06-25 20:00:00	Will Riley	will-riley	SG	SF	81.5	80.75	186	Illinois	Kitchener, ON	2006-02-10	\N	12	1	19.36	35	25.7	4.4	10.3	0.432	1.3	4.1	0.326	2.4	3.3	0.724	4.1	2.2	0.3	0.3	1.2	1.2	12.6	6.2	14.4	1.9	5.8	3.4	4.6	5.8	3.1	0.4	0.4	1.7	1.7	17.7	0.532	0.497	0.401	0.323	0.353	23.8	0.68	1.86	17.4	0.102	0.044	0.147	118	108.2	4.8	1.7	6.5	\N
-122	2025-06-25 20:00:00	Kobe Sanders	kobe-sanders	SG	\N	80.25	80.25	203	Nevada	San Diego, CA	2002-05-30	\N	\N	4	23.06	33	31.7	5.2	11.4	0.46	1.2	3.6	0.342	4.1	5.2	0.795	3.9	4.5	1.1	0.3	1.8	2.2	15.8	6	13	1.4	4.1	4.7	5.9	4.4	5.1	1.3	0.3	2.1	2.5	18	0.572	0.515	0.319	0.455	0.355	27.1	1.1	2.41	22	0.122	0.054	0.176	118.8	106.5	5.6	1.5	7	\N
-123	2025-06-25 20:00:00	Ben Saraf	ben-saraf	PG	SG	77	\N	200	Ratiopharm Ulm	Gan Yoshiya, Israel	2006-04-14	\N	\N	\N	19.18	60	23.4	4.5	10.1	0.444	0.7	2.3	0.29	2.4	3.2	0.749	2.8	4.1	1.1	0.3	2.7	2.2	12	6.9	15.6	1	3.5	3.7	4.9	4.3	6.3	1.7	0.4	4.1	3.4	18.5	0.517	0.477	0.228	0.315	0.34	27.6	1.16	1.52	15.5	\N	\N	\N	104.3	107.7	\N	\N	\N	\N
-124	2025-06-25 20:00:00	Max Shulga	max-shulga	PG	SG	77.5	77.75	206	VCU	Kyiv, Ukraine	2002-06-25	\N	\N	4	22.99	35	32.8	4.4	10.1	0.435	2.1	5.3	0.387	4.2	5.4	0.783	5.9	4	1.8	0.1	1.7	2	15	4.8	11	2.3	5.8	4.6	5.9	6.4	4.4	1.9	0.1	1.9	2.2	16.5	0.595	0.537	0.528	0.537	0.369	21.9	1.05	2.36	23.2	0.15	0.094	0.244	130.4	94.8	5.8	3.6	9.4	\N
-125	2025-06-25 20:00:00	Javon Small	javon-small	PG	\N	74.25	76.75	190	West Virginia	South Bend, IN	2002-12-19	\N	\N	4	22.5	32	36.1	5.7	13.7	0.418	2.6	7.3	0.353	4.6	5.2	0.88	4.1	5.6	1.5	0.3	2.7	1.5	18.6	5.7	13.6	2.6	7.3	4.5	5.2	4.1	5.6	1.5	0.3	2.7	1.5	18.5	0.576	0.513	0.537	0.379	0.387	28.2	1.24	2.07	22.3	0.114	0.076	0.187	115.4	100.4	7	3.6	10.6	\N
-126	2025-06-25 20:00:00	Thomas Sorber	thomas-sorber	PF	C	82.5	90	263	Georgetown	Trenton, NJ	2005-12-25	\N	56	1	19.48	24	31.3	5.5	10.4	0.532	0.3	1.5	0.162	3.2	4.4	0.724	8.5	2.4	1.5	2	2.3	2.2	14.5	6.4	12	0.3	1.8	3.6	5	9.7	2.8	1.7	2.3	2.6	2.5	16.7	0.58	0.544	0.148	0.42	0.318	23.6	0.66	1.07	24.7	0.09	0.09	0.181	114.7	96.7	4.1	4.4	8.5	\N
-127	2025-06-25 20:00:00	Adou Thiero	adou-thiero	SF	PF	79.5	84	218	Arkansas	Pittsburgh, PA	2004-05-08	\N	\N	3	21.12	27	27.5	5.1	9.4	0.545	0.4	1.6	0.256	4.4	6.5	0.686	5.8	1.9	1.6	0.7	1.7	2.6	15.1	6.7	12.3	0.5	2.1	5.8	8.5	7.6	2.5	2.1	1	2.2	3.3	19.7	0.605	0.567	0.17	0.692	0.322	25.8	0.54	1.11	25.1	0.124	0.081	0.205	120.6	99.2	5.9	4.7	10.6	\N
-128	2025-06-25 20:00:00	John Tonje	john-tonje	SG	\N	78	81	212	Wisconsin	North Omaha, NE	2001-04-23	\N	\N	4	24.16	37	31.1	5.5	11.9	0.465	2.3	5.9	0.388	6.2	6.9	0.909	5.3	1.8	0.7	0.2	1.8	1.7	19.6	6.4	13.7	2.7	6.8	7.2	7.9	6.1	2.1	0.8	0.3	2.1	2	22.6	0.647	0.562	0.499	0.579	0.392	28	0.42	0.99	24.8	0.163	0.056	0.222	128.2	105.2	8.6	2.4	11	\N
-129	2025-06-25 20:00:00	Alex Toohey	alex-toohey	SF	\N	81	82.75	223	Sydney (NBL)	Canberra, Australia	2004-05-04	\N	\N	\N	21.13	32	23.5	4	8.6	0.465	1	2.9	0.34	2.4	3.2	0.738	3.8	1.3	1.4	0.8	1.1	1.7	11.4	6.1	13.2	1.5	4.5	3.6	4.9	5.8	2.1	2.2	1.2	1.7	2.6	17.4	0.562	0.524	0.342	0.375	0.349	20.4	0.46	1.23	17.7	\N	\N	\N	114.9	109.2	\N	\N	\N	\N
-130	2025-06-25 20:00:00	Nolan Traore	nolan-traore	PG	\N	75	\N	175	Saint-Quentin (France)	Chennevières-sur-Marne, France	2006-05-28	\N	\N	\N	19.06	44	22.7	4.3	10.5	0.41	1.3	4	0.314	2.4	3.4	0.711	1.9	4.7	0.7	0	2.5	2.3	12.3	6.8	16.6	2	6.3	3.8	5.4	3	7.4	1.1	0.1	3.9	3.7	19.4	0.507	0.47	0.38	0.323	0.353	30.4	1.41	1.91	15.4	\N	\N	\N	105.7	114.5	\N	\N	\N	\N
-131	2025-06-25 20:00:00	Jamir Watkins	jamir-watkins	SG	SF	78.25	83.25	215	Florida State	Trenton, NJ	2001-07-06	\N	\N	4	23.96	32	30.9	5.5	13	0.427	1.7	5.2	0.321	5.7	7.7	0.747	5.7	2.4	1.2	0.5	2.7	3.2	18.4	6.4	15.1	1.9	6	6.7	8.9	6.6	2.8	1.4	0.6	3.1	3.7	21.5	0.555	0.49	0.398	0.59	0.357	31.1	0.52	0.88	20.4	0.085	0.065	0.149	109.3	103.5	4	1.6	5.6	\N
-132	2025-06-25 20:00:00	Amari Williams	amari-williams	C	\N	84	\N	262	Kentucky	Nottingham, England	2002-01-28	\N	\N	4	23.39	36	22.8	3.8	6.8	0.561	0	0.1	0.25	3.2	5.1	0.623	8.5	3.2	0.6	1.2	2.3	2.2	10.9	6.1	10.8	0	0.2	5	8	13.4	5	0.9	1.9	3.6	3.5	17.2	0.587	0.563	0.016	0.744	0.307	24.6	1	1.4	24.1	0.102	0.068	0.171	114.9	101.5	5.2	4.7	9.9	\N
-133	2025-06-25 20:00:00	Danny Wolf	danny-wolf	PF	C	83.75	86.25	252	Michigan	Glencoe, IL	2004-05-04	\N	\N	3	21.13	37	30.5	5	10.1	0.497	1	3.1	0.336	2.1	3.6	0.594	9.7	3.6	0.7	1.4	3.2	2.1	13.2	5.9	11.9	1.2	3.6	2.5	4.2	11.5	4.2	0.8	1.6	3.8	2.4	15.6	0.559	0.548	0.302	0.356	0.324	24.2	0.94	1.1	19.4	0.053	0.089	0.145	105.7	96.1	4.3	5.2	9.5	\N
-135	2025-06-25 20:00:00	Rocco Zikarsky	rocco-zikarsky	C	\N	88.25	88.75	257	Brisbane (NBL)	Sunshine Coast, Australia	2006-07-10	\N	\N	\N	18.95	20	12.2	1.8	3.6	0.5	0.1	0.3	0.2	1	1.6	0.625	3.5	0.3	0.3	0.7	0.6	1.3	4.7	5.3	10.7	0.1	0.7	3	4.7	10.4	0.9	0.9	2.1	1.8	3.9	13.8	0.533	0.507	0.069	0.444	0.309	17.1	0.2	0.5	16	\N	\N	\N	114.7	114.7	\N	\N	\N	\N
-91	2025-06-25 20:00:00	V.J. Edgecombe	v-j-edgecombe	SG	\N	77.25	79.5	193	Baylor	Bimini, Bahamas	2005-07-30	\N	3	1	19.89	33	32.7	5	11.5	0.436	1.6	4.6	0.34	3.4	4.3	0.782	5.6	3.2	2.1	0.6	1.9	2.5	15	5.5	12.7	1.7	5.1	3.7	4.7	6.2	3.5	2.3	0.7	2.1	2.8	16.5	0.552	0.504	0.402	0.373	0.359	24.1	0.8	1.66	22.1	0.111	0.067	0.178	119.1	102.5	7.1	4.3	11.4	\N
+447	2004-06-22 19:00:00	Josh Childress	josh-childress	SG	SF	79.25	83	196	Stanford	Compton, CA	1983-06-20	\N	\N	3	20.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	13.3	1.8	4.5	4.1	5	9.1	3.2	1.1	1.9	2.7	2.8	18.9	0.602	0.555	0.339	0.374	0.367	25.8	0.72	1.2	\N	0.146	0.158	0.298	\N	\N	\N	\N	\N	2735
+448	2004-06-22 19:00:00	Josh Smith	josh-smith	SF	\N	80.25	84	221	Oak Hill Academy	College Park, GA	1985-12-05	\N	\N	\N	18.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2746
+449	2004-06-22 19:00:00	Pavel Podkolzin	pavel-podkolzin	C	\N	89	\N	260	Metis Varese (Italy)	Novosibirsk, Russia	1985-01-15	\N	\N	\N	19.41	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	3.1	6.4	0	0.2	4	5.8	9	0.4	1.6	1.8	4.1	6.6	10.2	0.56	0.493	0.028	0.915	0.314	\N	\N	0.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	2750
+81	2025-06-25 20:00:00	Brooks Barnhizer	brooks-barnhizer	SF	\N	78	\N	215	Northwestern	South Bend, IN	2002-03-02	\N	\N	4	23.3	17	36.9	6.1	14.6	0.414	1	3.8	0.266	4	5.2	0.764	8.8	4.2	2.3	1.1	2.8	1.7	17.1	5.9	14.3	1	3.7	3.9	5.1	8.6	4.1	2.2	1.1	2.7	1.7	16.7	0.5	0.448	0.257	0.357	0.341	28.1	0.85	1.53	21.6	0.051	0.089	0.14	103.8	96.2	4.8	4.9	9.7	1642964
+82	2025-06-25 20:00:00	Joan Beringer	joan-beringer	C	\N	82	\N	230	KK Cedevita Junior (Croatia)	Strasbourg, France	2006-11-11	\N	\N	\N	18.61	64	18.8	2.2	3.4	0.644	0	0	0	1	1.8	0.566	4.9	0.5	0.5	1.4	0.7	2.3	5.4	4.2	6.6	0	0	1.9	3.4	9.4	0.9	1	2.7	1.3	4.5	10.4	0.634	0.644	0.005	0.516	0.299	12.3	0.34	0.7	16.2	\N	\N	\N	125.6	103.4	\N	\N	\N	1642866
+83	2025-06-25 20:00:00	Koby Brea	koby-brea	SG	\N	79	77.25	202	Kentucky	Bronx, NY	2002-11-06	\N	\N	4	22.62	36	28.1	4.1	8.7	0.47	2.6	5.9	0.435	0.9	1	0.914	3.2	1.3	0.5	0.3	0.5	1.3	11.6	5.2	11.2	3.3	7.6	1.1	1.2	4.1	1.7	0.6	0.4	0.6	1.7	14.9	0.636	0.618	0.684	0.112	0.405	16.7	0.48	2.82	16.1	0.099	0.032	0.131	130.1	112.4	5.8	1.3	7.1	1642886
+84	2025-06-25 20:00:00	Johni Broome	johni-broome	PF	C	82.5	84.25	249	Auburn	Plant City, FL	2002-07-19	\N	\N	4	22.92	36	30.2	7.3	14.3	0.51	0.7	2.5	0.278	3.3	5.6	0.587	10.8	2.9	0.9	2.1	1.6	2.1	18.6	8.7	17.1	0.8	3	3.9	6.7	12.9	3.4	1.1	2.5	1.9	2.5	22.1	0.547	0.534	0.174	0.39	0.315	30.4	0.64	1.82	30.9	0.154	0.096	0.25	121.7	94.8	9.6	4.7	14.3	1641780
+85	2025-06-25 20:00:00	Carter Bryant	carter-bryant	SF	PF	79.75	83.75	215	Arizona	Riverside, CA	2005-11-26	\N	20	1	19.56	37	19.3	2.2	4.8	0.46	1.1	2.8	0.371	1.1	1.6	0.695	4.1	1	0.9	1	1	2.3	6.5	4.1	8.9	2	5.3	2.1	3	7.7	1.8	1.8	1.9	1.9	4.3	12.2	0.593	0.571	0.597	0.335	0.352	16.4	0.51	0.97	16.6	0.067	0.078	0.14	116.5	100.1	3.5	5.3	8.8	1642868
+87	2025-06-25 20:00:00	Nique Clifford	nique-clifford	SG	SF	78.5	80	202	Colorado State	Colorado Springs, CO	2002-02-09	\N	\N	4	23.36	36	35.4	6.6	13.3	0.496	1.8	4.9	0.377	3.9	5	0.777	9.6	4.4	1.2	0.6	2.6	2.4	18.9	6.7	13.6	1.9	4.9	3.9	5.1	9.8	4.5	1.2	0.6	2.6	2.5	19.2	0.603	0.565	0.365	0.373	0.361	27.7	0.97	1.72	25.1	0.129	0.091	0.22	119.2	96.1	7.2	3.8	11.1	1642363
+88	2025-06-25 20:00:00	Cedric Coward	cedric-coward	SG	SF	78.5	86.25	213	Washington State	Fresno, CA	2003-09-11	\N	\N	4	21.77	6	33	5.7	10.2	0.557	2	5	0.4	4.3	5.2	0.839	7	3.7	0.8	1.7	2.2	2.7	17.7	6.2	11.1	2.2	5.5	4.7	5.6	7.6	4	0.9	1.8	2.4	2.9	19.3	0.7	0.656	0.492	0.508	0.375	22.1	0.94	1.69	26	0.162	0.04	0.202	135.2	108.9	7	2.2	9.3	1642907
+89	2025-06-25 20:00:00	Mohamed Diawara	mohamed-diawara	PF	\N	80	\N	200	Cholet (France)	Paris, France	2005-04-29	\N	\N	\N	20.14	49	19.6	2.3	5.3	0.439	0.6	2.2	0.282	0.8	1.4	0.557	3.2	1.3	0.7	0.1	0.9	2.1	6.1	4.3	9.8	1.2	4.1	1.5	2.6	5.8	2.4	1.2	0.2	1.6	3.8	11.3	0.508	0.498	0.42	0.267	0.317	16.1	0.63	1.52	10.4	\N	\N	\N	106.9	107.7	\N	\N	\N	1642885
+90	2025-06-25 20:00:00	Egor Demin	egor-demin	PG	SG	81.5	82.25	199	BYU	Moscow, Russia	2006-03-03	\N	\N	1	19.3	33	27.5	3.8	9.3	0.412	1.3	4.7	0.273	1.7	2.5	0.695	3.9	5.5	1.2	0.4	2.9	1.2	10.6	5	12.1	1.7	6.1	2.3	3.3	5.1	7.1	1.5	0.5	3.8	1.6	13.9	0.509	0.48	0.503	0.268	0.344	24.5	1.41	1.86	15.6	0.048	0.057	0.101	103.9	105.6	3.1	2.2	5.3	1642856
+92	2025-06-25 20:00:00	Noa Essengue	noa-essengue	SF	PF	81	\N	194	Ratiopharm Ulm (Germany)	Orleans, France	2006-12-18	\N	\N	\N	18.5	60	22.8	3.4	6.4	0.521	0.6	2.1	0.276	3.4	4.8	0.707	5	1.2	0.9	0.5	1.1	2.7	10.7	5.3	10.2	0.9	3.3	5.4	7.6	7.8	1.8	1.4	0.8	1.7	4.2	16.9	0.613	0.566	0.329	0.751	0.332	19.4	0.44	1.08	18.4	\N	\N	\N	125.9	107.3	\N	\N	\N	1642855
+450	2004-06-22 19:00:00	Andris Biedrins	andris-biedrins	C	\N	84	\N	225	Skonto (Latvia)	Riga, Latvia	1986-04-02	\N	\N	\N	18.2	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2740
+94	2025-06-25 20:00:00	Cooper Flagg	cooper-flagg	SF	PF	81	84	221	Duke	Newport, ME	2006-12-21	\N	1	1	18.5	37	30.7	6.5	13.4	0.481	1.4	3.6	0.385	4.8	5.8	0.84	7.5	4.2	1.4	1.4	2.1	1.9	19.2	7.6	15.8	1.6	4.3	5.7	6.8	8.8	4.9	1.6	1.6	2.5	2.2	22.5	0.593	0.533	0.272	0.429	0.367	30.9	0.87	2	30.4	0.18	0.116	0.296	126.3	89.5	9.7	6.7	16.3	1642843
+95	2025-06-25 20:00:00	Rasheer Fleming	rasheer-fleming	PF	\N	81.5	89.25	232	Saint Joseph's	Camden, NJ	2004-07-10	\N	\N	3	20.95	35	31.3	5.4	10.1	0.531	1.8	4.5	0.39	2.1	2.9	0.743	8.5	1.3	1.4	1.5	1.5	2.5	14.7	6.2	11.6	2	5.2	2.5	3.3	9.8	1.4	1.6	1.8	1.8	2.9	16.9	0.638	0.619	0.449	0.285	0.36	21.2	0.4	0.81	24.1	0.11	0.095	0.205	123.9	95	4.5	3.1	7.7	1642853
+97	2025-06-25 20:00:00	Dylan Harper	dylan-harper	PG	SG	77.75	82.5	213	Rutgers	Franklin Lakes, NJ	2006-03-02	\N	4	1	19.3	29	32.6	6.7	13.8	0.484	1.7	5.2	0.333	4.3	5.8	0.75	4.6	4	1.4	0.6	2.4	1.9	19.4	7.4	15.3	1.9	5.7	4.8	6.4	5.1	4.5	1.6	0.6	2.7	2.1	21.5	0.587	0.546	0.374	0.419	0.357	29	0.93	1.67	24.6	0.127	0.038	0.165	118.1	110.1	7	2.1	9.2	1642844
+98	2025-06-25 20:00:00	Kasparas Jakucionis	kasparas-jakucionis	PG	SG	78	79.75	205	Illinois	Vilnius, Lithuania	2006-05-29	\N	\N	1	19.06	33	31.8	4.5	10.3	0.44	1.6	5.2	0.318	4.3	5.1	0.845	5.7	4.7	0.9	0.3	3.7	2.7	15	5.1	11.6	1.8	5.8	4.9	5.8	6.4	5.3	1	0.3	4.2	3	16.9	0.59	0.519	0.501	0.496	0.369	24.2	1.07	1.27	17.4	0.084	0.057	0.141	112.1	105.2	4	2.6	6.6	1642857
+99	2025-06-25 20:00:00	Sion James	sion-james	SF	\N	77.75	78.5	218	Duke	Sugar Hill, GA	2002-12-04	\N	\N	4	22.54	39	25.5	2.9	5.6	0.516	0.8	1.9	0.413	2.1	2.6	0.81	4.2	2.9	0.8	0.3	1.2	2	8.6	4	7.8	1.1	2.7	2.9	3.6	5.9	4.2	1.2	0.4	1.7	2.9	12.1	0.635	0.588	0.346	0.461	0.355	16.2	1.17	2.45	17.9	0.116	0.088	0.205	131.1	96.8	4.3	4.9	9.3	1642883
+100	2025-06-25 20:00:00	Tre Johnson	tre-johnson	SG	\N	78	82.25	190	Texas	Dallas, TX	2006-03-07	\N	5	1	19.29	33	34.7	6.8	15.9	0.427	2.7	6.8	0.397	3.7	4.2	0.871	3.1	2.7	0.9	0.3	1.8	2.1	19.9	7	16.5	2.8	7	3.8	4.4	3.2	2.8	1	0.3	1.9	2.2	20.7	0.557	0.511	0.427	0.265	0.39	29.1	0.57	1.5	19.7	0.105	0.038	0.147	115.1	109.9	6.5	1.2	7.7	1642848
+101	2025-06-25 20:00:00	Kam Jones	kam-jones	PG	SG	76.5	78	202	Marquette	Memphis, TN	2002-02-25	\N	\N	4	23.32	34	33.8	7.8	16.2	0.483	1.9	6.1	0.311	1.7	2.6	0.648	4.5	5.9	1.4	0.3	1.9	2.2	19.2	8.3	17.3	2	6.5	1.8	2.8	4.8	6.3	1.5	0.3	2	2.3	20.5	0.551	0.541	0.374	0.16	0.345	28.9	1.32	3.17	24.5	0.136	0.066	0.202	119.4	103	7.3	3.3	10.6	1642880
+102	2025-06-25 20:00:00	Ryan Kalkbrenner	ryan-kalkbrenner	C	\N	86.25	90	257	Creighton	Florissant, MO	2002-01-17	\N	\N	4	23.42	35	34.5	7.7	11.9	0.653	0.6	1.7	0.344	3.1	4.6	0.681	8.7	1.5	0.5	2.7	1.5	1.4	19.2	8.1	12.4	0.6	1.8	3.3	4.8	9	1.6	0.6	2.8	1.5	1.5	20.1	0.684	0.678	0.147	0.386	0.326	23.6	0.42	1.06	29.1	0.159	0.08	0.235	132.7	99.4	7.7	4.4	12.2	1641750
+103	2025-06-25 20:00:00	Kon Knueppel	kon-knueppel	SG	SF	78.25	78.25	219	Duke	Milwaukee, WI	2005-08-03	\N	18	1	19.88	39	30.5	4.6	9.7	0.479	2.2	5.3	0.406	3	3.3	0.914	4	2.7	1	0.2	1.4	2.1	14.4	5.5	11.4	2.5	6.3	3.5	3.9	4.7	3.2	1.2	0.2	1.6	2.5	17	0.642	0.59	0.548	0.339	0.392	21.4	0.73	2.02	21.3	0.151	0.081	0.232	133.7	98.8	6.9	3.9	10.8	1642851
+104	2025-06-25 20:00:00	Chaz Lanier	chaz-lanier	SG	\N	77	81	206	Tennessee	Nashville, TN	2001-12-19	\N	\N	4	23.5	38	31.4	6.4	14.8	0.431	3.2	8.2	0.395	2	2.6	0.758	3.9	1.1	0.9	0.1	1.1	1.6	18	7.3	17	3.7	9.4	2.3	3	4.5	1.2	1	0.2	1.3	1.8	20.7	0.56	0.54	0.551	0.176	0.389	28.8	0.27	0.95	19.5	0.107	0.067	0.174	117.2	102.4	6.1	2.7	8.9	1642404
+105	2025-06-25 20:00:00	Khaman Maluach	khaman-maluach	C	\N	86	90.75	253	Duke	Kawempe, Uganda	2006-09-14	\N	\N	1	18.76	39	21.2	3.5	4.9	0.712	0.1	0.4	0.25	1.5	2	0.766	6.6	0.5	0.2	1.3	0.8	2.1	8.6	5.9	8.3	0.2	0.7	2.6	3.3	11.2	0.9	0.3	2.2	1.3	3.5	14.6	0.736	0.723	0.084	0.403	0.325	16.1	0.27	0.67	25.5	0.164	0.097	0.261	147.3	94.3	6.2	3.6	9.9	1642863
+106	2025-06-25 20:00:00	Alijah Martin	alijah-martin	SG	\N	74.75	79.5	208	Florida	Summit, MS	2001-12-26	\N	\N	4	23.48	38	30.4	5	11	0.452	2.1	5.9	0.35	2.3	3.1	0.761	4.5	2.2	1.5	0.2	1.4	1.4	14.4	5.9	13	2.5	7	2.8	3.6	5.3	2.6	1.7	0.2	1.7	1.7	17	0.576	0.547	0.541	0.28	0.368	21.7	0.57	1.49	19.4	0.114	0.073	0.184	123.8	101.2	5.8	3.9	9.8	1642918
+107	2025-06-25 20:00:00	Liam McNeeley	liam-mcneeley	SF	\N	80	80.5	215	UConn	Richardson, TX	2005-10-10	\N	9	1	19.69	27	32.1	4.4	11.5	0.381	1.7	5.4	0.317	4.1	4.7	0.866	6	2.3	0.6	0.2	1.9	2	14.5	4.9	12.9	1.9	6	4.6	5.3	6.7	2.5	0.6	0.2	2.1	2.2	16.3	0.529	0.455	0.468	0.41	0.373	25.6	0.51	1.22	16.1	0.083	0.051	0.134	112.5	107.1	2.6	0.8	3.4	1642862
+451	2004-06-22 19:00:00	Sebastian Telfair	sebastian-telfair	PG	\N	72	\N	165	Lincoln High School	Brooklyn, NY	1985-06-09	\N	\N	\N	19.02	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2742
+452	2004-06-22 19:00:00	Rafael Araújo	rafael-araujo	C	\N	83	\N	280	BYU	São Paulo, Brazil	1980-08-12	\N	\N	4	23.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.5	14.8	0.3	1.2	4.9	6.8	12.2	1.5	1.7	1	3.5	3.8	22.2	0.616	0.584	0.082	0.459	0.323	31.2	0.33	0.43	\N	0.174	0.094	0.268	\N	\N	\N	\N	\N	2737
+453	2004-06-22 19:00:00	Peter John Ramos	peter-john-ramos	C	\N	87.25	89.5	266	Caguas (Puerto Rico)	Caguas, Puerto Rico	1985-05-23	\N	\N	\N	19.06	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2762
+109	2025-06-25 20:00:00	Asa Newell	asa-newell	PF	\N	82.25	83.25	224	Georgia	Destin, FL	2005-10-05	\N	12	1	19.71	33	29	5.8	10.7	0.543	0.8	2.7	0.292	3.1	4.1	0.748	6.9	0.9	1	1	1.1	2.4	15.4	7.2	13.2	1	3.3	3.8	5.1	8.5	1.1	1.2	1.2	1.4	3	19.1	0.612	0.58	0.253	0.384	0.339	23.5	0.29	0.78	26.1	0.159	0.058	0.217	131.5	104.2	7.6	2	9.6	1642854
+110	2025-06-25 20:00:00	Yanic Konan Niederhauser	yanic-konan-niederhauser	C	\N	84.5	87.25	243	Penn State	Fraschels, Switzerland	2003-03-14	\N	\N	3	22.27	29	25.1	4.9	8.1	0.611	0	0.4	0.091	3	4.5	0.664	6.3	0.8	0.7	2.3	1.7	2.5	12.9	7.1	11.6	0	0.5	4.3	6.5	9.1	1.1	0.9	3.3	2.4	3.6	18.5	0.631	0.613	0.047	0.56	0.313	23.5	0.26	0.46	24.3	0.104	0.077	0.181	118.9	100.2	2.9	3.1	6.1	1642949
+111	2025-06-25 20:00:00	Lachlan Olbrich	lachlan-olbrich	PF	\N	82	83.25	230	Illawarra (NBL)	Adelaide, Australia	2003-12-30	\N	\N	\N	21.47	40	16.9	3.7	6	0.619	0.1	0.4	0.2	1.5	2.7	0.546	3.9	1.8	0.5	0.5	1	2.4	9	7.9	12.8	0.2	0.8	3.2	5.8	8.2	3.7	1	1	2.1	5	19.1	0.617	0.626	0.063	0.452	0.299	19.9	0.73	1.75	20.2	\N	\N	\N	125.5	112.5	\N	\N	\N	1642950
+112	2025-06-25 20:00:00	Micah Peavy	micah-peavy	SG	SF	79.5	79.25	212	Georgetown	Cibolo, TX	2001-07-16	\N	36	4	23.93	32	37	6.8	14.2	0.481	1.6	4.1	0.4	1.9	2.8	0.659	5.8	3.6	2.3	0.5	2.6	2.9	17.2	6.7	13.8	1.6	4	1.8	2.8	5.6	3.5	2.3	0.5	2.5	2.9	16.7	0.552	0.538	0.286	0.2	0.342	24.7	0.81	1.37	19.7	0.071	0.071	0.142	109.8	101.1	3.1	3.2	6.3	1642877
+113	2025-06-25 20:00:00	Noah Penda	noah-penda	SF	\N	79	\N	225	Le Mans Sarthe (France)	\N	2005-01-07	\N	\N	\N	20.45	37	27.3	3.5	7.9	0.447	1	3.1	0.322	2.2	3.3	0.667	5.5	2.7	1.2	0.9	1.6	2	10.2	4.6	10.4	1.3	4.1	2.9	4.4	7.3	3.5	1.6	1.2	2.2	2.7	13.5	0.542	0.51	0.395	0.423	0.335	18.4	0.83	1.62	16.2	\N	\N	\N	115.9	110	\N	\N	\N	1642869
+114	2025-06-25 20:00:00	Taelon Peter	taelon-peter	SG	\N	76	\N	210	Liberty	Russellville, AR	2002-02-27	\N	\N	4	23.31	35	22.7	4.8	8.3	0.578	2.2	4.9	0.453	1.9	2.5	0.773	4	1	0.9	0.1	0.6	2	13.7	7.6	13.1	3.5	7.7	3.1	4	6.4	1.6	1.5	0.2	1	3.2	21.7	0.724	0.711	0.588	0.304	0.389	24.1	0.4	1.71	27.2	0.166	0.101	0.267	136.6	93.6	6.8	2.2	9	1643007
+116	2025-06-25 20:00:00	Tyrese Proctor	tyrese-proctor	PG	\N	77.5	79.25	183	Duke	Sydney, Australia	2004-04-01	\N	\N	3	21.22	38	29.9	4.3	9.6	0.452	2.3	5.8	0.405	1.3	2	0.68	3	2.2	0.8	0.1	1.1	1.9	12.4	5.2	11.6	2.8	7	1.6	2.4	3.6	2.7	0.9	0.1	1.3	2.3	14.9	0.587	0.574	0.603	0.205	0.364	20.1	0.64	2.12	16.1	0.102	0.074	0.176	123.1	100.6	4.4	3.1	7.4	1642878
+117	2025-06-25 20:00:00	Derik Queen	derik-queen	C	\N	82.5	84.5	248	Maryland	Baltimore, MD	2004-12-27	\N	8	1	20.48	36	30.4	5.8	11.1	0.526	0.2	1	0.2	4.6	6.1	0.766	9	1.9	1.1	1.1	2.4	2.1	16.5	6.9	13.1	0.2	1.2	5.5	7.2	10.6	2.2	1.3	1.3	2.8	2.5	19.6	0.591	0.535	0.088	0.546	0.324	26.6	0.44	0.79	24.7	0.113	0.102	0.216	117	92.4	5.1	4.2	9.2	1642852
+118	2025-06-25 20:00:00	Maxime Raynaud	maxime-raynaud	C	\N	85.5	85.25	237	Stanford	Paris, France	2003-04-07	\N	\N	4	22.2	35	33.5	7.5	16.1	0.467	1.9	5.5	0.347	3.3	4.2	0.77	10.6	1.7	0.9	1.4	2.4	2	20.2	8.1	17.3	2.1	5.9	3.5	4.5	11.4	1.8	0.9	1.5	2.6	2.2	21.7	0.558	0.527	0.343	0.263	0.363	31.5	0.38	0.69	25.6	0.102	0.068	0.171	112.2	101.9	6.2	0.8	7	1642875
+119	2025-06-25 20:00:00	Will Richard	will-richard	SG	\N	76	\N	206	Florida	Fairburn, GA	2002-12-24	\N	\N	4	22.49	40	31.6	4.6	9.5	0.487	2	5.6	0.359	2	2.4	0.844	4.6	1.9	1.7	0.3	1.6	2.3	13.3	5.3	10.8	2.3	6.3	2.3	2.7	5.2	2.1	1.9	0.4	1.8	2.6	15.1	0.624	0.592	0.587	0.253	0.377	18.3	0.54	1.19	18.3	0.104	0.076	0.18	126.8	100.3	4.9	4.7	9.6	1642954
+120	2025-06-25 20:00:00	Jase Richardson	jase-richardson	SG	PG	73.75	78	178	Michigan State	Denver, CO	2005-10-16	\N	25	1	19.68	36	25.3	4	8.1	0.493	1.3	3.2	0.412	2.8	3.4	0.836	3.3	1.9	0.8	0.3	0.8	1.5	12.1	5.7	11.5	1.9	4.5	4	4.8	4.7	2.7	1.2	0.4	1.2	2.2	17.3	0.624	0.574	0.39	0.418	0.37	20.6	0.7	2.27	20.7	0.136	0.075	0.211	132	100.3	6.5	5.1	11.6	1642859
+121	2025-06-25 20:00:00	Will Riley	will-riley	SG	SF	81.5	80.75	186	Illinois	Kitchener, ON	2006-02-10	\N	12	1	19.36	35	25.7	4.4	10.3	0.432	1.3	4.1	0.326	2.4	3.3	0.724	4.1	2.2	0.3	0.3	1.2	1.2	12.6	6.2	14.4	1.9	5.8	3.4	4.6	5.8	3.1	0.4	0.4	1.7	1.7	17.7	0.532	0.497	0.401	0.323	0.353	23.8	0.68	1.86	17.4	0.102	0.044	0.147	118	108.2	4.8	1.7	6.5	1642860
+454	2004-06-22 19:00:00	Jameer Nelson	jameer-nelson	PG	\N	72.5	74.5	199	Saint Joseph's	Chester, PA	1982-02-09	\N	\N	4	22.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	16.4	2.4	6.2	3.9	4.9	5	5.6	3	0	3	2	21.9	0.584	0.549	0.379	0.302	0.373	\N	\N	1.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	2749
+455	2004-06-22 19:00:00	Delonte West	delonte-west	SG	\N	74.75	78	183	Saint Joseph's	Greenbelt, MD	1983-07-26	\N	\N	3	20.89	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	14	1.9	4.6	4.2	4.7	5.8	5.1	1.8	0.2	2.8	2	20.3	0.627	0.577	0.327	0.334	0.378	\N	\N	1.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	2753
+456	2004-06-22 19:00:00	Donta Smith	donta-smith	SF	\N	79	\N	230	Southeastern Illinois	Buckner, KY	1983-11-27	\N	\N	2	20.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2764
+123	2025-06-25 20:00:00	Ben Saraf	ben-saraf	PG	SG	77	\N	200	Ratiopharm Ulm	Gan Yoshiya, Israel	2006-04-14	\N	\N	\N	19.18	60	23.4	4.5	10.1	0.444	0.7	2.3	0.29	2.4	3.2	0.749	2.8	4.1	1.1	0.3	2.7	2.2	12	6.9	15.6	1	3.5	3.7	4.9	4.3	6.3	1.7	0.4	4.1	3.4	18.5	0.517	0.477	0.228	0.315	0.34	27.6	1.16	1.52	15.5	\N	\N	\N	104.3	107.7	\N	\N	\N	1642879
+124	2025-06-25 20:00:00	Max Shulga	max-shulga	PG	SG	77.5	77.75	206	VCU	Kyiv, Ukraine	2002-06-25	\N	\N	4	22.99	35	32.8	4.4	10.1	0.435	2.1	5.3	0.387	4.2	5.4	0.783	5.9	4	1.8	0.1	1.7	2	15	4.8	11	2.3	5.8	4.6	5.9	6.4	4.4	1.9	0.1	1.9	2.2	16.5	0.595	0.537	0.528	0.537	0.369	21.9	1.05	2.36	23.2	0.15	0.094	0.244	130.4	94.8	5.8	3.6	9.4	1642917
+125	2025-06-25 20:00:00	Javon Small	javon-small	PG	\N	74.25	76.75	190	West Virginia	South Bend, IN	2002-12-19	\N	\N	4	22.5	32	36.1	5.7	13.7	0.418	2.6	7.3	0.353	4.6	5.2	0.88	4.1	5.6	1.5	0.3	2.7	1.5	18.6	5.7	13.6	2.6	7.3	4.5	5.2	4.1	5.6	1.5	0.3	2.7	1.5	18.5	0.576	0.513	0.537	0.379	0.387	28.2	1.24	2.07	22.3	0.114	0.076	0.187	115.4	100.4	7	3.6	10.6	1642914
+126	2025-06-25 20:00:00	Thomas Sorber	thomas-sorber	PF	C	82.5	90	263	Georgetown	Trenton, NJ	2005-12-25	\N	56	1	19.48	24	31.3	5.5	10.4	0.532	0.3	1.5	0.162	3.2	4.4	0.724	8.5	2.4	1.5	2	2.3	2.2	14.5	6.4	12	0.3	1.8	3.6	5	9.7	2.8	1.7	2.3	2.6	2.5	16.7	0.58	0.544	0.148	0.42	0.318	23.6	0.66	1.07	24.7	0.09	0.09	0.181	114.7	96.7	4.1	4.4	8.5	1642850
+127	2025-06-25 20:00:00	Adou Thiero	adou-thiero	SF	PF	79.5	84	218	Arkansas	Pittsburgh, PA	2004-05-08	\N	\N	3	21.12	27	27.5	5.1	9.4	0.545	0.4	1.6	0.256	4.4	6.5	0.686	5.8	1.9	1.6	0.7	1.7	2.6	15.1	6.7	12.3	0.5	2.1	5.8	8.5	7.6	2.5	2.1	1	2.2	3.3	19.7	0.605	0.567	0.17	0.692	0.322	25.8	0.54	1.11	25.1	0.124	0.081	0.205	120.6	99.2	5.9	4.7	10.6	1642876
+129	2025-06-25 20:00:00	Alex Toohey	alex-toohey	SF	\N	81	82.75	223	Sydney (NBL)	Canberra, Australia	2004-05-04	\N	\N	\N	21.13	32	23.5	4	8.6	0.465	1	2.9	0.34	2.4	3.2	0.738	3.8	1.3	1.4	0.8	1.1	1.7	11.4	6.1	13.2	1.5	4.5	3.6	4.9	5.8	2.1	2.2	1.2	1.7	2.6	17.4	0.562	0.524	0.342	0.375	0.349	20.4	0.46	1.23	17.7	\N	\N	\N	114.9	109.2	\N	\N	\N	1642893
+130	2025-06-25 20:00:00	Nolan Traore	nolan-traore	PG	\N	75	\N	175	Saint-Quentin (France)	Chennevières-sur-Marne, France	2006-05-28	\N	\N	\N	19.06	44	22.7	4.3	10.5	0.41	1.3	4	0.314	2.4	3.4	0.711	1.9	4.7	0.7	0	2.5	2.3	12.3	6.8	16.6	2	6.3	3.8	5.4	3	7.4	1.1	0.1	3.9	3.7	19.4	0.507	0.47	0.38	0.323	0.353	30.4	1.41	1.91	15.4	\N	\N	\N	105.7	114.5	\N	\N	\N	1642849
+131	2025-06-25 20:00:00	Jamir Watkins	jamir-watkins	SG	SF	78.25	83.25	215	Florida State	Trenton, NJ	2001-07-06	\N	\N	4	23.96	32	30.9	5.5	13	0.427	1.7	5.2	0.321	5.7	7.7	0.747	5.7	2.4	1.2	0.5	2.7	3.2	18.4	6.4	15.1	1.9	6	6.7	8.9	6.6	2.8	1.4	0.6	3.1	3.7	21.5	0.555	0.49	0.398	0.59	0.357	31.1	0.52	0.88	20.4	0.085	0.065	0.149	109.3	103.5	4	1.6	5.6	1642364
+132	2025-06-25 20:00:00	Amari Williams	amari-williams	C	\N	84	\N	262	Kentucky	Nottingham, England	2002-01-28	\N	\N	4	23.39	36	22.8	3.8	6.8	0.561	0	0.1	0.25	3.2	5.1	0.623	8.5	3.2	0.6	1.2	2.3	2.2	10.9	6.1	10.8	0	0.2	5	8	13.4	5	0.9	1.9	3.6	3.5	17.2	0.587	0.563	0.016	0.744	0.307	24.6	1	1.4	24.1	0.102	0.068	0.171	114.9	101.5	5.2	4.7	9.9	1642873
+133	2025-06-25 20:00:00	Danny Wolf	danny-wolf	PF	C	83.75	86.25	252	Michigan	Glencoe, IL	2004-05-04	\N	\N	3	21.13	37	30.5	5	10.1	0.497	1	3.1	0.336	2.1	3.6	0.594	9.7	3.6	0.7	1.4	3.2	2.1	13.2	5.9	11.9	1.2	3.6	2.5	4.2	11.5	4.2	0.8	1.6	3.8	2.4	15.6	0.559	0.548	0.302	0.356	0.324	24.2	0.94	1.1	19.4	0.053	0.089	0.145	105.7	96.1	4.3	5.2	9.5	1642874
+135	2025-06-25 20:00:00	Rocco Zikarsky	rocco-zikarsky	C	\N	88.25	88.75	257	Brisbane (NBL)	Sunshine Coast, Australia	2006-07-10	\N	\N	\N	18.95	20	12.2	1.8	3.6	0.5	0.1	0.3	0.2	1	1.6	0.625	3.5	0.3	0.3	0.7	0.6	1.3	4.7	5.3	10.7	0.1	0.7	3	4.7	10.4	0.9	0.9	2.1	1.8	3.9	13.8	0.533	0.507	0.069	0.444	0.309	17.1	0.2	0.5	16	\N	\N	\N	114.7	114.7	\N	\N	\N	1642911
+91	2025-06-25 20:00:00	V.J. Edgecombe	v-j-edgecombe	SG	\N	77.25	79.5	193	Baylor	Bimini, Bahamas	2005-07-30	\N	3	1	19.89	33	32.7	5	11.5	0.436	1.6	4.6	0.34	3.4	4.3	0.782	5.6	3.2	2.1	0.6	1.9	2.5	15	5.5	12.7	1.7	5.1	3.7	4.7	6.2	3.5	2.3	0.7	2.1	2.8	16.5	0.552	0.504	0.402	0.373	0.359	24.1	0.8	1.66	22.1	0.111	0.067	0.178	119.1	102.5	7.1	4.3	11.4	1642845
 134	2025-06-25 20:00:00	Hansen Yang	hansen-yang	C	\N	86.25	86.75	253	Qingdao (China)	China	2005-06-26	\N	\N	\N	19.98	53	33	6.3	10.6	0.595	0.3	1.1	0.286	3.2	4.7	0.677	10	2.8	0.9	2.7	3.1	3.2	16.2	6.9	11.6	0.3	1.2	3.5	5.2	11	3.1	1	3	3.4	3.4	17.6	0.627	0.609	0.099	0.446	0.318	21.4	0.65	0.91	20.2	\N	\N	\N	115	103.9	\N	\N	\N	\N
 227	2024-04-25 20:00:00	Ajay Mitchell	ajay-mitchell	PG	SG	76.5	78.25	197	UC Santa Barbara	Ans, Belgium	2002-06-25	\N	\N	3	21.99	29	31.5	6.7	13.3	0.504	1.1	2.9	0.393	5.4	6.3	0.858	4	4	1.2	0.4	2.6	2.6	20	7.7	15.3	1.3	3.3	6.2	7.2	4.6	4.5	1.3	0.4	2.9	2.9	22.9	0.612	0.547	0.217	0.473	0.364	31.1	0.91	1.55	25.7	0.149	0.048	0.197	119.3	106.2	4.6	0.4	5	1642349
 228	2024-04-25 20:00:00	Dalton Knecht	dalton-knecht	SF	\N	78.5	81	212	Tennessee	Thornton, CO	2001-04-19	\N	\N	4	23.17	36	30.6	7.3	16	0.458	2.6	6.5	0.397	4.4	5.7	0.772	4.9	1.8	0.7	0.6	1.7	1.8	21.7	8.6	18.9	3	7.7	5.2	6.7	5.8	2.1	0.8	0.8	2	2.1	25.5	0.578	0.538	0.406	0.357	0.38	32.7	0.41	1.07	24.4	0.135	0.073	0.207	117.6	100.1	8.5	2.8	11.3	1642261
@@ -10788,6 +10991,1157 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 258	2024-04-25 20:00:00	Zyon Pullin	zyon-pullin	PG	\N	75.5	\N	206	Florida	Pleasant Hill, CA	2001-03-03	\N	\N	4	23.3	33	33.5	4.8	10.8	0.444	1.1	2.4	0.449	4.9	5.8	0.847	3.9	4.9	0.9	0.1	1.3	2	15.5	5.1	11.6	1.1	2.5	5.2	6.2	4.2	5.3	1	0.1	1.4	2.1	16.7	0.574	0.493	0.219	0.534	0.362	20.2	1.22	3.77	20.2	0.145	0.029	0.173	131.5	111.9	5.1	1.3	6.4	1642389
 259	2024-04-25 20:00:00	Cody Williams	cody-williams	SF	\N	79.75	85	178	Colorado	Gilbert, AZ	2004-11-20	\N	7	1	19.58	24	28.4	4.5	8.1	0.552	0.7	1.7	0.415	2.3	3.2	0.714	3	1.6	0.6	0.7	2	2	11.9	5.7	10.3	0.9	2.2	2.9	4.1	3.8	2	0.8	0.8	2.5	2.5	15.1	0.62	0.595	0.211	0.397	0.339	20.8	0.49	0.79	15.7	0.07	0.047	0.117	112	106.6	2.4	1.5	3.9	1642262
 260	2024-04-25 20:00:00	Kyle Filipowski	kyle-filipowski	C	\N	84	82.5	230	Duke	Westtown, NY	2003-11-07	\N	7	2	20.62	36	30.4	6.1	12.1	0.505	1.1	3.1	0.348	3.1	4.6	0.671	8.3	2.8	1.1	1.5	2.1	3	16.4	7.2	14.3	1.3	3.7	3.7	5.5	9.8	3.3	1.3	1.8	2.5	3.6	19.4	0.573	0.549	0.257	0.383	0.336	27.7	0.66	1.32	26	0.124	0.091	0.219	117.3	94.5	6.6	4.5	11.1	1642271
+261	2024-04-25 20:00:00	Ryan Dunn	ryan-dunn	SF	\N	79.5	85.5	214	Virginia	Freeport, NY	2003-01-07	\N	\N	2	21.45	34	27.5	3.4	6.1	0.548	0.2	1	0.2	1.2	2.3	0.532	6.9	0.8	1.3	2.3	0.8	2.1	8.1	4.4	8	0.3	1.3	1.6	3	9	1	1.7	3	1.1	2.7	10.6	0.564	0.565	0.168	0.37	0.293	16.8	0.36	0.93	22	0.068	0.111	0.18	114.5	89.3	1.6	5.6	7.2	1642346
+262	2024-04-25 20:00:00	Kyshawn George	kyshawn-george	SG	\N	80.25	82.25	209	Miami	Monthey, Switzerland	2003-12-12	\N	\N	1	20.52	31	23	2.6	6.1	0.426	1.7	4.2	0.408	0.7	0.9	0.778	3	2.2	0.9	0.4	1.5	1.8	7.6	4.1	9.6	2.7	6.6	1.1	1.4	4.7	3.4	1.4	0.6	2.4	2.8	11.9	0.582	0.566	0.684	0.142	0.375	17.6	0.93	1.4	13.6	0.05	0.045	0.095	108.2	106.9	1.2	2.4	3.6	1642273
+263	2024-04-25 20:00:00	Trey Alexander	trey-alexander	SG	\N	76.5	82.5	187	Creighton	Oklahoma City, OK	2003-05-02	\N	57	3	21.13	35	37.3	6.6	14.9	0.446	1.8	5.2	0.339	2.5	3.1	0.824	5.7	4.7	1.1	0.4	2.5	1.7	17.6	6.4	14.4	1.7	5.1	2.5	3	5.5	4.6	1	0.4	2.4	1.7	17	0.538	0.506	0.352	0.208	0.364	26.6	0.9	1.92	18.7	0.086	0.064	0.15	110.1	102	3.2	2.6	5.7	1641725
+264	2024-04-25 20:00:00	Ariel Hukporti	ariel-hukporti	C	\N	84	86.5	246	Melbourne (NBL)	Straslund, Germany	2002-04-12	\N	\N	\N	22.19	43	17.7	3.1	5.5	0.563	0	0	\N	1.7	2.8	0.617	7.1	0.7	0.5	1.5	1.7	2.5	8	6.3	11.2	0	0	3.5	5.7	14.4	1.5	1	3	3.4	5.1	16.2	0.58	0.563	0	0.504	0.306	20.34	0.31	0.45	19.58	\N	\N	\N	110	100.6	\N	\N	\N	1630574
+265	2024-04-25 20:00:00	Yves Missi	yves-missi	C	\N	84	86	229	Baylor	Yaounde, Cameroon	2004-05-14	\N	53	1	20.1	34	22.9	4.1	6.7	0.614	0	0	\N	2.5	4.1	0.616	5.6	0.4	0.6	1.5	1.1	2.4	10.7	6.5	10.5	0	0	3.9	6.4	8.8	0.6	0.9	2.4	1.8	3.7	16.8	0.622	0.614	0	0.605	0.306	21.8	0.16	0.33	24.7	0.133	0.062	0.19	125.8	103.2	5	2.4	7.4	1642274
+266	2024-04-25 20:00:00	Matas Buzelis	matas-buzelis	SF	\N	82	82	197	G League	Hinsdale, IL	2004-10-13	\N	5	\N	19.68	34	30.9	5.4	11.8	0.455	0.9	3.4	0.261	1.4	2	0.696	6.6	1.9	0.9	1.9	2.2	2.4	14.1	6.2	13.7	1	3.9	1.6	2.4	7.7	2.3	1.1	2.3	2.5	2.8	16.4	0.553	0.492	0.288	0.172	0.332	21.45	0.48	0.89	13.63	\N	\N	\N	97.3	117.4	\N	\N	\N	1641824
+267	2024-04-25 20:00:00	Donovan Clingan	donovan-clingan	C	\N	87	90.75	282	UConn	Bristol, CT	2004-02-23	\N	56	2	20.32	35	22.5	5.3	8.3	0.639	0.1	0.2	0.25	2.3	4	0.583	7.4	1.5	0.5	2.5	0.8	2	13	8.5	13.3	0.1	0.4	3.7	6.4	11.8	2.4	0.8	3.9	1.3	3.2	20.8	0.637	0.643	0.027	0.478	0.303	25.1	0.54	1.89	34.8	0.193	0.112	0.305	135.3	89.4	8.8	6.2	15	1642270
+268	2024-04-25 20:00:00	Dillon Jones	dillon-jones	SF	\N	77.75	83	237	Weber State	Columbia, SC	2001-10-29	\N	\N	4	22.64	31	37	6.9	14.2	0.489	1.1	3.4	0.324	5.8	6.8	0.857	9.8	5.2	2	0.1	3	2.3	20.8	6.8	13.8	1.1	3.3	5.7	6.6	9.6	5.1	1.9	0.1	3	2.2	20.2	0.597	0.527	0.239	0.477	0.357	29.5	1.03	1.72	27.9	0.14	0.091	0.23	118	95.3	5.5	2.3	7.7	1641794
+269	2024-04-25 20:00:00	Bronny James	bronny-james	PG	SG	74.75	79.25	210	USC	Cleveland, OH	2004-10-06	\N	20	1	19.7	25	19.3	1.6	4.5	0.366	0.6	2.4	0.267	0.9	1.4	0.676	2.8	2.1	0.8	0.2	1.1	1.7	4.8	3.1	8.3	1.2	4.5	1.7	2.5	5.3	4	1.4	0.4	2	3.2	9	0.472	0.438	0.536	0.304	0.333	16.2	1.2	1.96	10.3	0.017	0.05	0.066	98.1	106.8	-1.4	2.1	0.7	1642355
+270	2024-04-25 20:00:00	Jalen Bridges	jalen-bridges	SF	\N	80	82	213	Baylor	Fairmont, WV	2001-05-14	\N	73	4	23.1	35	31.7	4.1	8.8	0.466	2.1	5.1	0.412	1.9	2.3	0.823	5.7	1.4	1.1	0.6	1	1.5	12.2	4.7	10	2.4	5.7	2.1	2.6	6.4	1.6	1.2	0.6	1.1	1.7	13.8	0.615	0.584	0.573	0.256	0.377	17.5	0.47	1.47	19.6	0.122	0.05	0.173	132.5	106.1	7.5	2.3	9.9	1641779
+271	2024-04-25 20:00:00	Isaac Jones	isaac-jones	PF	\N	81	87	235	Washington State	Spanaway, WA	2000-07-11	\N	\N	4	23.94	35	31.7	5.7	9.9	0.575	0	0.4	0.071	3.9	5.5	0.712	7.6	1.5	0.5	1.1	1.9	2	15.3	6.4	11.2	0	0.5	4.4	6.2	8.6	1.7	0.6	1.2	2.2	2.3	17.3	0.613	0.577	0.04	0.552	0.319	23.4	0.42	0.81	23.7	0.122	0.072	0.194	121.3	100.3	5	2.6	7.6	1642403
+272	2024-04-25 20:00:00	Keshad Johnson	keshad-johnson	PF	\N	79.5	82.25	224	Arizona	Oakland, CA	2001-06-23	\N	\N	4	22.99	36	27.6	4.2	7.9	0.53	1	2.6	0.387	2.1	3	0.71	5.9	1.8	1	0.7	1.6	2.1	11.5	5.5	10.3	1.3	3.4	2.8	3.9	7.7	2.4	1.3	0.9	2	2.7	15	0.616	0.593	0.326	0.375	0.343	18.4	0.59	1.18	19.3	0.101	0.081	0.181	122.6	98.1	4.5	3.8	8.3	1642352
+273	2024-04-25 20:00:00	Stephon Castle	stephon-castle	PG	SG	78.75	81	210	UConn	Covington, GA	2004-11-01	\N	12	1	19.63	34	27	4	8.5	0.472	0.6	2.2	0.267	2.4	3.2	0.755	4.7	2.9	0.8	0.5	1.5	2.4	11.1	5.4	11.4	0.8	2.9	3.3	4.3	6.2	3.9	1.1	0.7	2	3.2	14.8	0.551	0.507	0.259	0.379	0.336	22	0.84	1.94	19	0.109	0.074	0.187	119.7	99.3	3.4	3.1	6.5	1642264
+274	2024-04-25 20:00:00	Quinten Post	quinten-post	C	\N	85.25	86.5	244	Boston College	Amsterdam, Netherlands	2000-03-21	\N	\N	4	24.25	35	31.9	6.3	12.3	0.514	1.4	3.3	0.431	2.9	3.5	0.821	8.1	2.9	0.9	1.7	2.5	2.9	17	7.2	13.9	1.6	3.7	3.3	4	9.2	3.2	1	2	2.8	3.2	19.2	0.607	0.572	0.269	0.285	0.365	26.9	0.7	1.16	25.6	0.118	0.065	0.183	116.9	102.1	6.5	3.1	9.6	1642366
+275	2024-04-25 20:00:00	Ulrich Chomche	ulrich-chomche	PF	C	83.5	88	232	NBA Academy Africa	Bafang, Cameroon	2005-12-30	\N	\N	\N	18.47	3	30	4.7	11	0.424	2.7	7	0.381	1	1.3	0.75	9	3.3	1.3	2.7	5	1	13	5.6	13.2	3.2	8.4	1.2	1.6	10.8	4	1.6	3.2	6	1.2	15.6	0.559	0.545	0.636	0.121	\N	23.36	0.81	0.67	20.53	\N	\N	\N	89.8	75.9	\N	\N	\N	1642279
+276	2024-04-25 20:00:00	Antonio Reeves	antonio-reeves	SG	\N	77.75	80.25	187	Kentucky	Chicago, IL	2000-11-20	\N	\N	4	23.58	33	31.4	7.1	13.9	0.512	2.5	5.7	0.447	3.4	4	0.863	4.2	1.6	0.7	0.2	1.2	1.8	20.2	8.2	15.9	2.9	6.5	3.9	4.5	4.8	1.9	0.8	0.3	1.4	2	23.2	0.64	0.603	0.41	0.285	0.392	25.9	0.36	1.35	23.6	0.158	0.023	0.181	129.2	112.9	7.3	-0.3	7	1641810
+277	2023-06-22 20:00:00	Adama Sanogo	adama-sanogo	C	\N	80.5	86.75	258	UConn	Bamako, Mali	2002-02-12	\N	58	3	21.35	39	26.5	7.1	11.7	0.606	0.5	1.3	0.365	2.5	3.3	0.766	7.7	1.3	0.7	0.8	1.9	2.7	17.2	9.6	15.9	0.7	1.8	3.4	4.5	10.4	1.7	0.9	1.1	2.6	3.6	23.3	0.648	0.627	0.114	0.28	0.339	28.1	0.4	0.65	30	0.166	0.093	0.259	125.1	93	7.8	3.2	11	1641766
+278	2023-06-22 20:00:00	Jett Howard	jett-howard	SG	\N	80	\N	215	Michigan	Miami, FL	2003-09-14	\N	44	1	19.76	29	31.8	4.7	11.4	0.414	2.7	7.3	0.368	2.1	2.6	0.8	2.8	2	0.4	0.7	1.3	2.2	14.2	5.3	12.9	3	8.3	2.3	2.9	3.2	2.3	0.5	0.7	1.4	2.5	16.1	0.562	0.532	0.64	0.227	0.384	23	0.56	1.59	16.7	0.091	0.043	0.13	113.1	106.2	4.2	1	5.2	1641724
+279	2023-06-22 20:00:00	Marcus Sasser	marcus-sasser	PG	SG	74.5	79	196	Houston	Dallas, TX	2000-09-21	\N	\N	4	22.74	36	30.8	5.3	12.1	0.438	2.7	6.9	0.384	3.6	4.2	0.848	2.8	3.1	1.6	0.2	1.6	1.5	16.8	6.2	14.1	3.1	8.1	4.2	4.9	3.3	3.6	1.9	0.2	1.9	1.8	19.6	0.597	0.548	0.576	0.348	0.392	26.1	0.75	1.95	24.9	0.166	0.094	0.26	126.6	91.9	7.7	4.3	12	1631204
+280	2023-06-22 20:00:00	Victor Wembanyama	victor-wembanyama	C	\N	89	96	220	Metropolitans 92 (France)	Le Chesnay, France	2004-01-04	\N	\N	\N	19.45	44	32.2	7.3	15.6	0.468	1.3	4.7	0.272	5	6.1	0.818	10.3	2.4	0.8	3	2.9	2.1	20.9	8.1	17.4	1.4	5.2	5.6	6.8	11.5	2.7	0.9	3.3	3.2	2.4	23.3	0.564	0.509	0.3	0.392	0.356	30.84	0.47	0.84	24.48	\N	\N	\N	109.8	100.2	\N	\N	\N	1641705
+281	2023-06-22 20:00:00	Rayan Rupert	rayan-rupert	SG	\N	79.25	86	193	NZ Breakers (NBL)	Strasbourg, France	2004-05-31	\N	\N	\N	19.05	31	18.1	2.2	6	0.369	0.8	2.6	0.312	1.5	2.1	0.738	2.4	0.8	0.7	0.2	1.1	2	6.8	4.4	12	1.6	5.1	3.1	4.2	4.8	1.6	1.5	0.3	2.2	3.9	13.6	0.484	0.436	0.428	0.348	0.35	20.15	0.36	0.74	9.96	\N	\N	\N	97.7	105.1	\N	\N	\N	1641712
+282	2023-06-22 20:00:00	Jordan Miller	jordan-miller	SF	\N	77.75	83.75	192	Miami	Middleburg, VA	2000-01-23	\N	\N	4	23.4	37	35	5.9	10.8	0.545	0.9	2.5	0.352	2.6	3.4	0.784	6.2	2.7	1.2	0.4	1.3	1.7	15.3	6.1	11.1	0.9	2.5	2.7	3.5	6.4	2.8	1.3	0.4	1.4	1.8	15.7	0.616	0.585	0.228	0.312	0.345	19.9	0.71	2.02	23	0.145	0.04	0.185	130	106.5	6	1.5	7.6	1641757
+283	2023-06-22 20:00:00	Amen Thompson	amen-thompson	SG	PG	79	84	214	Overtime Elite	Oakland, CA	2003-01-30	\N	\N	\N	20.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.6	14	0.9	3.6	3.8	5.5	8	8.3	2.7	0.9	3.9	2.9	19.8	0.595	0.571	0.257	0.392	0.329	\N	\N	2.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	1641708
+284	2023-06-22 20:00:00	Cam Whitmore	cam-whitmore	SF	\N	79	80.5	235	Villanova	Odenton, MD	2004-07-08	\N	21	1	18.95	26	27.3	4.7	9.8	0.478	1.4	4.2	0.343	1.7	2.5	0.703	5.3	0.7	1.4	0.3	1.6	1.7	12.5	6.2	12.9	1.9	5.5	2.3	3.2	7	1	1.9	0.5	2.1	2.2	16.6	0.571	0.551	0.424	0.251	0.351	25.6	0.25	0.45	20.5	0.062	0.068	0.13	105.4	100	3.7	2.5	6.2	1641715
+285	2023-06-22 20:00:00	Maxwell Lewis	maxwell-lewis	SF	\N	79.5	84	207	Pepperdine	Las Vegas, NV	2002-07-27	\N	\N	2	20.9	31	31.4	6.1	13	0.468	1.5	4.3	0.348	3.5	4.4	0.787	5.7	2.8	0.8	0.8	3.3	2.7	17.1	6.9	14.9	1.7	4.9	4	5	6.5	3.2	1	0.9	3.8	3.1	19.6	0.567	0.525	0.328	0.338	0.359	28.2	0.61	0.85	18.7	0.07	0.033	0.099	104.3	108.8	1.8	-0.1	1.8	1641721
+286	2023-06-22 20:00:00	Malcolm Cazalon	malcolm-cazalon	SG	\N	78	\N	186	Leuven (Belgium)	Roanne, France	2001-08-27	\N	\N	\N	21.81	39	26.6	4.5	10	0.45	1.6	5.1	0.32	2.3	2.9	0.795	3.1	2.8	1.8	0.3	2	2.5	12.9	6.1	13.5	2.2	6.8	3.1	3.9	4.2	3.9	2.4	0.4	2.7	3.4	17.4	0.568	0.531	0.506	0.288	0.368	23.43	0.8	1.42	16.53	\N	\N	\N	108.8	110.1	\N	\N	\N	1630608
+457	2004-06-22 19:00:00	Viktor Khryapa	viktor-khryapa	SF	\N	81	\N	210	CSKA Moscow (Russia)	Kyiv, Ukraine	1982-08-03	\N	\N	\N	21.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	3.5	7.7	1.1	4.1	2.6	3.5	6.8	2.4	1.8	2	1.9	4.6	10.8	0.578	0.533	0.539	0.461	0.341	\N	\N	1.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	2751
+287	2023-06-22 20:00:00	Brandon Miller	brandon-miller	SF	\N	81	\N	200	Alabama	Antioch, TN	2002-11-22	\N	9	1	20.57	37	32.6	6	13.9	0.43	2.9	7.5	0.384	3.9	4.6	0.859	8.2	2.1	0.9	0.9	2.2	2.4	18.8	6.6	15.4	3.2	8.2	4.4	5.1	9.1	2.3	1	1	2.4	2.6	20.7	0.583	0.533	0.535	0.329	0.394	26.2	0.49	0.95	23.4	0.136	0.096	0.232	119.7	91.9	7.8	4.3	12	1641706
+288	2023-06-22 20:00:00	Adam Flagler	adam-flagler	PG	SG	74.25	76.5	192	Baylor	Duluth, GA	1999-12-01	\N	\N	4	23.55	32	33.8	5.3	12.3	0.426	2.5	6.3	0.4	2.6	3.3	0.79	2.4	4.6	1.2	0.1	1.7	2	15.6	5.6	13.1	2.7	6.7	2.8	3.5	2.6	4.9	1.3	0.1	1.8	2.1	16.6	0.562	0.528	0.508	0.266	0.377	23.2	1.2	2.72	19.6	0.133	0.037	0.17	122.5	107.9	6.3	1.5	7.8	1641745
+289	2023-06-22 20:00:00	Leonard Miller	leonard-miller	SF	\N	82.5	86	213	G League	Thornhill, Canada	2003-11-26	\N	\N	\N	19.56	38	29.7	6.7	12.4	0.537	0.7	2.4	0.304	1.6	2	0.792	10.1	1.6	1	0.8	1.9	2.8	16.9	8.1	15.1	0.9	2.9	1.9	2.5	12.3	1.9	1.2	1	2.3	3.4	20.5	0.63	0.567	0.195	0.163	0.344	22.7	0.39	0.82	19.8	\N	\N	\N	113.7	117.5	\N	\N	\N	1631159
+290	2023-06-22 20:00:00	Kris Murray	kris-murray	PF	\N	81	83.75	213	Iowa	Cedar Rapids, IA	2000-08-19	\N	\N	3	22.83	29	34.9	7.5	15.7	0.476	2.3	6.8	0.335	3	4.1	0.729	7.9	2	1	1.2	1.5	2.1	20.2	7.7	16.2	2.4	7	3.1	4.2	8.2	2.1	1.1	1.2	1.6	2.2	20.9	0.572	0.548	0.432	0.259	0.362	27	0.43	1.32	25.9	0.142	0.044	0.186	120.7	105.7	8.4	0.5	8.9	1631200
+291	2023-06-22 20:00:00	Mouhamed Gueye	mouhamed-gueye	PF	\N	83.5	87.25	213	Washington State	Dakar, Senegal	2002-11-09	\N	100	2	20.61	33	32.1	5.6	11.5	0.488	0.3	1.2	0.275	2.7	4	0.674	8.4	1.9	0.8	0.8	2.3	2.8	14.3	6.3	13	0.4	1.4	3	4.5	9.4	2.1	0.9	1	2.6	3.1	16.1	0.532	0.503	0.105	0.346	0.318	26	0.54	0.81	21.5	0.087	0.064	0.151	108.8	100.1	3.6	1.6	5.1	1631243
+292	2023-06-22 20:00:00	Noah Clowney	noah-clowney	PF	\N	82	\N	210	Alabama	Roebuck, SC	2004-07-14	\N	68	1	18.93	36	25.4	3.4	7	0.486	0.9	3.3	0.283	2	3.1	0.649	7.9	0.8	0.6	0.9	1.3	2.5	9.8	4.8	10	1.3	4.7	2.8	4.4	11.2	1.1	0.8	1.3	1.8	3.5	13.8	0.576	0.553	0.474	0.439	0.332	18	0.32	0.63	18.6	0.083	0.105	0.188	116.7	89.8	3.7	4.5	8.3	1641730
+293	2023-06-22 20:00:00	Julian Phillips	julian-phillips	SF	\N	80	83.5	197	Tennessee	Blythewood, SC	2003-11-05	\N	13	1	19.62	32	24.1	2.5	6	0.411	0.3	1.4	0.239	3	3.7	0.822	4.7	1.4	0.6	0.5	1.3	1.8	8.3	3.7	9	0.5	2.2	4.5	5.5	7	2.2	0.9	0.8	1.9	2.6	12.4	0.536	0.44	0.24	0.615	0.339	19.1	0.6	1.12	16.6	0.083	0.099	0.182	114.4	91.1	2	3.8	5.7	1641763
+294	2023-06-22 20:00:00	Jaylen Clark	jaylen-clark	SG	\N	77.25	81	204	UCLA	Corona, CA	2001-10-13	\N	\N	3	21.68	30	30.5	4.9	10.3	0.481	0.9	2.6	0.329	2.2	3.2	0.698	6	1.9	2.6	0.3	1.2	2.1	13	5.8	12.1	1	3.1	2.6	3.8	7.1	2.2	3.1	0.3	1.5	2.5	15.3	0.55	0.523	0.256	0.312	0.335	21.7	0.53	1.51	23.4	0.105	0.118	0.223	117.3	85.9	5.2	6.7	11.9	1641740
+295	2023-06-22 20:00:00	Colin Castleton	colin-castleton	C	\N	83	\N	250	Florida	DeLand, FL	2000-05-25	\N	\N	4	23.07	26	31.2	5.8	11.5	0.5	0.1	0.6	0.133	4.3	6	0.729	7.7	2.7	0.9	3	2.5	2.1	16	6.7	13.3	0.1	0.7	5	6.9	8.9	3.2	1.1	3.5	2.9	2.4	18.4	0.555	0.503	0.05	0.517	0.323	27.8	0.71	1.08	26	0.089	0.089	0.178	107.8	93.5	4.9	5.6	10.5	1630658
+296	2023-06-22 20:00:00	Chris Livingston	chris-livingston	SF	\N	79.25	83.25	219	Kentucky	Akron, OH	2003-10-15	\N	12	1	19.68	34	22.4	2.3	5.4	0.429	0.5	1.7	0.305	1.1	1.6	0.722	4.2	0.7	0.4	0.4	0.9	1.7	6.3	3.7	8.7	0.9	2.8	1.8	2.6	6.7	1.1	0.7	0.6	1.5	2.7	10.2	0.513	0.478	0.321	0.293	0.334	15.7	0.35	0.77	12.1	0.047	0.052	0.1	108.6	103.9	1	1.6	2.6	1641753
+297	2023-06-22 20:00:00	Brice Sensabaugh	brice-sensabaugh	SF	\N	78	\N	235	Ohio State	Orlando, FL	2003-10-30	\N	45	1	19.64	33	24.5	6	12.4	0.48	1.8	4.5	0.405	2.5	3	0.83	5.4	1.2	0.5	0.4	2	2.5	16.3	8.8	18.2	2.7	6.6	3.7	4.4	7.9	1.7	0.8	0.6	3	3.6	23.9	0.587	0.554	0.361	0.244	0.382	34	0.32	0.57	26.4	0.138	0.049	0.188	113.8	103.9	7.8	0.8	8.6	1641729
+298	2023-06-22 20:00:00	Scoot Henderson	scoot-henderson	PG	\N	74	\N	195	G League	Marietta, GA	2004-02-03	\N	\N	\N	19.37	25	30.2	6.6	14.8	0.443	0.9	2.7	0.324	2.2	2.9	0.75	5.1	6.4	1.2	0.4	3.3	3.2	17.6	7.8	17.7	1.1	3.2	2.6	3.4	6.1	7.6	1.4	0.5	4	3.8	21.1	0.546	0.473	0.184	0.195	0.342	27.88	1.13	1.92	14.75	\N	\N	\N	101.5	122.1	\N	\N	\N	1630703
+299	2023-06-22 20:00:00	Dariq Whitehead	dariq-whitehead	SG	\N	79	82.25	217	Duke	Newark, NJ	2004-08-01	\N	2	1	18.88	28	20.6	3	7	0.421	1.5	3.5	0.429	0.8	1	0.793	2.4	1	0.8	0.2	1.4	1.5	8.3	5.2	12.3	2.6	6.1	1.4	1.8	4.2	1.7	1.3	0.4	2.4	2.6	14.4	0.548	0.528	0.497	0.147	0.377	22.4	0.42	0.69	14.1	0.049	0.069	0.118	104.1	99.7	1.6	2.3	4	1641727
+300	2023-06-22 20:00:00	Oscar Tshiebwe	oscar-tshiebwe	C	\N	80.5	87.5	254	Kentucky	Lubumbashi, DR Congo	1999-11-27	\N	48	4	23.56	32	33.6	6.1	10.9	0.56	0	0.1	0	4.3	5.9	0.729	13.7	1.6	1.6	1	2	2.9	16.5	6.5	11.7	0	0.1	4.6	6.3	14.6	1.7	1.7	1.1	2.2	3.1	17.6	0.603	0.56	0.006	0.54	0.321	23.2	0.41	0.77	30.9	0.164	0.086	0.246	126.8	94.9	8.2	2.3	10.5	1631131
+301	2023-06-22 20:00:00	Jalen Slawson	jalen-slawson	PF	\N	79.75	83.75	222	Furman	Summerville, SC	1999-10-22	\N	\N	4	23.66	36	30.7	5.4	9.6	0.556	1.1	2.9	0.394	3.7	4.8	0.775	7.1	3.2	1.5	1.5	2.6	2.8	15.6	6.3	11.3	1.3	3.4	4.4	5.6	8.3	3.8	1.8	1.8	3	3.3	18.3	0.654	0.615	0.3	0.499	0.353	24	0.83	1.24	26.8	0.141	0.08	0.221	122.1	96.6	4.8	2.8	7.6	1641771
+302	2023-06-22 20:00:00	Hunter Tyson	hunter-tyson	SF	\N	80	\N	215	Clemson	Gastonia, NC	2000-06-13	\N	\N	4	23.02	34	34.7	5.1	10.6	0.479	2.4	6	0.405	2.7	3.3	0.838	9.6	1.5	0.9	0.1	1	1.8	15.3	5.2	11	2.5	6.3	2.8	3.4	9.9	1.5	1	0.1	1.1	1.8	15.9	0.631	0.595	0.571	0.309	0.381	20.1	0.41	1.43	22.2	0.129	0.078	0.203	126.7	96.9	6.1	2	8.1	1641816
+303	2023-06-22 20:00:00	Sidy Cissoko	sidy-cissoko	SG	SF	78.75	81.75	224	G League	Saint-Maurice-Montcouronne, France	2004-04-02	\N	\N	\N	19.21	43	29	4	9.1	0.436	1.1	3.6	0.314	1.5	2.3	0.643	2.8	3.1	1.1	1	1.9	3.4	11.6	4.9	11.3	1.4	4.5	1.8	2.8	3.5	3.9	1.3	1.2	2.4	4.2	14.4	0.57	0.499	0.4	0.251	0.334	18.33	0.84	1.65	10.8	\N	\N	\N	101.9	121.6	\N	\N	\N	1631321
+304	2023-06-22 20:00:00	Kobe Brown	kobe-brown	PF	\N	79.75	84.75	252	Missouri	Huntsville, AL	2000-01-01	\N	\N	4	23.46	34	29.6	5.7	10.3	0.553	1.5	3.3	0.455	2.9	3.7	0.792	6.4	2.5	1.5	0.4	1.6	2.5	15.8	6.9	12.6	1.8	4	3.5	4.5	7.7	3.1	1.8	0.5	2	3	19.3	0.655	0.625	0.319	0.356	0.365	23.6	0.72	1.54	27	0.163	0.048	0.211	128.5	104.4	8	1	8.9	1641738
+305	2023-06-22 20:00:00	Jalen Wilson	jalen-wilson	SF	PF	78.75	80	230	Kansas	Denton, TX	2000-11-04	\N	73	4	22.62	36	35.4	6.9	16	0.43	1.9	5.8	0.337	4.4	5.5	0.799	8.3	2.2	0.9	0.5	2.3	2.1	20.1	7	16.2	2	5.9	4.5	5.6	8.4	2.2	1	0.5	2.4	2.1	20.4	0.54	0.49	0.362	0.346	0.365	29.7	0.42	0.94	21	0.091	0.075	0.166	108.7	97.4	5.4	1.9	7.3	1630592
+306	2023-06-22 20:00:00	Taylor Hendricks	taylor-hendricks	PF	\N	81.5	84.5	214	UCF	Fort Lauderdale, FL	2003-11-22	\N	59	1	19.57	34	34.7	5.4	11.3	0.478	1.8	4.6	0.394	2.5	3.2	0.782	7	1.4	0.9	1.7	1.4	2	15.1	5.6	11.8	1.9	4.7	2.6	3.4	7.2	1.4	0.9	1.8	1.5	2.1	15.7	0.589	0.557	0.403	0.286	0.362	21.2	0.41	0.96	22.5	0.119	0.075	0.193	122.5	97.2	5.4	2.5	7.9	1641707
+307	2023-06-22 20:00:00	Julian Strawther	julian-strawther	SG	\N	79.25	81.25	209	Gonzaga	Las Vegas, NV	2002-04-18	\N	62	3	21.17	37	31.2	5.1	10.9	0.469	2.2	5.3	0.408	2.8	3.6	0.776	6.2	1.3	0.8	0.4	1.5	2.1	15.2	5.9	12.6	2.5	6.1	3.2	4.2	7.2	1.5	1	0.5	1.7	2.4	17.6	0.602	0.568	0.484	0.331	0.372	22.2	0.3	0.88	19.7	0.111	0.055	0.166	119.7	102.9	4.9	0.9	5.8	1631124
+308	2023-06-22 20:00:00	Markquis Nowell	markquis-nowell	PG	\N	68	\N	160	Kansas State	New York, NY	1999-12-25	\N	\N	4	23.48	36	36.9	5	12.9	0.386	2.4	6.9	0.355	5.1	5.8	0.889	3.5	8.3	2.6	0.1	3.7	2	17.6	4.9	12.6	2.4	6.7	5	5.6	3.4	8.1	2.5	0.1	3.6	2	17.2	0.56	0.481	0.532	0.446	0.385	26.2	1.64	2.25	21.9	0.114	0.072	0.19	113.5	97.9	6	3.5	9.6	1641806
+309	2023-06-22 20:00:00	Emoni Bates	emoni-bates	SF	\N	81.5	81	179	Eastern Michigan	Ypsilanti, MI	2004-01-28	\N	3	2	19.39	30	33.8	6.4	15.9	0.405	2.5	7.7	0.33	3.8	4.9	0.782	5.8	1.4	0.7	0.5	2.5	2.3	19.2	6.9	16.9	2.7	8.2	4.1	5.2	6.1	1.5	0.8	0.6	2.7	2.4	20.5	0.528	0.484	0.482	0.308	0.375	31.1	0.3	0.55	18.6	0.063	0.008	0.071	102.2	115.1	2.3	-3.1	-0.7	1641734
+310	2023-06-22 20:00:00	Cason Wallace	cason-wallace	PG	\N	75.75	80.5	195	Kentucky	Richardson, TX	2003-11-07	\N	20	1	19.61	32	32.2	4.3	9.8	0.446	1.4	4	0.346	1.7	2.2	0.757	3.7	4.3	2	0.5	2.1	2.4	11.7	4.9	10.9	1.5	4.4	1.9	2.4	4.2	4.8	2.2	0.5	2.3	2.7	13.1	0.543	0.516	0.407	0.224	0.352	19.9	1.22	2.03	18.5	0.085	0.062	0.151	113.8	100.5	3.6	4.2	7.7	1641717
+311	2023-06-22 20:00:00	Ben Sheppard	ben-sheppard	SG	\N	78.5	79.75	195	Belmont	Atlanta, GA	2001-07-16	\N	\N	4	21.93	32	34.4	6.8	14.2	0.475	2.5	6	0.415	2.8	4.2	0.684	5.2	2.9	1.4	0.2	2.2	2.1	18.8	7.1	14.9	2.6	6.3	3	4.4	5.5	3	1.4	0.2	2.3	2.2	19.7	0.582	0.563	0.424	0.292	0.362	27.7	0.61	1.33	21.8	0.109	0.051	0.156	112.8	104.2	4	-0.4	3.6	1641767
+312	2023-06-22 20:00:00	Colby Jones	colby-jones	SG	SF	77.75	80	199	Xavier	Birmingham, AL	2002-05-28	\N	\N	3	21.06	36	34	5.8	11.3	0.509	1.3	3.3	0.378	2.3	3.4	0.653	5.7	4.4	1.3	0.6	2.3	2.1	15	6.1	12	1.3	3.5	2.4	3.7	6.1	4.7	1.4	0.6	2.5	2.3	15.9	0.58	0.564	0.292	0.305	0.336	21.9	1.02	1.88	19.8	0.098	0.052	0.15	114.7	103.5	4.8	2.5	7.3	1641732
+313	2023-06-22 20:00:00	Amari Bailey	amari-bailey	SG	\N	76.5	79	191	UCLA	Chicago, IL	2004-02-17	\N	5	1	19.33	30	26.9	4.5	9.1	0.495	0.7	1.8	0.389	1.5	2.1	0.698	3.8	2.2	1.1	0.3	2.4	1.7	11.2	6	12.2	0.9	2.4	2	2.8	5.1	2.9	1.5	0.4	3.3	2.3	14.9	0.553	0.533	0.198	0.231	0.336	23.7	0.64	0.89	16.4	0.045	0.094	0.134	101	92.8	1.7	3.3	5	1641735
+314	2023-06-22 20:00:00	Jordan Hawkins	jordan-hawkins	SG	\N	77.5	78.75	186	UConn	Gaithersburg, MD	2002-04-29	\N	59	2	21.14	37	29.4	4.9	12	0.409	2.9	7.6	0.388	3.4	3.8	0.887	3.8	1.3	0.7	0.5	1.4	2.2	16.2	6	14.8	3.6	9.3	4.1	4.7	4.6	1.6	0.9	0.6	1.7	2.7	19.8	0.584	0.531	0.631	0.317	0.405	25.4	0.32	0.94	20.2	0.14	0.07	0.21	124.1	98.5	6.4	1.9	8.3	1641722
+315	2023-06-22 20:00:00	Keyontae Johnson	keyontae-johnson	SF	\N	77.25	84	239	Kansas State	Norfolk, VA	2000-05-24	\N	70	4	23.07	36	34.1	6.6	12.7	0.516	1.3	3.2	0.405	3	4.2	0.715	6.8	2.1	1	0.2	2.9	2.4	17.4	6.9	13.4	1.4	3.4	3.2	4.4	7.2	2.3	1.1	0.2	3.1	2.6	18.4	0.593	0.568	0.254	0.33	0.346	25.8	0.52	0.73	18.8	0.078	0.068	0.147	107.8	99.2	3.8	1.9	5.7	1641749
+316	2023-06-22 20:00:00	Anthony Black	anthony-black	SG	SF	79	79.5	210	Arkansas	Duncanville, TX	2004-01-20	\N	15	1	19.41	36	34.9	4.1	9.1	0.453	0.8	2.6	0.301	3.7	5.3	0.705	5.1	3.9	2.1	0.6	3	2.6	12.8	4.3	9.4	0.8	2.7	3.8	5.5	5.2	4	2.1	0.6	3.1	2.7	13.2	0.549	0.495	0.283	0.578	0.331	20.9	0.99	1.29	17.2	0.057	0.076	0.134	104.9	96.9	2.8	3.9	6.7	1641710
+317	2023-06-22 20:00:00	Seth Lundy	seth-lundy	SG	SF	77.25	82.25	214	Penn State	Paulsboro, NJ	2000-04-02	\N	\N	4	23.21	36	31.7	4.6	10.2	0.45	2.6	6.4	0.4	2.4	3	0.807	6.3	0.9	0.8	0.6	0.9	2.2	14.2	5.2	11.6	2.9	7.3	2.8	3.4	7.1	1	0.9	0.7	1	2.5	16.1	0.609	0.575	0.627	0.297	0.383	22.3	0.24	1	21.1	0.116	0.053	0.168	120	103.1	6.4	1.3	7.7	1641754
+318	2023-06-22 20:00:00	Bilal Coulibaly	bilal-coulibaly	SF	\N	80	86.25	194	Metropolitans 92 (France)	Saint-Cloud, France	2004-07-26	\N	\N	\N	18.9	53	24	3.9	7.4	0.527	0.8	2.2	0.336	2.3	3.3	0.705	4.1	1.4	1.4	0.5	1.6	1.8	10.9	5.9	11.1	1.1	3.4	3.5	4.9	6.2	2.2	2.1	0.7	2.4	2.7	16.3	0.606	0.578	0.303	0.44	0.338	19.98	0.52	0.88	17.53	\N	\N	\N	114.4	100.7	\N	\N	\N	1641731
+319	2023-06-22 20:00:00	Toumani Camara	toumani-camara	PF	\N	80.25	84.5	220	Dayton	Brussels, Belgium	2000-05-08	\N	\N	3	23.12	34	30	5.2	9.6	0.546	0.9	2.4	0.362	2.6	3.9	0.669	8.6	1.7	1.2	0.8	2.1	2.6	13.9	6.3	11.5	1	2.8	3.1	4.7	10.4	2.1	1.5	1	2.5	3.1	16.7	0.609	0.59	0.245	0.408	0.332	24.8	0.54	0.83	25	0.11	0.106	0.216	115.3	89.5	4	3.1	7.1	1641739
+320	2023-06-22 20:00:00	Keyonte George	keyonte-george	SG	\N	76	\N	185	Baylor	Lewisville, TX	2003-11-08	\N	6	1	19.61	33	28.6	4.7	12.5	0.376	2.3	6.9	0.338	3.6	4.5	0.793	4.2	2.8	1.1	0.2	2.9	2.1	15.3	5.9	15.7	2.9	8.7	4.5	5.7	5.2	3.5	1.4	0.2	3.6	2.7	19.3	0.524	0.47	0.553	0.364	0.381	30.8	0.65	0.96	17.8	0.076	0.047	0.123	105.1	104.9	4.5	1.1	5.6	1641718
+321	2023-06-22 20:00:00	Ausar Thompson	ausar-thompson	SG	SF	79	84	218	Overtime Elite	Oakland, CA	2003-01-30	\N	\N	\N	20.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.9	16.8	1.9	5.8	3.7	5.3	8	7.1	3.1	1.4	4	2.8	21.5	0.557	0.53	0.346	0.315	0.351	\N	\N	1.78	\N	\N	\N	\N	\N	\N	\N	\N	\N	1641709
+322	2023-06-22 20:00:00	Terquavion Smith	terquavion-smith	SG	\N	75.75	78.75	163	NC State	Greenville, NC	2002-12-31	\N	96	2	20.47	34	33.6	6.1	16.1	0.38	2.7	8	0.336	3	4.3	0.701	3.6	4.1	1.4	0.4	2.2	2.4	17.9	6.6	17.2	2.9	8.5	3.2	4.6	3.8	4.4	1.5	0.4	2.4	2.6	19.2	0.494	0.463	0.495	0.269	0.367	30	0.76	1.84	19.1	0.084	0.049	0.133	106.2	104.3	3.8	0.7	4.5	1631173
+323	2023-06-22 20:00:00	Jalen Pickett	jalen-pickett	PG	\N	75.25	79.25	198	Penn State	Rochester, NY	1999-10-22	\N	\N	4	23.66	37	36.6	7	13.8	0.508	1.2	3.2	0.381	2.4	3.2	0.763	7.4	6.6	0.9	0.5	2.3	2.1	17.7	6.9	13.6	1.2	3.1	2.4	3.1	7.3	6.5	0.9	0.5	2.2	2	17.4	0.577	0.552	0.23	0.23	0.349	27.3	1.44	2.89	26.6	0.163	0.053	0.216	120.3	103.1	8	2.9	10.9	1629618
+324	2023-06-22 20:00:00	Jarace Walker	jarace-walker	PF	\N	79.75	86.5	249	Houston	New Freedom, PA	2003-09-04	\N	10	1	19.79	36	27.6	4.4	9.4	0.465	1	2.8	0.347	1.5	2.2	0.662	6.8	1.8	1	1.3	1.5	2.1	11.2	5.7	12.3	1.3	3.7	1.9	2.9	8.9	2.4	1.3	1.7	1.9	2.7	14.7	0.534	0.516	0.297	0.235	0.335	22.4	0.56	1.23	22.1	0.097	0.113	0.21	114.5	87.1	4.5	4.4	8.8	1641716
+325	2023-06-22 20:00:00	Tristan Vukčević	tristan-vukcevic	PF	\N	84.5	86.5	223	Real Madrid B (Spain)	Siena, Italy	2003-03-11	\N	\N	\N	20.27	40	11.6	2.1	3.7	0.558	0.6	1.5	0.373	0.9	1.1	0.8	2.4	0.9	0.4	0.4	0.8	1.9	5.6	6.4	11.5	1.7	4.6	2.8	3.5	7.5	2.7	1.3	1.1	2.4	5.9	17.3	0.659	0.633	0.401	0.306	0.362	21.31	0.6	1.13	19.37	\N	\N	\N	122.4	106	\N	\N	\N	1641774
+326	2023-06-22 20:00:00	Jordan Walsh	jordan-walsh	SF	\N	79	85.75	204	Arkansas	Desoto, TX	2004-03-03	\N	11	1	19.3	36	24.4	2.6	6	0.433	0.6	2	0.278	1.3	1.8	0.712	3.9	0.9	1.1	0.5	1	2.9	7.1	3.9	8.9	0.8	3	1.9	2.7	5.8	1.4	1.6	0.7	1.5	4.3	10.5	0.513	0.479	0.332	0.304	0.331	16.2	0.41	0.89	12.8	0.046	0.073	0.114	105.7	98.2	0.5	3.3	3.8	1641775
+327	2023-06-22 20:00:00	Isaiah Wong	isaiah-wong	PG	SG	75.75	78.75	178	Miami	Piscataway, NJ	2001-01-28	\N	83	4	22.39	37	33.4	5.2	11.6	0.445	1.6	4.3	0.384	4.1	4.9	0.845	4.3	3.2	1.4	0.4	2.1	1.8	16.2	5.6	12.5	1.8	4.6	4.5	5.3	4.7	3.4	1.5	0.4	2.2	1.9	17.4	0.578	0.516	0.369	0.42	0.369	24.3	0.7	1.53	21.3	0.123	0.042	0.165	118.9	106.5	4.8	1.3	6.1	1631209
+328	2023-06-22 20:00:00	Kobe Bufkin	kobe-bufkin	SG	PG	77.5	79.75	187	Michigan	Grand Rapids, MI	2003-09-21	\N	40	2	19.74	33	34	5.2	10.9	0.482	1.3	3.7	0.355	2.2	2.6	0.849	4.5	2.9	1.3	0.7	1.9	2.4	14	5.6	11.5	1.4	3.9	2.3	2.8	4.8	3.1	1.4	0.7	2.1	2.6	14.8	0.578	0.542	0.337	0.24	0.362	21.8	0.8	1.5	19.2	0.089	0.061	0.146	112.8	101.6	3.5	3.3	6.7	1641723
+329	2023-06-22 20:00:00	Gradey Dick	gradey-dick	SG	SF	79.5	80.75	204	Kansas	Wichita, KS	2003-11-20	\N	14	1	19.58	36	32.7	4.8	10.9	0.442	2.3	5.7	0.403	2.1	2.5	0.854	5.1	1.7	1.4	0.3	1.3	2.1	14.1	5.3	12.1	2.5	6.3	2.3	2.7	5.7	1.8	1.6	0.3	1.4	2.3	15.5	0.581	0.547	0.523	0.226	0.383	20.5	0.46	1.33	18.4	0.095	0.071	0.167	117.2	98.5	4.9	2.9	7.7	1641711
+330	2023-06-22 20:00:00	Brandin Podziemski	brandin-podziemski	SG	\N	77	77.5	204	Santa Clara	Muskego, WI	2003-02-25	\N	\N	2	20.31	32	36	6.9	14.4	0.483	2.5	5.8	0.438	3.5	4.5	0.771	8.8	3.7	1.8	0.5	2.3	1.9	19.9	6.9	14.4	2.5	5.8	3.5	4.5	8.8	3.7	1.8	0.5	2.3	1.9	19.9	0.602	0.571	0.402	0.313	0.373	25.6	0.8	1.6	26.4	0.146	0.069	0.215	121.9	99	7.9	2.7	10.6	1641764
+331	2023-06-22 20:00:00	Drew Timme	drew-timme	PF	C	82	85.75	243	Gonzaga	Richardson, TX	2000-09-09	\N	47	4	22.78	37	31.5	8.5	13.7	0.616	0.1	0.6	0.167	4.2	6.7	0.632	7.5	3.2	0.6	1	2.6	2.2	21.2	9.7	15.7	0.1	0.7	4.8	7.6	8.6	3.7	0.7	1.1	3	2.6	24.2	0.628	0.62	0.047	0.486	0.302	30.2	0.64	1.24	30.6	0.189	0.051	0.24	124	103.4	8.1	1.5	9.6	1631166
+332	2022-06-03 20:00:00	Caleb Houstan	caleb-houstan	SF	\N	80	\N	205	Michigan	Mississauga, ON	2003-01-09	\N	8	1	19.44	34	32	3.2	8.4	0.384	1.8	5	0.355	1.9	2.4	0.783	4	1.4	0.7	0.2	1.5	1.7	10.1	3.6	9.4	2	5.6	2.2	2.7	4.5	1.5	0.8	0.3	1.7	1.9	11.3	0.53	0.489	0.595	0.292	0.363	17.9	0.41	0.88	11.8	0.051	0.033	0.085	105.4	106.8	1.9	1.2	3.1	1631216
+333	2022-06-03 20:00:00	Christian Braun	christian-braun	SG	\N	79	78.5	209	Kansas	Burlington, KS	2001-04-17	\N	\N	3	21.17	40	34.4	5.2	10.5	0.495	1.3	3.3	0.386	2.5	3.4	0.733	6.5	2.8	1	0.8	2	1.8	14.1	5.4	11	1.3	3.5	2.6	3.5	6.8	2.9	1	0.9	2.1	1.9	14.8	0.585	0.556	0.316	0.323	0.347	20.4	0.71	1.37	19.6	0.102	0.073	0.175	116.5	96.9	5.6	3.3	9	1631128
+334	2022-06-03 20:00:00	Jaden Ivey	jaden-ivey	SG	\N	76	\N	200	Purdue	South Bend, IN	2002-02-13	\N	84	2	20.35	36	31.4	5.6	12.3	0.46	1.8	5	0.358	4.3	5.8	0.744	4.9	3.1	0.9	0.6	2.6	1.8	17.3	6.5	14	2	5.7	4.9	6.6	5.6	3.5	1	0.6	3	2	19.8	0.579	0.533	0.406	0.469	0.359	28.7	0.67	1.17	22.5	0.131	0.049	0.18	114.7	102.5	5.7	1.6	7.2	1631093
+335	2022-06-03 20:00:00	Mark Williams	mark-williams	C	\N	86	90.5	242	Duke	Norfolk, VA	2001-12-16	\N	32	2	20.51	39	23.6	4.9	6.8	0.721	0	0	0	1.4	2	0.727	7.4	0.9	0.5	2.8	0.9	2.1	11.2	7.5	10.3	0	0	2.2	3	11.3	1.4	0.7	4.3	1.4	3.1	17.1	0.726	0.721	0.004	0.291	0.321	18.6	0.38	0.97	33.1	0.187	0.087	0.273	142	93.2	7.8	4.8	12.5	1631109
+336	2022-06-03 20:00:00	Jeremy Sochan	jeremy-sochan	SF	PF	81	\N	230	Baylor	Milton Keynes, UK	2003-05-20	\N	\N	1	19.08	30	25.1	3.3	7	0.474	0.8	2.7	0.296	1.8	3	0.589	6.4	1.8	1.3	0.7	1.6	2.3	9.2	4.8	10.1	1.1	3.9	2.5	4.3	9.1	2.5	1.8	1	2.2	3.3	13.2	0.546	0.531	0.384	0.427	0.321	19.6	0.63	1.13	19.6	0.085	0.101	0.18	111.7	89.8	3.6	4.4	8	1631110
+337	2022-06-03 20:00:00	Malaki Branham	malaki-branham	SG	\N	77.5	82	195	Ohio State	Columbus, OH	2003-05-12	\N	34	1	19.1	32	29.6	5	10	0.498	1.2	2.8	0.416	2.5	3	0.833	3.6	2	0.7	0.3	1.7	1.8	13.7	6.1	12.2	1.4	3.4	3	3.6	4.3	2.4	0.9	0.3	2.1	2.1	16.6	0.596	0.556	0.277	0.299	0.363	24.1	0.6	1.19	20.4	0.122	0.034	0.152	117.3	107.1	4.8	0.9	5.7	1631103
+338	2022-06-03 20:00:00	Jabari Walker	jabari-walker	SF	PF	80	82.75	214	Colorado	Inglewood, CA	2002-07-30	\N	\N	2	19.89	33	28.1	4.8	10.5	0.461	1.1	3.2	0.346	3.8	4.9	0.784	9.4	1.2	0.7	0.7	2.3	2.5	14.6	6.2	13.5	1.4	4	4.9	6.3	12	1.6	0.9	0.9	2.9	3.2	18.7	0.57	0.513	0.3	0.467	0.353	27.6	0.36	0.54	23	0.099	0.086	0.185	109.8	93.8	3.8	1.8	5.7	1631133
+339	2022-06-03 20:00:00	Orlando Robinson	orlando-robinson	C	\N	83	88	244	Fresno State	\N	2000-07-10	\N	\N	3	21.94	36	33.2	7	14.4	0.484	1	2.9	0.352	4.5	6.3	0.716	8.4	2.9	1	1.2	2.5	2.4	19.4	7.6	15.6	1.1	3.2	4.8	6.8	9.1	3.1	1.1	1.3	2.7	2.6	21.1	0.559	0.519	0.202	0.434	0.34	33.7	0.68	1.14	29.8	0.151	0.097	0.247	113.5	90.9	7.7	2.8	10.6	1631115
+340	2022-06-03 20:00:00	Ousmane Dieng	ousmane-dieng	SF	\N	81	\N	185	New Zealand (NBL)	Lot-et-Garonne, France	2003-05-21	\N	\N	\N	19.08	23	20.8	3.5	8.7	0.398	1.1	4.2	0.271	0.8	1.2	0.667	3.1	1	0.6	0.3	1.4	1.5	8.9	6	15.1	2	7.2	1.4	2	5.4	1.7	1.1	0.5	2.4	2.6	15.3	0.477	0.463	0.478	0.134	0.346	24.07	0.37	0.72	10.66	\N	\N	\N	89.2	111.8	\N	\N	\N	1631172
+341	2022-06-03 20:00:00	Ochai Agbaji	ochai-agbaji	SG	\N	77.75	82.25	217	Kansas	Kansas City, MO	2000-04-20	\N	\N	4	22.16	39	35.1	6.6	13.9	0.475	2.6	6.5	0.407	2.9	3.9	0.743	5.1	1.6	0.9	0.6	2.1	1.7	18.8	6.8	14.3	2.7	6.7	3	4	5.2	1.6	0.9	0.6	2.1	1.7	19.3	0.595	0.57	0.466	0.28	0.371	25.3	0.34	0.78	20.8	0.117	0.064	0.181	116.3	99	6.9	2.2	9	1630534
+342	2022-06-03 20:00:00	Isaiah Mobley	isaiah-mobley	PF	\N	82	\N	240	USC	Murrieta, CA	1999-09-24	\N	16	3	22.73	32	34.1	5	11.3	0.445	1.3	3.8	0.352	2.8	4	0.682	8.3	3.3	0.8	0.9	1.9	2	14.2	5.3	12	1.4	4	2.9	4.3	8.8	3.5	0.8	1	2	2.1	15	0.535	0.504	0.337	0.356	0.34	22.4	0.84	1.77	21.1	0.106	0.073	0.18	114.5	96.8	5.2	2.7	7.9	1630600
+343	2022-06-03 20:00:00	Tari Eason	tari-eason	PF	\N	80	86	217	LSU	Seattle, WA	2001-05-10	\N	\N	2	21.11	33	24.4	5.8	11.1	0.521	0.8	2.4	0.359	4.6	5.7	0.803	6.6	1	1.9	1.1	2.2	2.8	16.9	8.5	16.3	1.3	3.5	6.7	8.4	9.7	1.5	2.9	1.6	3.3	4.1	25	0.615	0.559	0.214	0.515	0.354	31.8	0.32	0.45	33.4	0.169	0.124	0.293	119.2	83.2	9	5.7	14.7	1631106
+344	2022-06-03 20:00:00	Andrew Nembhard	andrew-nembhard	PG	\N	76.5	77.75	196	Gonzaga	Aurora, ON	2000-01-16	\N	28	4	22.42	32	32.2	4.4	9.7	0.452	1.6	4.2	0.383	1.5	1.7	0.873	3.4	5.8	1.6	0.1	1.9	2	11.8	4.9	10.8	1.8	4.7	1.7	1.9	3.8	6.4	1.8	0.1	2.2	2.2	13.3	0.564	0.534	0.429	0.177	0.373	18.6	1.41	2.97	18.1	0.109	0.086	0.194	118.5	93	3.9	3.4	7.3	1629614
+345	2022-06-03 20:00:00	Gui Santos	gui-santos	SF	\N	80	\N	209	Minas (Brazil)	Brasília, Brazil	2002-06-22	\N	\N	\N	19.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1630611
+346	2022-06-03 20:00:00	Johnny Juzang	johnny-juzang	SG	\N	78.5	83	209	UCLA	Los Angeles, CA	2001-05-17	\N	30	3	21.09	30	31.8	6	13.8	0.432	1.5	4.2	0.36	2.2	2.6	0.835	4.7	1.8	0.7	0.1	1.6	2	15.6	6.8	15.6	1.7	4.7	2.5	3	5.4	2	0.8	0.2	1.8	2.2	17.7	0.519	0.487	0.302	0.191	0.366	27	0.43	1.15	18.1	0.084	0.063	0.147	107.2	99.3	3.6	1.4	5	1630548
+458	2004-06-22 19:00:00	Vassilis Spanoulis	vassilis-spanoulis	PG	\N	76	\N	195	Maroussi (Greece)	Larissa, Greece	1982-08-07	\N	\N	\N	21.85	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.3	9.4	2.2	3.6	0.7	1.4	1.4	2.2	0.7	0	3.6	5	11.5	0.573	0.577	0.385	0.154	\N	\N	\N	0.6	\N	\N	\N	\N	\N	\N	\N	\N	\N	2779
+347	2022-06-03 20:00:00	Blake Wesley	blake-wesley	SG	\N	76.25	81.25	187	Notre Dame	South Bend, IN	2003-03-16	\N	\N	1	19.26	35	29.3	5.1	12.6	0.404	1.5	5.1	0.303	2.7	4.1	0.657	3.7	2.4	1.3	0.1	2.2	1.9	14.4	6.2	15.5	1.9	6.2	3.3	5	4.5	2.9	1.5	0.1	2.7	2.3	17.7	0.495	0.465	0.404	0.324	0.344	31.3	0.56	1.09	16.9	0.043	0.055	0.097	97.2	101.1	0.5	0.8	1.3	1631104
+348	2022-06-03 20:00:00	Dereon Seabron	dereon-seabron	SG	\N	77.75	80.75	182	NC State	Norfolk, VA	2000-05-26	\N	\N	2	22.07	32	35.8	6.3	12.7	0.491	0.3	1.3	0.256	4.5	6.3	0.713	8.2	3.2	1.4	0.1	2.4	1.6	17.3	6.3	12.8	0.3	1.4	4.5	6.3	8.2	3.2	1.4	0.1	2.5	1.6	17.4	0.552	0.505	0.106	0.496	0.322	25.5	0.76	1.31	24	0.119	0.024	0.143	114.1	109.4	5.5	0.1	5.6	1631220
+349	2022-06-03 20:00:00	Luke Travers	luke-travers	SG	\N	79	\N	207	Perth (NBL)	Perth, Australia	2001-09-03	\N	\N	\N	20.79	27	22	3	7.1	0.417	0.6	2.5	0.25	1.3	1.9	0.68	5.4	2.3	0.9	0.7	1.6	0.9	7.8	4.9	11.7	1	4.1	2.1	3	8.8	3.8	1.4	1.1	2.5	1.5	12.8	0.489	0.461	0.354	0.26	0.33	19.12	0.85	1.5	15.29	\N	\N	\N	102.5	103.8	\N	\N	\N	1631247
+350	2022-06-03 20:00:00	Kendall Brown	kendall-brown	SF	\N	79.5	83	201	Baylor	Cottage Grove, MN	2003-05-11	\N	17	1	19.11	34	27	3.9	6.6	0.584	0.4	1.2	0.341	1.5	2.2	0.689	4.9	1.9	1	0.4	1.7	2.3	9.7	5.2	8.9	0.5	1.6	2	2.9	6.5	2.5	1.3	0.5	2.3	3	12.9	0.63	0.615	0.181	0.327	0.326	17.1	0.72	1.09	18.4	0.096	0.078	0.174	118.5	95.2	3.7	3.6	7.4	1631112
+351	2022-06-03 20:00:00	Julian Champagnie	julian-champagnie	SF	\N	79.75	82	212	St. John's	Brooklyn, NY	2001-06-29	\N	\N	3	20.97	31	34.2	7.1	17.2	0.414	2.1	6.2	0.337	2.9	3.7	0.781	6.6	2	2	1.1	1.5	1.5	19.2	7.5	18.1	2.2	6.6	3	3.9	7	2.1	2.1	1.2	1.6	1.6	20.2	0.507	0.475	0.361	0.213	0.366	27.7	0.4	1.37	21.6	0.083	0.072	0.155	107.1	97.5	4.5	1.6	6.2	1630577
+352	2022-06-03 20:00:00	Keon Ellis	keon-ellis	SG	\N	76.75	80.5	167	Alabama	Eustis, FL	2000-01-08	\N	\N	4	22.44	33	30.9	3.7	8.4	0.439	2	5.5	0.366	2.7	3.1	0.881	6.1	1.8	1.9	0.6	1.6	2.7	12.1	4.3	9.8	2.4	6.5	3.1	3.6	7.1	2.1	2.3	0.7	1.8	3.1	14.1	0.614	0.559	0.658	0.363	0.383	17.1	0.6	1.13	19.9	0.114	0.051	0.165	125.1	102.1	5.7	3.8	9.5	1631165
+353	2022-06-03 20:00:00	Justin Lewis	justin-lewis	SF	PF	79.5	86.5	235	Marquette	Baltimore, MD	2002-04-12	\N	71	2	20.19	32	32.2	6.1	13.8	0.44	1.8	5.2	0.349	2.8	3.7	0.761	7.9	1.7	1.1	0.6	1.9	2.2	16.8	6.8	15.5	2	5.8	3.1	4.1	8.9	1.9	1.2	0.7	2.2	2.4	18.8	0.539	0.506	0.375	0.264	0.361	27.5	0.4	0.87	19.9	0.07	0.07	0.14	103.8	97.6	3.9	1.3	5.2	1631171
+354	2022-06-03 20:00:00	Josh Minott	josh-minott	PF	\N	80	\N	205	Memphis	Boca Raton, FL	2002-01-01	\N	70	1	20.46	33	14.6	2.5	4.8	0.522	0.1	0.4	0.143	1.5	2	0.754	3.8	0.9	0.8	0.7	0.9	1.8	6.6	6.2	11.9	0.1	1	3.7	4.8	9.2	2.3	2	1.6	2.3	4.3	16.2	0.571	0.528	0.088	0.409	0.327	21.9	0.58	1	23.7	0.116	0.083	0.199	117.6	93.7	3.8	3.4	7.2	1631169
+355	2022-06-03 20:00:00	Shaedon Sharpe	shaedon-sharpe	SG	\N	77.25	83.5	198	Kentucky	London, ON	2003-05-30	\N	\N	1	19.05	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1631101
+356	2022-06-03 20:00:00	Jalen Duren	jalen-duren	C	\N	83	89.25	250	Memphis	New Castle, DE	2003-11-18	\N	7	1	18.58	29	25.3	4.9	8.1	0.597	0	0	0	2.2	3.6	0.625	8.1	1.3	0.8	2.1	2.2	2.7	12	6.9	11.6	0	0	3.2	5.1	11.6	1.8	1.2	3	3.2	3.9	17	0.608	0.597	0.004	0.441	0.307	22.8	0.46	0.57	25.3	0.098	0.093	0.191	112.6	91.9	3.7	3.3	7.1	1631105
+357	2022-06-03 20:00:00	Jaden Hardy	jaden-hardy	SG	\N	76	\N	190	G League	Detroit, MI	2002-07-05	\N	2	\N	19.96	25	32.6	6.9	18.3	0.376	2.3	7.5	0.309	2.2	2.7	0.794	4.3	3.6	1.2	0.2	3.4	2.4	19.5	7.6	20.2	2.6	8.3	2.4	3	4.8	3.9	1.4	0.2	3.7	2.7	21.5	0.498	0.44	0.411	0.149	0.374	30.47	0.58	1.06	9.93	\N	\N	\N	88.8	113.1	\N	\N	\N	1630702
+358	2022-06-03 20:00:00	David Roddy	david-roddy	SF	\N	78	83.5	261	Colorado State	Minneapolis, MN	2001-03-27	\N	\N	3	21.23	31	32.9	7.2	12.5	0.571	1.5	3.4	0.438	3.4	4.9	0.691	7.5	2.9	1.2	1.1	2.3	2.3	19.2	7.8	13.7	1.6	3.7	3.7	5.4	8.3	3.1	1.3	1.2	2.5	2.5	21	0.645	0.63	0.27	0.391	0.348	28.8	0.69	1.24	30.3	0.172	0.071	0.247	121.9	97	8.7	2.3	11.1	1631223
+359	2022-06-03 20:00:00	Chet Holmgren	chet-holmgren	C	\N	84	\N	195	Gonzaga	Minneapolis, MN	2002-05-01	\N	1	1	20.13	32	26.9	5.3	8.8	0.607	1.3	3.3	0.39	2.2	3.1	0.717	9.9	1.9	0.8	3.7	1.9	2.7	14.1	7.1	11.7	1.7	4.4	3	4.1	13.3	2.6	1.1	4.9	2.6	3.6	18.9	0.691	0.68	0.375	0.354	0.351	21.6	0.53	1	31.3	0.153	0.144	0.293	127	78.7	7.5	7.5	15	1631096
+360	2022-06-03 20:00:00	Ryan Rollins	ryan-rollins	SG	\N	75.25	81.75	179	Toledo	Macomb, MI	2002-07-03	\N	\N	2	19.96	34	32.7	6.8	14.6	0.468	1.4	4.4	0.311	3.8	4.8	0.802	6	3.6	1.7	0.3	2.2	2.4	18.9	7.5	16.1	1.5	4.9	4.2	5.2	6.6	4	1.9	0.3	2.5	2.7	20.8	0.559	0.515	0.304	0.327	0.357	28.9	0.71	1.62	24.7	0.13	0.079	0.209	114	95.1	3.4	2	5.4	1631157
+361	2022-06-03 20:00:00	Walker Kessler	walker-kessler	C	\N	85	88.25	256	Auburn	Newnan, GA	2001-07-26	\N	14	2	20.9	34	25.6	4.8	7.9	0.608	0.3	1.5	0.2	1.6	2.6	0.596	8.1	0.9	1.1	4.6	1.1	2.6	11.4	6.7	11.1	0.4	2.1	2.2	3.7	11.3	1.2	1.5	6.4	1.5	3.6	16.1	0.627	0.627	0.187	0.332	0.305	19	0.36	0.81	31.4	0.129	0.124	0.253	126	83	6.2	8	14.1	1631117
+362	2022-06-03 20:00:00	Keegan Murray	keegan-murray	PF	\N	80	\N	225	Iowa	Cedar Rapids, IA	2000-08-19	\N	\N	2	21.83	35	31.9	8.8	15.8	0.554	1.9	4.7	0.398	4.1	5.4	0.747	8.7	1.5	1.3	1.9	1.1	1.9	23.5	9.9	17.9	2.1	5.4	4.6	6.1	9.8	1.7	1.5	2.2	1.3	2.1	26.5	0.638	0.614	0.3	0.343	0.362	29.7	0.34	1.33	37.8	0.237	0.072	0.312	134.6	96.8	13	2.7	15.7	1631099
+363	2022-06-03 20:00:00	Kennedy Chandler	kennedy-chandler	PG	\N	72.5	77.25	172	Tennessee	Memphis, TN	2002-09-16	\N	10	1	19.76	34	30.8	5.4	11.5	0.464	1.4	3.8	0.383	1.8	2.9	0.606	3.2	4.7	2.2	0.2	2.5	2	13.9	6.3	13.5	1.7	4.4	2.1	3.4	3.8	5.5	2.5	0.3	2.9	2.4	16.2	0.539	0.527	0.327	0.253	0.335	25	1.29	1.89	20.2	0.084	0.092	0.176	107.8	92.1	4.2	4.8	9	1631113
+364	2022-06-03 20:00:00	Christian Koloko	christian-koloko	C	\N	84	89.25	221	Arizona	Douala, Cameroon	2000-06-20	\N	\N	3	22	37	25.4	4.9	7.8	0.635	0	0.1	0	2.7	3.7	0.735	7.3	1.4	0.8	2.8	1.6	2.8	12.6	7	11	0	0.1	3.8	5.2	10.3	2	1.1	3.9	2.3	3.9	17.8	0.661	0.635	0.01	0.472	0.322	20.7	0.47	0.86	28	0.145	0.102	0.251	127.3	88.6	5.2	5.3	10.5	1631132
+365	2022-06-03 20:00:00	Bennedict Mathurin	bennedict-mathurin	SG	\N	78	81	205	Arizona	Montreal, QC	2002-06-19	\N	\N	2	20	37	32.5	5.9	13.1	0.45	2.2	6.1	0.369	3.7	4.8	0.764	5.6	2.5	1	0.3	1.8	1.8	17.7	6.5	14.5	2.5	6.7	4.1	5.3	6.2	2.8	1.1	0.3	2	2	19.6	0.576	0.536	0.465	0.368	0.37	25.1	0.55	1.42	21.1	0.133	0.073	0.206	119.7	96.8	6.1	1.9	8	1631097
+366	2022-06-03 20:00:00	Tyrese Martin	tyrese-martin	SG	SF	78	\N	215	UConn	Allentown, PA	1999-03-07	\N	\N	4	23.28	29	32.1	5	11.1	0.449	1.5	3.4	0.43	2.1	3.1	0.689	7.5	1.9	0.8	0.5	1.8	2.1	13.6	5.6	12.4	1.7	3.9	2.4	3.5	8.4	2.2	0.9	0.5	2.1	2.4	15.2	0.54	0.516	0.312	0.28	0.348	22.3	0.54	1.06	19.5	0.099	0.069	0.168	113.7	97.6	4.9	1.8	6.7	1631213
+367	2022-06-03 20:00:00	Dyson Daniels	dyson-daniels	SG	\N	79.5	82.5	195	G League	Bendigo, Australia	2003-03-17	\N	\N	\N	19.26	29	31.6	4.6	10.2	0.453	1	3.4	0.3	0.8	1.6	0.533	6.8	4.7	2	0.7	2.7	2.2	11.6	5.3	11.6	1.2	3.9	0.9	1.8	7.7	5.4	2.3	0.8	3.1	2.5	13.2	0.531	0.503	0.338	0.152	0.314	18.72	1.18	1.76	14.48	\N	\N	\N	99.9	108.3	\N	\N	\N	1630700
+368	2022-06-03 20:00:00	Jabari Smith	jabari-smith	PF	\N	82	\N	210	Auburn	Tyrone, GA	2003-05-13	\N	6	1	19.1	34	28.8	5.4	12.6	0.429	2.3	5.5	0.42	3.9	4.8	0.799	7.4	2	1.1	1	1.9	2.1	16.9	6.7	15.7	2.9	6.9	4.8	6	9.3	2.5	1.4	1.3	2.3	2.6	21.2	0.57	0.521	0.44	0.384	0.382	27.6	0.51	1.08	25.1	0.131	0.094	0.229	116.5	90.7	7.4	3.8	11.1	2074
+369	2022-06-03 20:00:00	Trevor Keels	trevor-keels	SG	\N	76.75	79.25	224	Duke	Clinton, MD	2003-08-26	\N	23	1	18.81	36	30.2	4.1	9.8	0.419	1.5	4.8	0.312	1.8	2.7	0.67	3.4	2.7	1.2	0.1	1.3	1.3	11.5	4.9	11.6	1.8	5.7	2.2	3.2	4.1	3.2	1.5	0.1	1.5	1.6	13.7	0.52	0.496	0.493	0.276	0.344	20.7	0.72	2.18	16.5	0.085	0.048	0.136	112.4	103.2	2.7	1.5	4.2	1631211
+370	2022-06-03 20:00:00	Jaylin Williams	jaylin-williams	PF	\N	82	85	237	Arkansas	Fort Smith, AR	2002-06-29	\N	94	2	19.97	37	31.6	3.8	8.3	0.461	0.5	1.9	0.239	2.8	3.8	0.729	9.8	2.6	1.3	1.1	1.8	2.6	10.9	4.4	9.5	0.5	2.2	3.1	4.3	11.2	2.9	1.5	1.3	2.1	3	12.4	0.538	0.489	0.231	0.455	0.327	18.2	0.84	1.42	18.9	0.065	0.102	0.167	108.9	89.3	2.7	5.2	7.9	1631119
+371	2022-06-03 20:00:00	Jalen Williams	jalen-williams	SF	\N	77.75	86.25	209	Santa Clara	Gilbert, AZ	2001-04-14	\N	\N	3	21.18	33	34.8	6.6	12.9	0.513	1.3	3.2	0.396	3.5	4.3	0.809	4.4	4.2	1.2	0.5	2.1	2.6	18	6.9	13.4	1.3	3.3	3.6	4.4	4.6	4.3	1.2	0.6	2.2	2.7	18.6	0.601	0.562	0.248	0.33	0.357	25	0.9	1.99	22.8	0.132	0.052	0.184	118.2	102.6	4.8	1.2	6	1631114
+372	2022-06-03 20:00:00	Johnny Davis	johnny-davis	SG	\N	77.75	80.5	196	Wisconsin	La Crosse, WI	2002-02-27	\N	\N	2	20.31	31	34.2	6.8	15.9	0.427	1.2	3.9	0.306	5	6.3	0.791	8.2	2.1	1.2	0.7	2.3	2	19.7	7.1	16.7	1.3	4.1	5.3	6.7	8.7	2.2	1.2	0.8	2.4	2.1	20.8	0.523	0.464	0.246	0.398	0.351	32.5	0.46	0.93	24.3	0.094	0.075	0.17	105.8	95.8	5.8	3	8.9	76526
+373	2022-06-03 20:00:00	Max Christie	max-christie	SG	\N	77.75	80.75	189	Michigan State	Arlington Heights, IL	2003-02-10	\N	18	1	19.35	35	30.8	3.2	8.4	0.382	1.1	3.5	0.317	1.7	2.1	0.824	3.5	1.5	0.5	0.5	1.5	1.1	9.3	3.7	9.8	1.3	4.1	2	2.5	4	1.7	0.6	0.6	1.7	1.3	10.8	0.494	0.449	0.42	0.253	0.356	18.1	0.48	0.98	10.5	0.033	0.03	0.063	99.9	107.8	0.8	1.1	1.9	1631108
+374	2022-06-03 20:00:00	Peyton Watson	peyton-watson	SF	\N	80	84.5	203	UCLA	Long Beach, CA	2002-09-11	\N	12	1	19.77	32	12.7	1.2	3.7	0.322	0.2	1	0.226	0.7	1	0.688	2.9	0.8	0.6	0.6	0.9	1.6	3.3	3.4	10.5	0.6	2.8	2	2.8	8.2	2.3	1.7	1.7	2.7	4.5	9.3	0.394	0.352	0.263	0.271	0.322	20.8	0.53	0.87	11.2	-0.02	0.089	0.079	85.6	91.6	-2.7	3.8	1.1	1631212
+375	2022-06-03 20:00:00	Dalen Terry	dalen-terry	SG	PG	79.25	84.75	195	Arizona	Phoenix, AZ	2002-07-12	\N	63	2	19.94	37	27.8	3.1	6.2	0.502	0.8	2.1	0.364	1.1	1.4	0.736	4.8	3.9	1.2	0.3	1.4	2.3	8	4	8	1	2.7	1.4	1.9	6.3	5.1	1.6	0.4	1.8	2.9	10.4	0.584	0.563	0.336	0.231	0.341	14.1	1.57	2.84	16.9	0.093	0.082	0.175	122.8	94.6	3.5	4.5	8	1631207
+376	2022-06-03 20:00:00	Jordan Hall	jordan-hall	PG	SG	79	\N	215	Saint Joseph's	Wildwood, NJ	2002-01-14	\N	\N	2	20.43	30	34.9	5.2	13.3	0.392	2.3	6.3	0.362	1.4	1.9	0.737	6.7	5.8	1.2	0.2	3.5	2.5	14.1	5.4	13.7	2.3	6.5	1.4	2	6.9	6	1.3	0.2	3.6	2.6	14.6	0.496	0.478	0.47	0.142	0.363	25.9	1.37	1.66	16.2	0.042	0.061	0.103	98.4	99.7	1.8	1.3	3	1631160
+377	2022-06-03 20:00:00	Alondes Williams	alondes-williams	SG	PG	77	79	209	Wake Forest	Milwaukee, WI	1999-06-19	\N	\N	4	23	35	34.1	6.9	13.6	0.507	1.1	4.1	0.282	3.6	5.2	0.691	6.4	5.2	1.2	0.4	3.6	2.1	18.5	7.3	14.4	1.2	4.3	3.8	5.5	6.8	5.5	1.3	0.4	3.8	2.2	19.6	0.576	0.549	0.298	0.379	0.336	28.9	1.08	1.43	23.1	0.117	0.067	0.184	110.6	98.2	4.7	1.8	6.6	1631214
+378	2022-06-03 20:00:00	Paolo Banchero	paolo-banchero	PF	\N	82	\N	250	Duke	Seattle, WA	2002-11-12	\N	4	1	19.6	39	33	6.3	13.2	0.478	1.1	3.3	0.338	3.5	4.8	0.729	7.8	3.2	1.1	0.9	2.4	1.9	17.2	6.9	14.4	1.2	3.6	3.8	5.3	8.5	3.5	1.1	1	2.6	2.1	18.8	0.557	0.52	0.253	0.366	0.343	27.5	0.64	1.35	24.2	0.124	0.068	0.19	113.8	98.1	5.4	2.3	7.7	1631094
+379	2022-06-03 20:00:00	Dominick Barlow	dominick-barlow	PF	\N	81.75	87	221	Overtime Elite	Dumont, NJ	2003-05-26	\N	\N	\N	19.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1631230
+380	2017-06-22 19:00:00	Jabari Bird	jabari-bird	SG	\N	78	\N	198	California	Walnut Creek, CA	1994-07-03	\N	\N	4	22.96	27	32	5.2	11.8	0.44	2.4	6.6	0.365	1.6	2	0.764	4.7	1	0.7	0.2	1.9	1.9	14.3	5.8	13.3	2.7	7.4	1.8	2.3	5.3	1.2	0.8	0.3	2.1	2.2	16.1	0.562	0.542	0.56	0.173	0.373	23.5	0.33	0.56	16.5	0.07	0.074	0.144	108.4	98.1	3.8	2.4	6.2	1628444
+381	2017-06-22 19:00:00	Josh Hart	josh-hart	SG	\N	77	80.25	209	Villanova	Silver Spring, MD	1995-03-06	\N	\N	4	22.28	36	33.1	6.6	12.9	0.51	2.1	5.1	0.404	3.5	4.7	0.747	6.4	2.9	1.6	0.3	2	2.3	18.7	7.1	14	2.2	5.5	3.8	5.1	6.9	3.2	1.7	0.3	2.1	2.4	20.3	0.619	0.59	0.395	0.367	0.364	27.8	0.68	1.49	28.2	0.171	0.087	0.258	125.1	94.5	8.1	3.9	12	1628404
+382	2017-06-22 19:00:00	Frank Jackson	frank-jackson	PG	\N	75.5	79.5	202	Duke	Alpine, UT	1998-05-04	\N	\N	1	19.12	36	24.9	3.7	7.8	0.473	1.4	3.6	0.395	2.1	2.8	0.755	2.5	1.7	0.6	0.1	1.4	2.4	10.9	5.3	11.3	2.1	5.2	3.1	4.1	3.6	2.5	0.8	0.1	2	3.4	15.8	0.598	0.564	0.459	0.363	0.362	21.1	0.6	1.24	17	0.107	0.04	0.147	119	106.4	3.7	1.4	5.1	1628402
+383	2017-06-22 19:00:00	Monte Morris	monte-morris	PG	\N	74.5	76	175	Iowa State	Flint, MI	1995-06-27	\N	\N	4	21.98	35	35.3	6.2	13.3	0.465	1.5	4.1	0.378	2.5	3.2	0.802	4.8	6.2	1.5	0.3	1.2	1.5	16.4	6.3	13.5	1.6	4.2	2.6	3.2	4.9	6.3	1.5	0.3	1.2	1.5	16.7	0.555	0.523	0.308	0.239	0.36	22.8	1.4	5.17	24.7	0.155	0.055	0.21	126.1	103	7.5	3	10.5	1628420
+384	2017-06-22 19:00:00	Cameron Oliver	cameron-oliver	PF	\N	80.25	85.25	239	Nevada	Oakland, CA	1996-07-11	\N	\N	2	20.94	35	31.9	5.8	12.4	0.465	1.9	4.9	0.384	2.6	3.7	0.692	8.7	1.8	0.8	2.6	2.4	2.9	16	6.5	14	2.1	5.6	2.9	4.2	9.8	2.1	0.9	2.9	2.7	3.3	18.1	0.565	0.541	0.396	0.3	0.354	25.4	0.47	0.77	22.6	0.075	0.086	0.161	108	94.7	3.1	2.9	6.1	1628419
+385	2017-06-22 19:00:00	Ivan Rabb	ivan-rabb	PF	\N	82	85.5	220	California	Oakland, CA	1997-02-04	\N	\N	2	20.37	31	32.6	4.9	10.1	0.484	0.3	0.6	0.4	4	6	0.663	10.5	1.5	0.7	1	2.2	3.1	14	5.4	11.1	0.3	0.7	4.4	6.7	11.5	1.7	0.7	1.1	2.4	3.4	15.4	0.541	0.497	0.064	0.599	0.321	23.8	0.46	0.72	21.7	0.083	0.099	0.182	109.9	91.6	3	3.4	6.4	1628397
+386	2017-06-22 19:00:00	Terrance Ferguson	terrance-ferguson	SG	\N	79	80.75	184	Adelaide (Australia)	Tulsa, OK	1998-05-17	\N	\N	\N	19.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628390
+387	2017-06-22 19:00:00	Derrick White	derrick-white	PG	SG	76.5	79.5	190	Colorado	Parker, CO	1994-07-02	\N	\N	4	22.96	34	32.8	6	11.9	0.507	1.7	4.2	0.396	4.4	5.4	0.813	4.1	4.4	1.2	1.4	2.4	2.1	18.1	6.6	13	1.8	4.6	4.8	5.9	4.5	4.8	1.4	1.6	2.6	2.3	19.8	0.627	0.578	0.356	0.45	0.366	25.3	1.13	1.83	27.3	0.161	0.05	0.211	124.9	104	9	3.4	12.4	1628401
+388	2017-06-22 19:00:00	Johnathan Motley	johnathan-motley	PF	\N	80.75	88	238	Baylor	Houston, TX	1995-05-04	\N	\N	3	22.12	34	30.5	6.6	12.8	0.521	0.3	1	0.273	3.8	5.4	0.699	9.9	2.3	0.4	1.1	2.9	3.1	17.3	7.9	15.1	0.3	1.1	4.4	6.4	11.6	2.7	0.4	1.3	3.5	3.6	20.5	0.565	0.531	0.076	0.422	0.32	30.6	0.57	0.79	26.7	0.127	0.081	0.208	113.8	96.3	5.9	2.8	8.7	1628405
+389	2017-06-22 19:00:00	Luke Kennard	luke-kennard	SG	\N	77.5	77.25	196	Duke	Franklin, OH	1996-06-24	\N	\N	2	20.98	37	35.5	6.4	13.1	0.489	2.4	5.4	0.438	4.3	5.1	0.856	5.1	2.5	0.8	0.4	1.6	2.2	19.5	6.5	13.3	2.4	5.5	4.4	5.1	5.2	2.5	0.8	0.4	1.6	2.3	19.8	0.629	0.579	0.414	0.386	0.383	24	0.57	1.54	24.4	0.167	0.049	0.216	130.5	104.4	8.4	2	10.3	1628379
+390	2017-06-22 19:00:00	Markelle Fultz	markelle-fultz	PG	\N	77	81	185	Washington	Upper Marlboro, MD	1998-05-29	\N	\N	1	19.05	25	35.7	8.4	17.6	0.476	2.1	5	0.413	4.4	6.7	0.649	5.7	5.9	1.6	1.2	3.2	2.5	23.2	8.4	17.7	2.1	5.1	4.4	6.8	5.8	6	1.6	1.2	3.2	2.5	23.4	0.558	0.535	0.287	0.383	0.349	31.4	1.13	1.85	28	0.148	0.027	0.175	116.3	110.7	7.7	1.7	9.4	1628365
+391	2017-06-22 19:00:00	Caleb Swanigan	caleb-swanigan	PF	\N	80.5	87	246	Purdue	Fort Wayne, IN	1997-04-18	\N	\N	2	20.17	35	32.5	6.3	12	0.527	1.1	2.4	0.447	4.7	6	0.781	12.5	3.1	0.4	0.8	3.4	2.8	18.5	7	13.3	1.2	2.7	5.2	6.6	13.8	3.4	0.5	0.9	3.7	3.1	20.4	0.62	0.572	0.202	0.499	0.354	28.1	0.67	0.91	26.2	0.13	0.091	0.225	116.2	92.7	6.1	3.4	9.4	1628403
+392	2017-06-22 19:00:00	Semi Ojeleye	semi-ojeleye	SF	\N	78.75	81.75	241	SMU	Ottawa, KS	1994-12-05	\N	\N	3	22.53	35	34.1	6	12.3	0.487	2.1	4.9	0.424	4.9	6.3	0.785	6.9	1.5	0.4	0.4	1.4	1.8	19	6.3	13	2.2	5.2	5.2	6.6	7.2	1.6	0.5	0.4	1.5	1.9	20	0.621	0.572	0.399	0.508	0.369	25.9	0.36	1.06	26.5	0.184	0.074	0.258	131.8	98	8.3	1.1	9.3	1628400
+393	2017-06-22 19:00:00	Ike Anigbogu	ike-anigbogu	C	\N	81.75	90.25	252	UCLA	Corona, CA	1998-10-22	\N	\N	1	18.65	29	13	2	3.5	0.564	0	0	\N	0.8	1.5	0.535	4	0.2	0.2	1.2	0.8	2.5	4.7	5.4	9.6	0	0	2.2	4.1	11.2	0.6	0.5	3.3	2.3	6.9	13.1	0.564	0.564	0	0.426	0.294	18.4	0.12	0.25	17.1	0.064	0.074	0.138	109	98.4	-1.5	2.4	0.9	1628387
+394	2017-06-22 19:00:00	Lonzo Ball	lonzo-ball	PG	\N	78	\N	190	UCLA	Chino Hills, CA	1997-10-27	\N	\N	1	19.64	36	35.1	5.3	9.5	0.551	2.2	5.4	0.412	1.8	2.7	0.673	6	7.6	1.8	0.8	2.5	1.8	14.6	5.4	9.8	2.3	5.5	1.9	2.8	6.2	7.8	1.9	0.8	2.5	1.9	14.9	0.673	0.668	0.566	0.286	0.355	18.1	1.73	3.08	24.7	0.152	0.063	0.215	131.3	100.7	8.1	3.9	12	1628366
+395	2017-06-22 19:00:00	Bam Adebayo	bam-adebayo	PF	C	81.75	86.75	243	Kentucky	Pinetown, NC	1997-07-18	\N	\N	1	19.92	38	30.1	4.5	7.5	0.599	0	0	\N	4.1	6.2	0.653	8	0.8	0.7	1.5	1.7	2.6	13	5.3	8.9	0	0	4.8	7.4	9.6	1	0.8	1.8	2	3.1	15.5	0.624	0.599	0	0.831	0.311	18.5	0.25	0.5	22	0.115	0.08	0.196	123.7	95.8	4.5	3.6	8.2	1628389
+396	2017-06-22 19:00:00	Isaiah Hartenstein	isaiah-hartenstein	PF	C	84	\N	249	Žalgiris (Lithuania)	Eugene, OR	1998-05-05	\N	\N	\N	19.12	5	3.2	0.4	1	0.4	0	0.4	0	0.2	0.2	1	0.8	0.2	0	0	0.4	0.4	1	4.5	11.3	0	4.5	2.3	2.3	9	2.3	0	0	4.5	4.5	11.3	0.457	0.4	0.4	0.2	\N	\N	\N	0.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628392
+397	2017-06-22 19:00:00	John Collins	john-collins	PF	\N	81.5	83.25	225	Wake Forest	West Palm Beach, FL	1997-09-23	\N	\N	2	19.73	33	26.6	7.1	11.4	0.622	0	0	0	5	6.7	0.745	9.8	0.5	0.6	1.6	1.8	3	19.2	9.6	15.4	0	0	6.7	9	13.3	0.7	0.9	2.1	2.5	4	25.9	0.658	0.622	0.003	0.585	0.324	29.9	0.15	0.28	35.9	0.21	0.046	0.255	129.9	105	9.3	0.7	9.9	1628381
+398	2017-06-22 19:00:00	Donovan Mitchell	donovan-mitchell	SG	\N	75	82	211	Louisville	Greenwich, CT	1996-09-07	\N	\N	2	20.78	34	32.3	5.3	13.1	0.408	2.4	6.6	0.354	2.6	3.2	0.806	4.9	2.7	2.1	0.5	1.6	2.6	15.6	5.9	14.6	2.6	7.4	2.9	3.5	5.4	3	2.3	0.6	1.8	2.9	17.3	0.534	0.498	0.509	0.243	0.377	24.6	0.65	1.66	21.8	0.109	0.087	0.197	116.3	94.1	5.7	5.5	11.1	1628378
+399	2017-06-22 19:00:00	Dillon Brooks	dillon-brooks	SF	\N	78	78	220	Oregon	Mississauga, Ontario	1996-01-22	\N	\N	3	21.4	35	25.3	5.9	12.1	0.488	1.6	4.1	0.401	2.7	3.6	0.754	3.2	2.7	1.1	0.5	2.1	2.8	16.1	8.4	17.1	2.3	5.8	3.9	5.1	4.6	3.9	1.5	0.7	2.9	3.9	22.9	0.585	0.556	0.336	0.299	0.366	31.6	0.73	1.32	25.5	0.14	0.072	0.212	116.2	98.2	6.2	2.9	9.1	1628415
+400	2017-06-22 19:00:00	Malik Monk	malik-monk	SG	PG	75	\N	190	Kentucky	Bentonville, AR	1998-02-04	\N	\N	1	19.37	38	32.1	6.6	14.7	0.45	2.7	6.9	0.397	3.9	4.7	0.822	2.5	2.3	0.9	0.5	2	1.9	19.8	7.4	16.5	3.1	7.7	4.4	5.3	2.8	2.6	1.1	0.6	2.2	2.1	22.3	0.586	0.543	0.47	0.323	0.388	27.2	0.49	1.16	21.5	0.128	0.062	0.19	118.2	100.8	6.5	2.5	9	1628370
+401	2017-06-22 19:00:00	Sindarius Thornwell	sindarius-thornwell	SG	\N	76.75	82	212	South Carolina	Lancaster, SC	1994-11-24	\N	\N	4	22.56	31	33.9	6.3	14.2	0.444	1.9	4.8	0.392	6.9	8.4	0.83	7.1	2.8	2.1	1	2.5	2.3	21.4	6.7	15	2	5.1	7.4	8.9	7.6	2.9	2.3	1	2.6	2.4	22.7	0.59	0.51	0.337	0.59	0.371	29.5	0.65	1.13	30.3	0.167	0.107	0.274	122.2	89	11	6.2	17.1	1628414
+402	2017-06-22 19:00:00	Devin Robinson	devin-robinson	SF	\N	80.25	84.75	190	Florida	Chesterfield, VA	1995-03-07	\N	\N	3	22.28	36	26.4	3.9	8.3	0.475	1.2	3.1	0.391	2	2.8	0.723	6.1	0.6	0.9	0.8	1.1	2.3	11.1	5.4	11.3	1.6	4.2	2.8	3.8	8.3	0.9	1.2	1.1	1.5	3.1	15.1	0.576	0.547	0.368	0.338	0.35	20	0.24	0.59	20.2	0.097	0.088	0.189	118.7	93.6	4.7	3.9	8.6	1628421
+403	2017-06-22 19:00:00	Jayson Tatum	jayson-tatum	SF	\N	80	83	205	Duke	St. Louis, MO	1998-03-03	\N	\N	1	19.29	29	33.3	5.7	12.6	0.452	1.4	4	0.342	4.1	4.8	0.849	7.3	2.1	1.3	1.1	2.6	3	16.8	6.1	13.6	1.5	4.4	4.4	5.2	7.9	2.3	1.5	1.2	2.8	3.2	18.2	0.566	0.507	0.321	0.381	0.364	26.2	0.47	0.82	22	0.095	0.075	0.17	111.4	97.8	4.6	3.2	7.9	1628369
+404	2017-06-22 19:00:00	Tony Bradley	tony-bradley	C	\N	82.75	89	249	North Carolina	Bartow, FL	1998-01-08	\N	\N	1	19.44	38	14.6	2.7	4.7	0.573	0	0	\N	1.7	2.8	0.619	5.1	0.6	0.3	0.6	0.7	1.8	7.1	6.6	11.6	0	0	4.2	6.8	12.7	1.5	0.7	1.4	1.6	4.5	17.5	0.59	0.573	0	0.59	0.306	20.7	0.35	0.92	26.2	0.152	0.072	0.224	129.2	97.7	5.6	2.3	7.9	1628396
+405	2017-06-22 19:00:00	Kadeem Allen	kadeem-allen	PG	\N	74.25	81.25	192	Arizona	Wilmington, NC	1993-01-15	\N	\N	4	24.42	34	30	3.1	6.9	0.453	0.9	2.2	0.427	2.5	3.4	0.741	4	3	1.6	0.6	1.9	2.4	9.8	3.8	8.3	1.1	2.6	3	4.1	4.8	3.6	1.9	0.7	2.3	2.9	11.7	0.57	0.521	0.318	0.492	0.346	18.1	0.98	1.55	16.7	0.067	0.078	0.149	111.3	96.3	2.2	5.2	7.4	1628443
+406	2017-06-22 19:00:00	Sterling Brown	sterling-brown	SG	\N	78	\N	230	SMU	Maywood, IL	1995-02-10	\N	\N	4	22.35	35	32.7	4.6	10	0.459	1.7	3.9	0.449	2.5	3.1	0.791	6.5	3	1.4	0.5	2	2.6	13.4	5.1	11.1	1.9	4.3	2.7	3.5	7.1	3.3	1.6	0.6	2.2	2.9	14.8	0.583	0.546	0.387	0.313	0.367	21.9	0.82	1.52	21.7	0.115	0.094	0.21	119.6	92.1	4.8	4	8.9	1628425
+407	2017-06-22 19:00:00	Justin Jackson	justin-jackson	SF	\N	80.25	83	201	North Carolina	Tomball, TX	1995-03-28	\N	\N	3	22.22	40	32	6.6	14.9	0.443	2.6	7.1	0.37	2.5	3.3	0.748	4.7	2.8	0.8	0.2	1.7	1.4	18.3	7.4	16.7	3	8	2.8	3.7	5.2	3.2	0.9	0.3	1.9	1.5	20.5	0.555	0.531	0.477	0.22	0.375	25.7	0.61	1.64	21.3	0.134	0.056	0.19	121.2	102.4	7.7	2.1	9.8	1628382
+408	2017-06-22 19:00:00	Kyle Kuzma	kyle-kuzma	PF	\N	81.5	84.25	223	Utah	Flint, MI	1995-07-24	\N	\N	3	21.9	29	30.8	6.3	12.4	0.504	0.9	2.9	0.321	2.9	4.4	0.669	9.3	2.4	0.6	0.5	2.1	1.6	16.4	7.3	14.5	1.1	3.4	3.4	5.1	10.9	2.9	0.7	0.6	2.5	1.9	19.2	0.565	0.542	0.233	0.352	0.332	27	0.56	1.15	25	0.125	0.081	0.201	115.8	96.3	5.6	0.7	6.3	1628398
+409	2017-06-22 19:00:00	Jarrett Allen	jarrett-allen	C	\N	82.25	89.25	234	Texas	Austin, TX	1998-04-21	\N	\N	1	19.16	33	32.2	5.4	9.6	0.566	0	0.2	0	2.5	4.5	0.564	8.4	0.8	0.6	1.5	2.5	2.1	13.4	6.1	10.7	0	0.2	2.9	5.1	9.4	0.9	0.6	1.7	2.9	2.3	15	0.571	0.566	0.022	0.472	0.298	22.6	0.25	0.32	20.3	0.057	0.064	0.124	104.9	99.9	2.6	2.6	5.2	1628386
+410	2017-06-22 19:00:00	Damyean Dotson	damyean-dotson	SG	\N	77.5	81	205	Houston	Houston, TX	1995-05-06	\N	\N	4	22.12	32	34.3	6.3	13.4	0.47	3.4	7.6	0.443	1.4	1.7	0.83	6.9	1.1	0.9	0.2	1	1.7	17.4	6.6	14.1	3.5	8	1.4	1.7	7.3	1.2	1	0.2	1.1	1.7	18.2	0.611	0.595	0.567	0.123	0.397	23.1	0.3	1.09	23.9	0.142	0.073	0.215	127	98.3	8.2	1.3	9.4	1628422
+411	2017-06-22 19:00:00	Jawun Evans	jawun-evans	PG	\N	71.5	77.5	185	Oklahoma State	Greenville, SC	1996-07-26	\N	\N	2	20.9	32	29.3	6.6	15.1	0.438	1.1	3	0.379	4.8	6	0.812	3.4	6.4	1.8	0.1	2.8	2.3	19.2	8.1	18.5	1.4	3.7	6	7.3	4.2	7.8	2.2	0.2	3.5	2.8	23.6	0.535	0.475	0.197	0.396	0.358	32.7	1.33	2.27	27.3	0.171	0.034	0.205	118.8	108.3	8	1.2	9.2	1628393
+412	2017-06-22 19:00:00	Sasha Vezenkov	sasha-vezenkov	PF	\N	81	\N	225	Barcelona (Spain)	Nicosia, Cyprus	1996-08-06	\N	\N	\N	20.87	62	18.6	3	5.5	0.553	1.1	2.7	0.42	1.1	1.3	0.84	3.2	1	0.6	0.2	0.7	1.9	8.3	5.8	10.5	2.2	5.3	2.1	2.5	6.2	1.9	1.2	0.5	1.4	3.6	16	0.681	0.658	0.5	0.24	0.377	\N	\N	1.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628426
+413	2017-06-22 19:00:00	Josh Jackson	josh-jackson	SF	\N	80	82	205	Kansas	Detroit, MI	1997-02-10	\N	\N	1	20.35	35	30.8	6.3	12.3	0.513	1	2.6	0.378	2.8	4.9	0.566	7.4	3	1.7	1.1	2.8	3	16.3	7.4	14.3	1.1	3	3.3	5.8	8.6	3.5	2	1.2	3.2	3.5	19.1	0.559	0.552	0.21	0.403	0.321	27.2	0.67	1.07	24.2	0.1	0.082	0.182	110.9	96.1	5.7	4.2	9.9	1628367
+414	2017-06-22 19:00:00	Jordan Bell	jordan-bell	PF	\N	80.5	83.75	224	Oregon	Long Beach, CA	1995-01-07	\N	\N	3	22.44	39	28.8	4.4	6.9	0.636	0.1	0.4	0.214	2.1	3	0.701	8.8	1.8	1.3	2.3	1.9	1.7	10.9	5.5	8.6	0.1	0.4	2.6	3.7	11	2.2	1.6	2.8	2.4	2.2	13.7	0.658	0.641	0.052	0.435	0.319	18	0.63	0.93	26.4	0.114	0.107	0.221	123.8	89.1	5.3	5.5	10.8	1628395
+415	2017-06-22 19:00:00	Frank Ntilikina	frank-ntilikina	PG	\N	78	\N	190	SIG Strasbourg	Strasbourg, France	1998-07-28	\N	\N	\N	18.89	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628373
+416	2017-06-22 19:00:00	Thomas Bryant	thomas-bryant	C	\N	82.75	90	248	Indiana	Rochester, NY	1997-07-31	\N	\N	2	19.88	34	28.1	4.4	8.4	0.519	0.7	1.8	0.383	3.2	4.4	0.73	6.6	1.5	0.8	1.5	2.3	3.1	12.6	5.6	10.8	0.9	2.3	4.1	5.6	8.5	1.9	1	2	2.9	3.9	16.1	0.601	0.56	0.211	0.519	0.339	22.2	0.44	0.64	21.6	0.101	0.059	0.159	115.4	101.9	3.8	2.4	6.2	1628418
+417	2017-06-22 19:00:00	Jonah Bolden	jonah-bolden	PF	\N	82	\N	220	Maccabi Tel Aviv	Melbourne, Australia	1996-01-02	\N	\N	\N	21.46	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628413
+418	2017-06-22 19:00:00	Tyler Lydon	tyler-lydon	SF	PF	81.5	84	215	Syracuse	Elizaville, NY	1996-04-09	\N	\N	2	21.19	34	36.1	4.4	9.4	0.473	1.4	3.6	0.395	2.9	3.4	0.836	8.6	2.1	1	1.4	1.7	2.5	13.2	4.4	9.4	1.4	3.6	2.8	3.4	8.6	2.1	1	1.4	1.7	2.5	13.1	0.599	0.55	0.389	0.364	0.363	18	0.6	1.19	20.3	0.101	0.055	0.156	121.5	102.8	4.8	2.2	7	1628399
+419	2017-06-22 19:00:00	Zach Collins	zach-collins	PF	C	84	85	232	Gonzaga	Las Vegas, NV	1997-11-19	\N	\N	1	19.58	39	17.3	3.5	5.3	0.652	0.3	0.5	0.476	2.8	3.8	0.743	5.9	0.4	0.5	1.8	1.5	2.7	10	7.2	11.1	0.5	1.1	5.9	7.9	12.3	0.9	1	3.7	3.2	5.6	20.9	0.703	0.676	0.101	0.715	0.34	24.8	0.18	0.27	31	0.155	0.143	0.297	125.3	79.5	4.6	6	10.6	1628380
+420	2017-06-22 19:00:00	Justin Patton	justin-patton	C	\N	83.25	87	229	Creighton	Omaha, NE	1997-06-14	\N	\N	1	20.01	35	25.3	5.7	8.5	0.676	0.2	0.4	0.533	1.3	2.5	0.517	6.2	1.2	0.9	1.4	1.7	2.7	12.9	8.1	12	0.3	0.6	1.8	3.5	8.9	1.7	1.2	2	2.4	3.9	18.4	0.671	0.689	0.051	0.294	0.298	22	0.39	0.68	25.2	0.113	0.081	0.194	119.8	96.1	4.2	4.2	8.4	1628383
+421	2017-06-22 19:00:00	Davon Reed	davon-reed	SG	\N	77.5	84	206	Miami	Ewing Township, NJ	1995-06-11	\N	\N	4	22.02	33	35.3	4.9	11.3	0.433	2.4	6	0.397	2.7	3.3	0.833	4.8	2.4	1.3	0.5	2	1.6	14.9	5	11.5	2.4	6.1	2.8	3.3	4.9	2.4	1.3	0.5	2.1	1.6	15.2	0.58	0.539	0.535	0.29	0.379	22.2	0.64	1.18	19.7	0.1	0.065	0.165	115.9	100.3	5	3.2	8.2	1628432
+422	2017-06-22 19:00:00	Tyler Dorsey	tyler-dorsey	SG	\N	76.5	77.25	183	Oregon	Pasadena, CA	1996-02-14	\N	\N	2	21.34	39	30	4.8	10.4	0.467	2.3	5.3	0.423	2.7	3.6	0.755	3.5	1.7	0.8	0.1	1.5	1.5	14.6	5.8	12.5	2.7	6.4	3.2	4.3	4.2	2.1	0.9	0.1	1.8	1.8	17.6	0.606	0.575	0.514	0.343	0.373	22.9	0.47	1.14	19.6	0.12	0.058	0.178	120.9	101.6	5.1	1.6	6.8	1628416
+423	2017-06-22 19:00:00	Alec Peters	alec-peters	PF	\N	80.75	82.75	232	Valparaiso	Washington, IL	1995-04-13	\N	\N	4	22.18	29	35.1	7.5	16.1	0.466	2	5.5	0.362	5.9	6.7	0.887	10.1	2.2	0.8	0.4	2.4	2.2	23	7.7	16.5	2	5.7	6.1	6.9	10.4	2.3	0.8	0.4	2.5	2.3	23.5	0.594	0.528	0.342	0.415	0.379	30.8	0.48	0.9	28.7	0.165	0.075	0.239	121	97.2	7.5	0.4	7.9	1628409
+424	2017-06-22 19:00:00	Dwayne Bacon	dwayne-bacon	SF	\N	78.25	82	222	Florida State	Lakeland, FL	1995-08-30	\N	\N	2	21.8	35	28.8	6.3	14	0.452	1.6	4.9	0.333	3	3.9	0.754	4.2	1.7	1	0.1	2	1.6	17.2	7.9	17.5	2	6.1	3.7	4.9	5.3	2.2	1.3	0.1	2.5	2	21.5	0.544	0.51	0.35	0.282	0.36	29.4	0.39	0.86	20.8	0.099	0.052	0.151	110.4	103.4	4.6	1	5.5	1628407
+459	2004-06-22 19:00:00	Luke Jackson	luke-jackson	SF	\N	79	80.5	212	Oregon	Cresswell, OR	1981-11-06	\N	\N	4	22.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	14.4	2.5	5.6	5.5	6.3	7.5	4.7	1.3	0.2	3.1	1.8	22	0.631	0.573	0.386	0.44	0.384	\N	\N	1.49	\N	\N	\N	\N	\N	\N	\N	\N	\N	2739
+425	2017-06-22 19:00:00	Jaron Blossomgame	jaron-blossomgame	SF	\N	78.75	82	219	Clemson	Alpharetta, GA	1993-09-13	\N	\N	4	23.76	33	34.3	6.7	13.4	0.499	0.7	2.8	0.255	3.6	5.1	0.714	6.3	1.5	0.8	0.9	1.7	1.6	17.7	7	14	0.8	3	3.8	5.3	6.6	1.6	0.9	1	1.8	1.7	18.6	0.561	0.526	0.213	0.381	0.33	25.9	0.37	0.91	23.1	0.113	0.039	0.152	115.7	107.1	5.2	1	6.2	1628417
+426	2017-06-22 19:00:00	Lauri Markkanen	lauri-markkanen	PF	\N	84	\N	225	Arizona	Vantaa, Finland	1997-05-22	\N	\N	1	20.07	37	30.8	5	10.2	0.492	1.9	4.4	0.423	3.7	4.4	0.835	7.2	0.9	0.4	0.5	1.1	2	15.6	5.8	11.9	2.2	5.1	4.3	5.2	8.4	1	0.5	0.6	1.3	2.3	18.2	0.635	0.584	0.434	0.436	0.376	22.5	0.25	0.8	25	0.168	0.063	0.235	134.1	100.4	7.9	1.5	9.4	1628374
+427	2017-06-22 19:00:00	Jonathan Isaac	jonathan-isaac	SF	PF	83	\N	205	Florida State	Naples, FL	1997-10-03	\N	\N	1	19.71	32	26.2	4.1	8	0.508	1	2.8	0.348	2.9	3.7	0.78	7.8	1.2	1.2	1.5	1.5	2.2	12	5.6	11	1.3	3.8	3.9	5.1	10.8	1.6	1.6	2.1	2.1	3	16.4	0.614	0.568	0.348	0.461	0.352	20.3	0.37	0.77	24.6	0.114	0.091	0.205	122.2	93.6	5.8	4.2	10	1628371
+428	2017-06-22 19:00:00	Edmond Sumner	edmond-sumner	PG	SG	77.75	81	176	Xavier	Detroit, MI	1995-12-31	\N	\N	2	21.46	21	33.1	4.8	10	0.479	0.6	2.1	0.273	4.8	6.5	0.735	4.3	5	1.3	0.8	2.8	2.4	15	5.2	10.9	0.6	2.3	5.2	7	4.7	5.4	1.4	0.8	3	2.6	16.2	0.57	0.507	0.209	0.645	0.331	24	1.26	1.81	21.1	0.103	0.052	0.155	113.8	104.1	5.1	3.7	8.8	1628410
+429	2004-06-22 19:00:00	Lionel Chalmers	lionel-chalmers	PG	\N	72	\N	180	Xavier	Schenectady, NY	1980-11-10	\N	\N	4	23.59	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12.6	2.8	6.9	2.9	4.1	3.4	3.3	1.1	0	2.9	2.2	17.1	0.586	0.561	0.544	0.326	0.368	25	0.8	1.14	\N	0.118	0.053	0.173	\N	\N	\N	\N	\N	2763
+430	2004-06-22 19:00:00	Luis Flores	luis-flores	PG	\N	73.75	79.5	202	Manhattan	New York, NY	1981-04-11	\N	\N	4	23.18	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.5	17	2.2	5.8	6.7	7.7	3.9	1.6	1.9	0.1	2.3	2.4	23.9	0.578	0.507	0.344	0.456	0.378	\N	\N	0.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	2784
+431	2004-06-22 19:00:00	Kevin Martin	kevin-martin	SG	\N	79	\N	185	Western Carolina	Zanesville, OH	1983-02-01	\N	\N	3	21.37	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.9	18.7	2.2	6.5	8.8	10.8	5.6	2	2.1	0.3	3.6	2.2	28.7	0.602	0.532	0.346	0.574	0.371	\N	\N	0.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	2755
+432	2004-06-22 19:00:00	Jackson Vroman	jackson-vroman	PF	C	82.75	84	226	Iowa State	Bountiful, UT	1981-06-06	\N	\N	4	23.02	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.8	12.1	0	0.3	2.6	5.2	11.2	2.7	1.7	0.8	3.7	4.1	16.3	0.56	0.565	0.021	0.43	0.291	24.1	0.63	0.74	\N	0.085	0.081	0.167	\N	\N	\N	\N	\N	2761
+433	2004-06-22 19:00:00	David Harrison	david-harrison	C	\N	84	\N	260	Colorado	Nashville, TN	1982-08-15	\N	\N	3	21.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	11.6	0	0	4.9	9.1	10	1	0.7	3.3	3.1	3.7	19.5	0.613	0.631	0.003	0.786	0.295	\N	\N	0.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	2758
+434	2004-06-22 19:00:00	Andre Emmett	andre-emmett	SG	SF	76.5	81	216	Texas Tech	Dallas, TX	1982-08-27	\N	\N	4	21.8	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	14.1	0.5	1.3	4.7	6.5	6.4	1.8	1.3	0.3	2	1.4	20	0.583	0.543	0.091	0.457	0.331	26.5	0.4	0.89	\N	0.127	0.073	0.2	\N	\N	\N	\N	\N	2765
+435	2004-06-22 19:00:00	Kris Humphries	kris-humphries	PF	\N	81.5	84.5	238	Minnesota	Minnetonka, MN	1985-02-06	\N	\N	1	19.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8	18.1	0.6	1.8	6.2	8.3	10.7	0.7	1	1.2	3	2.4	22.9	0.518	0.461	0.1	0.46	0.334	34.6	0.15	0.24	\N	0.073	0.069	0.141	\N	\N	\N	\N	\N	2743
+436	2004-06-22 19:00:00	Sergei Monia	sergei-monia	SF	\N	80	\N	220	CSKA Moscow (Russia)	Saratov, Russia	1983-04-15	\N	\N	\N	21.17	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.6	10.7	1.7	5.6	2.1	2.8	6.5	1.3	1.2	0.9	1.9	5.4	12.9	0.535	0.505	0.524	0.262	0.351	\N	\N	0.72	\N	\N	\N	\N	\N	\N	\N	\N	\N	2752
+437	2004-06-22 19:00:00	Robert Swift	robert-swift	C	\N	84	\N	245	Bakersfield HS	Bakersfield, CA	1985-12-03	\N	\N	\N	18.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2741
+438	2004-06-22 19:00:00	Pape Sow	pape-sow	PF	\N	82	86	233	CSU Fullerton	Dakar, Senegal	1981-11-22	\N	\N	4	22.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	12.9	0.3	1	6.2	9.2	10.9	1	1.8	0.6	3.4	4	19.3	0.558	0.506	0.074	0.713	0.32	\N	\N	0.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	2776
+439	2004-06-22 19:00:00	Kirk Snyder	kirk-snyder	SG	\N	78.75	81	228	Nevada	Upland, CA	1983-06-05	\N	\N	3	21.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7	16.2	1.8	5.2	5.5	7.6	6.5	3.9	1.2	0.7	4	2.4	21.3	0.538	0.487	0.32	0.468	0.353	\N	\N	0.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	2745
+440	2004-06-22 19:00:00	Andre Iguodala	andre-iguodala	SF	\N	78.75	83	217	Arizona	Springfield, IL	1984-01-28	\N	\N	2	20.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.1	11.3	0.9	2.7	3.5	4.4	9.5	5.5	1.8	0.4	3.1	2.8	14.5	0.542	0.488	0.242	0.391	0.344	20.4	1.16	1.77	\N	0.058	0.062	0.125	\N	\N	\N	\N	\N	2738
+441	2004-06-22 19:00:00	Matt Freije	matt-freije	PF	\N	81.5	85	234	Vanderbilt	Overland Park, KS	1981-10-02	\N	\N	4	22.7	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.8	16.3	2.3	6.4	6.4	8.1	6.5	1.1	0.8	0.8	1.2	1.9	22.2	0.55	0.484	0.39	0.498	0.369	30.2	0.23	0.88	\N	0.11	0.077	0.187	\N	\N	\N	\N	\N	2782
+442	2004-06-22 19:00:00	Justin Reed	justin-reed	SF	\N	79	\N	240	Ole Miss	Jackson, MS	1982-01-16	\N	\N	4	22.41	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	15.9	0.5	2.3	4.5	6.1	8	1.6	0.7	0.9	3.2	3.3	19.8	0.525	0.481	0.142	0.385	0.327	\N	\N	0.49	\N	\N	\N	\N	\N	\N	\N	\N	\N	2770
+443	2004-06-22 19:00:00	Emeka Okafor	emeka-okafor	C	\N	82	88	257	UConn	Bartlesville, OK	1982-09-28	\N	\N	3	21.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.1	13.5	0	0	3.5	6.7	12.8	1.1	1.1	4.5	2.6	2.6	19.6	0.588	0.599	0	0.5	0.292	25.1	0.24	0.43	\N	0.127	0.213	0.34	\N	\N	\N	\N	\N	2731
+444	2004-06-22 19:00:00	Bernard Robinson	bernard-robinson	SF	\N	78.5	82	208	Michigan	Washington, DC	1980-12-26	\N	\N	4	23.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	11.4	0.6	2.2	3.1	4	6.4	4.3	2.1	0.3	3.1	2.8	13.5	0.507	0.457	0.196	0.352	0.333	\N	\N	1.4	\N	\N	\N	\N	\N	\N	\N	\N	\N	2774
+445	2004-06-22 19:00:00	Antonio Burks	antonio-burks	PG	\N	72.75	78.5	191	Memphis	Memphis, TN	1980-02-25	\N	\N	4	24.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.2	13	2	4.8	2.5	4	3.4	5.8	2.5	0.2	2.6	2.4	16.8	0.566	0.551	0.372	0.307	0.345	23.7	1.53	2.23	\N	0.101	0.097	0.198	\N	\N	\N	\N	\N	2766
+446	2004-06-22 19:00:00	Anderson Varejão	anderson-varejao	PF	\N	82	\N	230	FC Barcelona (Spain)	Colatina, Brazil	1982-09-28	\N	\N	\N	21.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.1	10	0.4	1.7	2.7	4.5	8.1	1.5	2	1.2	2.3	4.8	13.2	0.546	0.529	0.174	0.45	0.307	\N	\N	0.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	2760
+488	2005-06-22 19:00:00	Amir Johnson	amir-johnson	PF	\N	82	\N	220	Westchester High School	Los Angeles, CA	1987-05-01	\N	\N	\N	18.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101161
+460	2004-06-22 19:00:00	Sasha Vujačić	sasha-vujacic	SG	\N	79	\N	205	Snaidero Udine (Italy)	Maribor, Slovenia	1984-03-08	\N	\N	\N	20.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	13.1	2.3	7.1	5.7	6.9	4.9	2.9	2.9	0.2	3	3.7	18.8	0.575	0.502	0.538	0.523	0.374	\N	\N	0.96	\N	\N	\N	\N	\N	\N	\N	\N	\N	2756
+461	2004-06-22 19:00:00	Royal Ivey	royal-ivey	PG	\N	75	\N	200	Texas	New York, NY	1981-12-20	\N	\N	4	22.48	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.1	9.1	0.4	1.1	2.8	4.5	4.9	5.2	1.5	0.3	1.9	3.1	11.4	0.507	0.472	0.125	0.496	0.318	17.5	1.46	2.76	\N	0.037	0.102	0.135	\N	\N	\N	\N	\N	2767
+462	2004-06-22 19:00:00	Al Jefferson	al-jefferson	PF	C	81.75	86.5	263	Prentiss High School	Prentiss, MS	1985-01-04	\N	\N	\N	19.44	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2744
+463	2004-06-22 19:00:00	Tony Allen	tony-allen	SG	\N	76.25	81	214	Oklahoma State	Chicago, IL	1982-01-11	\N	\N	4	22.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	13.2	0.7	2.4	4.3	6.3	6.3	3.5	2.3	1	3.2	3.4	18.2	0.564	0.531	0.183	0.479	0.325	\N	\N	1.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	2754
+464	2004-06-22 19:00:00	Devin Harris	devin-harris	PG	\N	75	79.5	170	Wisconsin	Milwaukee, WI	1983-02-27	\N	\N	3	21.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	12.8	2.3	6.2	5.3	6.7	4.3	4.4	1.7	0.1	2	1.9	19.3	0.606	0.55	0.488	0.524	0.371	27.6	1.04	2.14	\N	0.165	0.103	0.269	\N	\N	\N	\N	\N	2734
+465	2004-06-22 19:00:00	Trevor Ariza	trevor-ariza	SF	\N	80.25	86	201	UCLA	Los Angeles, CA	1985-06-30	\N	\N	1	18.96	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	11.5	0.8	3.5	2.6	5.2	7.4	2.4	1.9	0.5	3.7	3.1	13.2	0.474	0.462	0.303	0.45	0.302	\N	\N	0.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	2772
+466	2004-06-22 19:00:00	Shaun Livingston	shaun-livingston	PG	\N	79.5	83	186	Peoria High School	Peoria, IL	1985-09-11	\N	\N	\N	18.76	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2733
+467	2004-06-22 19:00:00	Dorell Wright	dorell-wright	SF	\N	79	\N	210	South Kent School	Los Angeles, CA	1985-12-02	\N	\N	\N	18.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2748
+468	2004-06-22 19:00:00	Chris Duhon	chris-duhon	PG	\N	73.25	78.5	193	Duke	Slidell, LA	1982-08-31	\N	\N	4	21.79	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	3.8	8.5	0.8	2.6	1.8	2.5	4.1	6.2	2.2	0.2	2.9	2.1	10.2	0.527	0.495	0.312	0.292	0.333	16.7	1.78	2.16	\N	0.043	0.088	0.131	\N	\N	\N	\N	\N	2768
+469	2004-06-22 19:00:00	Beno Udrih	beno-udrih	PG	\N	75.75	76.5	199	Breil Milano (Italy)	Celje, Slovenia	1982-07-05	\N	\N	\N	21.95	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	11.1	1.2	3	2.1	2.2	2.6	3	2.2	0	3.4	4.2	15	0.614	0.579	0.266	0.201	0.372	\N	\N	0.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	2757
+470	2004-06-22 19:00:00	Ben Gordon	ben-gordon	SG	\N	74.25	80.5	192	UConn	Mount Vernon, NY	1983-04-04	\N	\N	3	21.2	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	14.7	2.8	6.4	3.8	4.5	4.9	4.7	1.4	0.2	2.9	2.4	19.3	0.572	0.528	0.436	0.309	0.385	25.8	0.91	1.63	\N	0.116	0.092	0.208	\N	\N	\N	\N	\N	2732
+471	2004-06-22 19:00:00	Dwight Howard	dwight-howard	C	\N	82.25	88.5	240	SACA	Atlanta, GA	1985-12-08	\N	\N	\N	18.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2730
+472	2004-06-22 19:00:00	Luol Deng	luol-deng	SF	\N	80	84.5	220	Duke	London, UK	1985-04-16	\N	\N	1	19.16	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	13.8	1.3	3.5	3.1	4.3	8	2.1	1.5	1.2	2.6	2.6	17.5	0.551	0.522	0.252	0.313	0.342	24.7	0.48	0.82	\N	0.084	0.111	0.195	\N	\N	\N	\N	\N	2736
+473	2005-06-22 19:00:00	Wayne Simien	wayne-simien	PF	\N	81	84	256	Kansas	Leavenworth, KS	1983-03-09	\N	\N	4	22.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	14	0.2	0.6	5.7	7	11.6	1.5	0.6	0.6	2.4	2.7	21.3	0.616	0.558	0.04	0.503	0.336	27.6	0.33	0.6	\N	0.161	0.09	0.256	\N	\N	\N	\N	\N	101134
+474	2005-06-22 19:00:00	Martynas Andriuškevičius	martynas-andriuskevicius	C	PF	87	83.25	228	Žalgiris Kaunas (Lithuania)	Kaunas, Lithuania	1986-03-12	\N	\N	\N	19.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2.2	6.3	0.3	1.1	1.4	4.4	4.7	1.1	1.6	2.5	3.3	7.4	6	0.359	0.37	0.174	0.696	0.268	\N	\N	0.33	\N	\N	\N	\N	\N	\N	\N	\N	\N	101149
+475	2005-06-22 19:00:00	Andrew Bynum	andrew-bynum	C	\N	84	\N	280	St. Joseph High School	Plainsboro Township, NJ	1987-10-27	\N	\N	\N	17.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101115
+476	2005-06-22 19:00:00	Andray Blatche	andray-blatche	PF	\N	83	\N	240	South Kent School	Syracuse, NY	1986-08-22	\N	\N	\N	18.81	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101154
+477	2005-06-22 19:00:00	Linas Kleiza	linas-kleiza	SF	\N	80	\N	235	Missouri	Kaunas, Lithuania	1985-01-03	\N	\N	2	20.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	14.2	1.1	3.9	5.9	8	8.7	1.8	0.7	0.3	3.1	3.2	18.4	0.511	0.441	0.276	0.565	0.338	30.3	0.44	0.6	\N	0.058	0.058	0.116	\N	\N	\N	\N	\N	101132
+478	2005-06-22 19:00:00	Antoine Wright	antoine-wright	SF	SG	78.25	80.75	203	Texas A&M	\N	1984-02-06	\N	\N	3	21.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	13.2	2.4	5.4	3.3	4.8	6.3	2.4	1.2	0.8	2.6	2.7	18.9	0.613	0.594	0.413	0.361	0.361	\N	\N	0.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	101120
+479	2005-06-22 19:00:00	Lawrence Roberts	lawrence-roberts	PF	\N	81	\N	240	Mississippi State	Houston, TX	1982-10-20	\N	\N	4	22.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	13.4	0.4	1.4	6.6	10.1	12.4	2.1	1.8	0.9	3.1	2.4	19.1	0.522	0.463	0.107	0.754	0.317	28.4	0.44	0.7	\N	0.066	0.141	0.211	\N	\N	\N	\N	\N	101160
+480	2005-06-22 19:00:00	Joey Graham	joey-graham	SF	\N	78.5	80	217	Oklahoma State	\N	1982-06-11	\N	\N	4	23.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	13.6	0.9	2	5.6	6.3	7.3	2.4	1.1	0.2	3.1	3.6	20.9	0.63	0.563	0.145	0.466	0.365	27.7	0.49	0.76	\N	0.17	0.063	0.23	\N	\N	\N	\N	\N	101121
+481	2005-06-22 19:00:00	Marcin Gortat	marcin-gortat	PF	C	84	87.5	225	Köln (Germany)	Lodz, Poland	1984-02-17	\N	\N	\N	21.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	9.6	0	0	2.3	3.6	8.3	0.9	0.5	2.3	1.7	6.6	15.6	0.692	0.694	0	0.371	0.311	\N	\N	0.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	101162
+482	2005-06-22 19:00:00	Channing Frye	channing-frye	PF	C	82.5	86.5	244	Arizona	Phoenix, AZ	1983-05-17	\N	\N	4	22.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	12.9	0.1	0.5	4	4.8	8.8	2.3	1.1	2.7	2	3	18.3	0.605	0.557	0.041	0.373	0.329	22.7	0.53	1.12	\N	0.125	0.129	0.258	\N	\N	\N	\N	\N	101112
+483	2005-06-22 19:00:00	Sean May	sean-may	PF	\N	80.5	85.25	259	North Carolina	Bloomington, IN	1984-04-04	\N	\N	3	21.2	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.3	14.6	0	0.1	6.9	9.1	14.4	2.3	1.6	1.4	3.4	3.2	23.5	0.62	0.567	0.007	0.627	0.325	27.6	0.42	0.66	\N	0.165	0.145	0.31	\N	\N	\N	\N	\N	101118
+484	2005-06-22 19:00:00	David Lee	david-lee	PF	\N	81	84	230	Florida	Creve Coeur, MO	1983-04-29	\N	\N	4	22.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	12.2	0	0.2	4.6	6.5	11.6	2.8	1.4	1	3.4	3.1	17.5	0.57	0.525	0.013	0.528	0.319	26.5	0.62	0.82	\N	0.103	0.12	0.223	\N	\N	\N	\N	\N	101135
+485	2005-06-22 19:00:00	Ronny Turiaf	ronny-turiaf	PF	\N	81.25	85.5	238	Gonzaga	Fort-de-France, Martinique	1983-01-13	\N	\N	4	22.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	11.5	0.1	0.3	6.6	9.6	11	1.8	0.4	2.2	2.6	3.1	18.4	0.571	0.511	0.023	0.838	0.316	25.8	0.36	0.69	\N	0.103	0.095	0.199	\N	\N	\N	\N	\N	101142
+486	2005-06-22 19:00:00	Martell Webster	martell-webster	SF	\N	79.5	83	230	Seattle Prep	Edmonds, WA	1986-12-04	\N	\N	\N	18.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101110
+487	2005-06-22 19:00:00	Ian Mahinmi	ian-mahinmi	PF	\N	82	\N	230	Le Havre (France)	Rouen, France	1986-11-05	\N	\N	\N	18.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	8.2	0	0	3.1	4.7	8.6	0.2	1.1	1.4	2.6	7.3	12.9	0.618	0.597	0	0.571	0.312	\N	\N	0.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	101133
+489	2005-06-22 19:00:00	Uroš Slokar	uros-slokar	PF	\N	82	\N	238	Snaidero Udine (Italy)	Ljubljana, Slovenia	1983-05-14	\N	\N	\N	22.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	7.6	0.7	1.6	4	5.3	9.4	0.7	1.6	1	2.3	4.2	13.1	0.648	0.604	0.207	0.703	0.34	\N	\N	0.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	101166
+490	2005-06-22 19:00:00	Ryan Gomes	ryan-gomes	SF	\N	79	\N	245	Providence	Waterbury, CT	1982-09-01	\N	\N	4	22.79	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	15.4	1.6	4.2	3.8	5	7.9	3.1	1.5	0.2	2.4	1.6	20.8	0.583	0.548	0.275	0.323	0.356	\N	\N	1.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	101155
+491	2005-06-22 19:00:00	Travis Diener	travis-diener	PG	\N	73	71.75	165	Marquette	Fond du Lac, WI	1982-03-01	\N	\N	4	23.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	14.3	3.1	7.7	5.7	6.8	4.1	7.4	1.4	0	2.7	2.1	20.9	0.594	0.529	0.538	0.474	0.391	29.7	1.79	2.76	\N	0.158	0.061	0.22	\N	\N	\N	\N	\N	101143
+492	2005-06-22 19:00:00	Jarrett Jack	jarrett-jack	PG	\N	75.5	79.5	198	Georgia Tech	Fort Washington, MD	1983-10-28	\N	\N	3	21.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	10.5	1.5	3.4	4.1	4.7	5.1	4.8	1.9	0.1	3.6	1.8	16.4	0.643	0.586	0.326	0.445	0.37	21.8	1.2	1.32	\N	0.147	0.077	0.224	\N	\N	\N	\N	\N	101127
+493	2005-06-22 19:00:00	Alex Acker	alex-acker	SG	\N	76.75	84	183	Pepperdine	Compton, CA	1983-01-21	\N	\N	3	22.4	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12.7	1.8	4.3	2.8	3.3	6.3	3.6	1.3	0.5	2.6	1.8	16.1	0.564	0.522	0.337	0.26	0.374	22.2	0.9	1.39	\N	0.087	0.052	0.139	\N	\N	\N	\N	\N	101165
+494	2005-06-22 19:00:00	Gerald Green	gerald-green	SG	SF	79.25	81.75	192	Gulf Shores Academy	Houston, TX	1986-01-26	\N	\N	\N	19.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101123
+495	2005-06-22 19:00:00	Brandon Bass	brandon-bass	PF	\N	79	\N	252	LSU	Baton Rouge, LA	1985-04-30	\N	\N	2	20.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	11.4	0.4	0.9	5.2	6.7	9.7	0.9	0.9	1.7	1.9	2.6	18.6	0.637	0.586	0.082	0.589	0.342	23.2	0.24	0.46	\N	0.151	0.068	0.218	\N	\N	\N	\N	\N	101138
+496	2005-06-22 19:00:00	Chris Taft	chris-taft	PF	\N	81.5	85.75	261	Pittsburgh	Brooklyn, NY	1985-03-10	\N	\N	2	20.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	12.8	0	0	3.2	5.4	10.2	1.1	0.5	2.3	2.2	2.2	18.1	0.586	0.58	0	0.423	0.301	24.8	0.3	0.51	\N	0.12	0.13	0.25	\N	\N	\N	\N	\N	101147
+497	2005-06-22 19:00:00	Ersan Ilyasova	ersan-ilyasova	SF	\N	81	85.25	209	Ülkerspor (Turkey)	Eskişehir, Turkey	1987-05-15	\N	\N	\N	18.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	18.6	1.2	11.2	1.2	2.5	3.7	0	0	0	1.2	8.7	12.4	0.313	0.3	0.6	0.133	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101141
+498	2005-06-22 19:00:00	Yaroslav Korolev	yaroslav-korolev	SF	\N	81	\N	215	CSKA Moscow (Russia)	Moscow, Russia	1987-05-07	\N	\N	\N	18.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101117
+499	2005-06-22 19:00:00	Nate Robinson	nate-robinson	PG	\N	69	\N	180	Washington	Seattle, WA	1984-05-31	\N	\N	3	21.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	13.3	2	5.3	4.4	5.7	4.4	4.9	2	0.2	2.3	3.2	18.8	0.587	0.539	0.397	0.429	0.365	22.9	0.97	2.1	\N	0.113	0.069	0.178	\N	\N	\N	\N	\N	101126
+500	2005-06-22 19:00:00	Orien Greene	orien-greene	SG	\N	76	\N	208	Louisiana	Gainesville, FL	1982-02-04	\N	\N	4	23.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	10.8	1.5	4.8	2.8	3.7	5.1	4.4	3.1	0.4	3.8	3.2	12.7	0.507	0.46	0.447	0.346	0.351	\N	\N	1.18	\N	\N	\N	\N	\N	\N	\N	\N	\N	101158
+501	2005-06-22 19:00:00	Francisco Garcia	francisco-garcia	SG	SF	79	82.75	190	Louisville	\N	1981-12-31	\N	\N	3	23.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	12.7	2.1	5.8	4.5	5.1	4.7	4.4	1.9	1.7	3.1	3.3	17.7	0.584	0.52	0.453	0.4	0.379	24.5	0.98	1.42	\N	0.112	0.132	0.248	\N	\N	\N	\N	\N	101128
+502	2005-06-22 19:00:00	Bracey Wright	bracey-wright	SG	PG	74.5	82	187	Indiana	The Colony, TX	1984-07-01	\N	\N	3	20.96	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	14.3	2	6	4.9	6.3	4.9	2.7	1.1	0.6	2.7	2	18.7	0.542	0.482	0.419	0.444	0.362	30.4	0.67	1.03	\N	0.096	0.052	0.144	\N	\N	\N	\N	\N	101152
+503	2005-06-22 19:00:00	Daniel Ewing	daniel-ewing	PG	\N	73	\N	190	Duke	\N	1983-03-26	\N	\N	4	22.22	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	13.4	2.2	6.3	2.3	3.4	3.3	4.2	2.1	0.4	3.1	3.1	16	0.532	0.508	0.469	0.252	0.354	\N	\N	1.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	101137
+504	2005-06-22 19:00:00	Luther Head	luther-head	PG	SG	75	77.25	179	Illinois	Chicago, IL	1982-11-26	\N	\N	4	22.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	12.8	3.2	7.9	2.2	2.7	4.3	4.2	1.9	0.2	1.9	1.5	17.3	0.611	0.589	0.613	0.214	0.386	23.4	0.93	2.17	\N	0.136	0.086	0.222	\N	\N	\N	\N	\N	101129
+505	2005-06-22 19:00:00	Danny Granger	danny-granger	SF	\N	80.5	85.5	225	New Mexico	Metairie, LA	1983-04-20	\N	\N	4	22.15	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	14	1.8	4.2	6.2	8.2	10.6	2.8	2.5	2.4	2.9	2.9	22.6	0.634	0.589	0.298	0.585	0.359	29.8	0.6	0.99	\N	0.191	0.147	0.338	\N	\N	\N	\N	\N	101122
+506	2005-06-22 19:00:00	Marvin Williams	marvin-williams	SF	PF	80.25	87.5	228	North Carolina	Bremerton, WA	1986-06-19	\N	\N	1	18.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	11.1	0.9	2	6.2	7.3	10.6	1.2	1.8	0.8	2.5	4.1	18.3	0.627	0.545	0.178	0.66	0.357	21.1	0.26	0.46	\N	0.13	0.105	0.24	\N	\N	\N	\N	\N	101107
+507	2005-06-22 19:00:00	Raymond Felton	raymond-felton	PG	\N	72.25	76.25	199	North Carolina	Latta, SC	1984-06-26	\N	\N	3	20.97	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	10.4	2.2	5	3	4.2	4.9	7.8	2.3	0.3	4.1	2.2	14.6	0.589	0.561	0.482	0.406	0.359	20.4	1.7	1.93	\N	0.095	0.088	0.179	\N	\N	\N	\N	\N	101109
+508	2005-06-22 19:00:00	Deron Williams	deron-williams	PG	\N	74.75	78.25	202	Illinois	The Colony, TX	1984-06-26	\N	\N	3	20.97	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	11.3	1.9	5.1	1.8	2.6	3.9	7.2	1	0.2	3	2.2	13.4	0.535	0.516	0.455	0.234	0.347	22.5	1.59	2.42	\N	0.064	0.076	0.14	\N	\N	\N	\N	\N	101114
+509	2005-06-22 19:00:00	Johan Petro	johan-petro	C	\N	85	\N	250	Pau-Orthez (France)	Paris, France	1986-01-27	\N	\N	\N	19.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	12.7	0	0	3	4.1	8.7	1.3	2	1.7	2.3	7.6	15.9	0.543	0.508	0	0.326	0.321	\N	\N	0.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	101130
+510	2005-06-22 19:00:00	Salim Stoudamire	salim-stoudamire	PG	SG	73	\N	190	Arizona	Portland, OR	1982-10-11	\N	\N	4	22.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.3	3.8	7.6	3.9	4.3	2.7	2.5	1	0.1	2.7	2.1	21.2	0.689	0.647	0.571	0.321	0.414	24	0.54	0.92	\N	0.206	0.036	0.238	\N	\N	\N	\N	\N	101136
+511	2005-06-22 19:00:00	Charlie Villanueva	charlie-villanueva	PF	SF	81.5	84.25	237	UConn	Queens, NY	1984-08-24	\N	\N	2	20.81	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	13.8	0.3	0.5	4.4	6.4	11.6	1.8	0.9	2.6	3.2	3.1	19	0.566	0.531	0.039	0.462	0.32	\N	\N	0.57	\N	\N	\N	\N	\N	\N	\N	\N	\N	101111
+512	2005-06-22 19:00:00	Hakim Warrick	hakim-warrick	PF	\N	80.5	86	215	Syracuse	Wynnewood, PA	1982-07-08	\N	\N	4	22.94	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	13	0.3	0.9	6	8.8	8.3	1.4	0.9	0.8	2.4	2.2	20.5	0.596	0.557	0.067	0.671	0.317	26.9	0.3	0.58	\N	0.141	0.091	0.235	\N	\N	\N	\N	\N	101124
+513	2005-06-22 19:00:00	Roko Ukić	roko-ukic	PG	\N	77	\N	185	KK Split (Croatia)	Split, Croatia	1984-12-05	\N	\N	\N	20.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.5	12.1	1.3	4.5	2.7	4.7	3.9	5.5	1.8	0	2.6	1.9	15	0.524	0.507	0.373	0.387	0.323	\N	\N	2.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	101146
+514	2005-06-22 19:00:00	Lou Williams	lou-williams	SG	\N	73	\N	175	South Gwinnett HS	Snellville, GA	1986-10-27	\N	\N	\N	18.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101150
+515	2005-06-22 19:00:00	Dijon Thompson	dijon-thompson	SF	\N	80	81.75	196	UCLA	Redondo Beach, CA	1983-03-23	\N	\N	4	22.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.8	14.3	1.6	4.3	4	5	8.2	2.3	1.6	0.3	3.4	2.3	19.2	0.573	0.53	0.298	0.352	0.358	27.1	0.54	0.69	\N	0.111	0.058	0.165	\N	\N	\N	\N	\N	101159
+516	2005-06-22 19:00:00	Ike Diogu	ike-diogu	PF	\N	80	87.5	255	Arizona State	Garland, TX	1983-09-11	\N	\N	3	21.76	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	12.3	0.6	1.4	7.7	9.6	9.6	1.3	0.6	2.3	3.6	2.7	22.4	0.663	0.598	0.113	0.781	0.344	27.3	0.3	0.37	\N	0.199	0.089	0.289	\N	\N	\N	\N	\N	101113
+517	2005-06-22 19:00:00	Monta Ellis	monta-ellis	SG	PG	75.25	74.75	177	Lanier High School	Jackson, MS	1985-10-26	\N	\N	\N	19.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101145
+518	2005-06-22 19:00:00	Jason Maxiell	jason-maxiell	PF	\N	78.25	87.25	258	Cincinnati	\N	1983-02-18	\N	\N	4	22.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	10.5	0.1	0.2	6.1	9.5	8.8	1	1.1	3.1	2.2	2.8	17.6	0.586	0.546	0.017	0.904	0.311	22.9	0.25	0.44	\N	0.116	0.17	0.282	\N	\N	\N	\N	\N	101131
+519	2005-06-22 19:00:00	Mile Ilić	mile-ilic	C	\N	85	\N	240	KK Reflex (Serbia)	\N	1984-06-02	\N	\N	\N	21.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	8.7	0	0	3.1	4.7	7.8	1.1	0.8	1.4	2.8	5.6	14.2	0.653	0.645	0	0.548	0.31	\N	\N	0.4	\N	\N	\N	\N	\N	\N	\N	\N	\N	101148
+520	2005-06-22 19:00:00	Andrew Bogut	andrew-bogut	C	\N	84.25	87	251	Utah	Melbourne, Australia	1984-11-28	\N	\N	2	20.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.3	13.3	0.3	0.7	4.2	6.1	12.6	2.4	1	1.9	2.8	2.3	21	0.648	0.63	0.055	0.459	0.323	29.7	0.61	0.85	\N	0.209	0.147	0.356	\N	\N	\N	\N	\N	101106
+521	2005-06-22 19:00:00	Von Wafer	von-wafer	SG	\N	77	\N	210	Florida State	Lisbon, LA	1985-07-21	\N	\N	2	19.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	13.5	3.1	7.8	2.3	3.2	3.5	2.3	1.4	0.4	2.3	1.6	17.2	0.572	0.551	0.577	0.239	0.374	24.4	0.59	0.98	\N	0.106	0.026	0.132	\N	\N	\N	\N	\N	101144
+522	2005-06-22 19:00:00	Julius Hodge	julius-hodge	SG	SF	79	84.5	202	NC State	New York, NY	1983-11-18	\N	\N	4	21.57	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	12.2	0.4	1.7	5.2	7.7	6.9	5	1.5	0.7	2.7	2.3	17.6	0.555	0.51	0.138	0.632	0.317	26.8	1.13	1.82	\N	0.095	0.078	0.173	\N	\N	\N	\N	\N	101125
+523	2005-06-22 19:00:00	Mickaël Gelabale	mickael-gelabale	SF	\N	79	\N	210	Real Madrid (Spain)	\N	1983-05-22	\N	\N	\N	22.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.4	7.7	0.7	1.9	2.6	3.3	5.6	1.6	1	0.9	1.4	4.2	12.1	0.652	0.617	0.248	0.434	0.341	\N	\N	1.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	101153
+524	2005-06-22 19:00:00	Robert Whaley	robert-whaley	PF	C	81	86	269	Walsh	Benton Harbor, MI	1982-04-16	\N	\N	4	23.16	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	101156
+525	2005-06-22 19:00:00	Chris Paul	chris-paul	PG	\N	73	76.25	178	Wake Forest	Winston-Salem, NC	1985-05-07	\N	\N	2	20.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	10.7	1.5	3.3	5.3	6.3	4.8	7.1	2.6	0	3	2.8	16.4	0.601	0.524	0.306	0.59	0.368	21.5	1.57	2.38	\N	0.109	0.06	0.172	\N	\N	\N	\N	\N	101108
+526	2006-06-22 19:00:00	Hassan Adams	hassan-adams	SG	\N	76	\N	220	Arizona	Inglewood, CA	1984-06-20	\N	\N	4	21.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.2	17.1	0.6	2.3	2	3.3	5.4	3.1	2.9	0.5	2.4	2.1	19	0.507	0.495	0.133	0.194	0.313	28.2	0.69	1.3	\N	0.047	0.101	0.151	\N	\N	\N	\N	\N	200801
+527	2006-06-22 19:00:00	Cedric Simmons	cedric-simmons	PF	\N	81.5	88.25	223	NC State	Shallotte, NC	1986-01-03	\N	\N	2	20.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.2	8.9	0.1	0.1	4.9	7.2	8.3	2.2	0.9	3.3	2.4	4	15.5	0.626	0.592	0.009	0.812	0.316	21.8	0.61	0.92	\N	0.123	0.086	0.209	\N	\N	\N	\N	\N	200759
+528	2006-06-22 19:00:00	Kyle Lowry	kyle-lowry	PG	\N	73	\N	185	Villanova	Philadelphia, PA	1986-03-25	\N	\N	2	20.22	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.4	9.3	0.3	0.7	4.5	5.7	5.3	4.5	2.9	0.3	2.6	3.5	13.5	0.56	0.482	0.072	0.614	0.34	20.4	1.27	1.74	\N	0.079	0.128	0.203	\N	\N	\N	\N	\N	200768
+529	2006-06-22 19:00:00	Thabo Sefolosha	thabo-sefolosha	SG	\N	79	\N	213	Angelico Biella (Italy)	Vevey, Switzerland	1984-05-02	\N	\N	\N	22.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	11.3	1.3	3.1	2.2	3.4	8.3	2.8	2.5	0.7	3.2	3.7	14.4	0.555	0.535	0.275	0.299	0.337	\N	\N	0.88	\N	\N	\N	\N	\N	\N	\N	\N	\N	200757
+530	2006-06-22 19:00:00	Leon Powe	leon-powe	PF	\N	80	\N	240	California	Oakland, CA	1984-01-22	\N	\N	3	22.39	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.6	0.1	0.3	7.3	10.2	10.3	1.4	0.9	0.6	2.5	2.5	20.9	0.567	0.5	0.025	0.752	0.322	31.6	0.33	0.58	\N	0.122	0.084	0.21	\N	\N	\N	\N	\N	200796
+531	2006-06-22 19:00:00	Craig Smith	craig-smith	PF	\N	78.5	81.5	259	Boston College	Inglewood, CA	1983-11-10	\N	\N	4	22.59	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	11.7	0	0.3	4	6.3	9.4	3	1.2	0.8	2.5	3	17.5	0.595	0.574	0.028	0.535	0.31	\N	\N	1.22	\N	\N	\N	\N	\N	\N	\N	\N	\N	200783
+532	2006-06-22 19:00:00	Maurice Ager	maurice-ager	SG	\N	76.5	79.75	203	Michigan State	Detroit, MI	1984-02-09	\N	\N	3	22.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7	15.2	2.6	6.8	3.7	4.9	4.3	2.6	0.7	0.3	2.7	2.5	20.2	0.575	0.54	0.446	0.321	0.37	29.1	0.55	0.97	\N	0.12	0.034	0.154	\N	\N	\N	\N	\N	200772
+533	2006-06-22 19:00:00	Steve Novak	steve-novak	SF	\N	81.25	81.5	216	Marquette	Brown Deer, WI	1983-06-13	\N	\N	4	23.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	12.5	4.2	8.9	2.5	2.6	6.3	1.3	0.6	0.1	1.1	2.2	18.6	0.678	0.643	0.713	0.209	0.427	20.2	0.37	1.22	\N	0.18	0.038	0.218	\N	\N	\N	\N	\N	200779
+534	2006-06-22 19:00:00	Randy Foye	randy-foye	SG	\N	75.25	78.25	212	Villanova	Newark, NJ	1983-09-24	\N	\N	4	22.72	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	17.3	2.8	8	4.3	5.4	6	3.1	1.4	0.7	2.2	2.2	21.3	0.536	0.492	0.462	0.313	0.378	30.8	0.69	1.41	\N	0.091	0.108	0.199	\N	\N	\N	\N	\N	200751
+535	2006-06-22 19:00:00	Quincy Douby	quincy-douby	SG	PG	75	\N	175	Rutgers	Brooklyn, NY	1984-05-16	\N	\N	3	22.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.5	18.5	3.4	8.6	4.4	5.2	4.2	3.1	1.7	0.8	2.7	1.8	24.9	0.595	0.556	0.465	0.283	0.397	34.7	0.73	1.12	\N	0.182	0.079	0.258	\N	\N	\N	\N	\N	200763
+536	2006-06-22 19:00:00	Oleksiy Pecherov	oleksiy-pecherov	C	\N	83	\N	220	BC Kyiv (Ukraine)	Donetsk, Ukraine	1985-12-08	\N	\N	\N	20.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.9	14.7	1.6	4.9	3.7	4.5	10.8	0.3	0.7	1.6	2.3	3.1	19.3	0.572	0.528	0.335	0.305	0.364	\N	\N	0.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	200762
+537	2006-06-22 19:00:00	Mouhamed Sene	mouhamed-sene	C	\N	84	92.5	237	Verviers-Pepinster (Belgium)	Thiès, Senegal	1986-05-12	\N	\N	\N	20.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	200754
+538	2006-06-22 19:00:00	Cheikh Samb	cheikh-samb	C	\N	85	\N	195	WTC Cornellà (Spain)	Dakar, Senegal	1984-10-22	\N	\N	\N	21.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	200798
+539	2006-06-22 19:00:00	David Noel	david-noel	SF	\N	78	81.5	223	North Carolina	Durham, NC	1984-02-27	\N	\N	4	22.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	10.2	1.3	3.2	1.6	2.5	7.3	3.7	1.2	0.8	3.3	2.9	13.8	0.604	0.598	0.31	0.242	0.334	18.9	0.99	1.13	\N	0.096	0.08	0.176	\N	\N	\N	\N	\N	200786
+540	2006-06-22 19:00:00	Solomon Jones	solomon-jones	PF	\N	81.75	88.75	224	South Florida	Eustis, FL	1984-07-16	\N	\N	4	21.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	9.8	0	0.1	3.6	4.6	9.7	1.3	0.9	3	3.4	3.4	13.1	0.545	0.484	0.007	0.47	0.328	22.5	0.42	0.39	\N	0.068	0.068	0.136	\N	\N	\N	\N	\N	200780
+541	2006-06-22 19:00:00	Jordan Farmar	jordan-farmar	PG	\N	74	75	171	UCLA	Tarzana, CA	1986-11-30	\N	\N	2	19.54	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.5	13.4	2	6	2.9	4.1	3	6	1.3	0.3	4.3	2	15.9	0.518	0.485	0.45	0.302	0.354	29.4	1.28	1.4	\N	0.06	0.078	0.139	\N	\N	\N	\N	\N	200770
+542	2006-06-22 19:00:00	Paul Millsap	paul-millsap	PF	\N	79.25	85.5	258	Louisiana Tech	Monroe, LA	1985-02-12	\N	\N	3	21.34	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.2	14.5	0.2	0.4	4.1	6.5	14	1.2	2	2.4	2.7	3.2	20.7	0.59	0.576	0.031	0.451	0.309	\N	\N	0.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	200794
+543	2006-06-22 19:00:00	Ronnie Brewer	ronnie-brewer	SG	\N	78.75	83.25	223	Arkansas	Fayetteville, AR	1985-03-20	\N	\N	3	21.24	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	14.5	1.7	4.9	4.7	6.2	5	3.4	2.7	0.5	2.3	1.5	19.1	0.547	0.498	0.338	0.43	0.353	27.1	0.73	1.49	\N	0.094	0.097	0.191	\N	\N	\N	\N	\N	200758
+544	2006-06-22 19:00:00	Shawne Williams	shawne-williams	SF	PF	80.75	87	227	Memphis	Memphis, TN	1986-02-16	\N	\N	1	20.33	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	13.7	1.8	5.6	4.2	5.3	8.1	2.5	1.8	1.8	3	3.8	17.4	0.534	0.48	0.411	0.387	0.359	\N	\N	0.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	200761
+545	2006-06-22 19:00:00	James White	james-white	SG	SF	79	\N	190	Cincinnati	Washington, DC	1982-10-21	\N	\N	4	23.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	11.8	1.6	4.3	4.4	5.2	5.4	2.2	1.2	0.9	2.5	2.9	17.5	0.612	0.555	0.361	0.441	0.365	\N	\N	0.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	200778
+546	2006-06-22 19:00:00	Rodney Carney	rodney-carney	SF	\N	77.75	82	204	Memphis	Indianapolis, IN	1984-04-05	\N	\N	4	22.19	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.9	18.1	3.6	9.3	3.4	4.7	5.6	1.7	1.8	0.9	1.9	3	22.7	0.56	0.537	0.517	0.261	0.382	\N	\N	0.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	200760
+547	2006-06-22 19:00:00	Dee Brown	dee-brown	PG	\N	72	\N	185	Illinois	Maywood, IL	1984-08-17	\N	\N	4	21.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	13.3	2.4	7.4	2.4	3.1	3.1	5.8	1.6	0	2.9	1.9	14.3	0.484	0.449	0.556	0.236	0.366	25.5	1.24	2.03	\N	0.024	0.091	0.115	\N	\N	\N	\N	\N	244
+548	2006-06-22 19:00:00	Renaldo Balkman	renaldo-balkman	SF	PF	78.5	85	206	South Carolina	Staten Island, NY	1984-07-14	\N	\N	3	21.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	9.2	0.1	0.5	2.1	3.8	8.8	2.7	2.4	1.8	2.4	3.1	13.4	0.608	0.616	0.052	0.416	0.297	20.4	0.77	1.12	\N	0.106	0.123	0.229	\N	\N	\N	\N	\N	200764
+549	2006-06-22 19:00:00	Shelden Williams	shelden-williams	PF	\N	80.5	88.25	258	Duke	Midwest City, OK	1983-10-21	\N	\N	4	22.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	12.3	0.1	0.2	6	8.1	11.5	1.2	1.8	4.1	2.7	3.4	20.3	0.629	0.58	0.015	0.659	0.324	25.8	0.26	0.44	\N	0.154	0.15	0.304	\N	\N	\N	\N	\N	200749
+550	2006-06-22 19:00:00	Bobby Jones	bobby-jones	SF	\N	78.75	81.5	211	Washington	Compton, CA	1984-01-09	\N	\N	4	22.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	9.8	1.2	3.6	3.6	4.9	6.7	1.8	1.6	0.7	2.7	4.3	14.1	0.581	0.533	0.368	0.494	0.344	19.1	0.43	0.65	\N	0.082	0.096	0.178	\N	\N	\N	\N	\N	77193
+551	2006-06-22 19:00:00	Rudy Gay	rudy-gay	SF	\N	80	87	222	UConn	Baltimore, MD	1986-08-17	\N	\N	2	19.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	14.4	1	3.1	3.6	4.9	7.4	2.4	2.1	1.8	2.9	2.7	17.8	0.533	0.495	0.217	0.34	0.339	25.2	0.5	0.83	\N	0.067	0.138	0.205	\N	\N	\N	\N	\N	200752
+552	2006-06-22 19:00:00	Mardy Collins	mardy-collins	SG	\N	77.5	82	224	Temple	Philadelphia, PA	1984-08-04	\N	\N	4	21.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	13.9	1.2	4.1	2.7	4.5	4.5	3.8	2.6	0.2	1.9	2.1	15.9	0.497	0.476	0.293	0.323	0.324	27.6	0.99	1.95	\N	0.04	0.119	0.158	\N	\N	\N	\N	\N	200776
+553	2006-06-22 19:00:00	Rajon Rondo	rajon-rondo	PG	\N	73	\N	171	Kentucky	Louisville, KY	1986-02-22	\N	\N	2	20.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	10.4	0.6	2.3	2.3	4.1	7.1	5.7	2.4	0.2	2.7	2.4	13	0.526	0.511	0.216	0.39	0.308	21.1	1.48	2.11	\N	0.053	0.099	0.152	\N	\N	\N	\N	\N	200765
+554	2006-06-22 19:00:00	Brandon Roy	brandon-roy	SG	\N	78.25	80	207	Washington	Seattle, WA	1984-07-23	\N	\N	4	21.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	15.5	1.3	3.3	5.9	7.3	6.4	4.6	1.6	0.9	2.6	2.8	22.9	0.606	0.551	0.216	0.47	0.358	27.5	0.91	1.8	\N	0.157	0.111	0.268	\N	\N	\N	\N	\N	200750
+555	2006-06-22 19:00:00	Kosta Perović	kosta-perovic	C	\N	86	\N	240	Partizan Belgrade (Serbia)	Osijek, Croatia	1985-02-19	\N	\N	\N	21.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.1	10	0	0	4.1	6.1	6	0.5	2.4	0.8	2.3	4.2	14.2	0.551	0.505	0	0.611	0.313	\N	\N	0.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	200785
+556	2006-06-22 19:00:00	Marcus Vinicius	marcus-vinicius	SF	PF	80	\N	225	Objetivo São Carlos (Brazil)	Rio de Janeiro, Brazil	1984-05-31	\N	\N	\N	22.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	200790
+557	2006-06-22 19:00:00	Alexander Johnson	alexander-johnson	PF	\N	81	\N	240	Florida State	Albany, GA	1983-02-08	\N	\N	3	23.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	11.7	0.4	1.4	6	8.5	10.8	1	1.5	1.5	4.1	4.6	19.1	0.606	0.56	0.123	0.723	0.325	26.8	0.22	0.26	\N	0.133	0.122	0.254	\N	\N	\N	\N	\N	200792
+558	2006-06-22 19:00:00	Tyrus Thomas	tyrus-thomas	PF	\N	80.25	87	217	LSU	Baton Rouge, LA	1986-08-17	\N	\N	1	19.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	10.9	0	0	3.9	5.9	12.8	1.8	1.4	4.3	2.6	3.6	17.2	0.627	0.61	0.004	0.548	0.312	21.7	0.48	0.71	\N	0.14	0.207	0.352	\N	\N	\N	\N	\N	200748
+559	2006-06-22 19:00:00	James Augustine	james-augustine	PF	\N	81.75	84.25	227	Illinois	Mokena, IL	1984-02-27	\N	\N	4	22.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	9.3	0	0.1	3.3	5.1	10	2	1.6	0.8	2.2	2.8	14.9	0.638	0.625	0.007	0.545	0.311	20.2	0.56	0.88	\N	0.137	0.178	0.319	\N	\N	\N	\N	\N	200788
+560	2006-06-22 19:00:00	Daniel Gibson	daniel-gibson	SG	\N	74	\N	190	Texas	Houston, TX	1986-02-27	\N	\N	2	20.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	11.8	3	7.8	2	2.8	3.9	3.4	1.4	0.4	2.1	2.6	14.5	0.555	0.531	0.662	0.236	0.372	20.9	0.85	1.66	\N	0.078	0.085	0.163	\N	\N	\N	\N	\N	200789
+561	2006-06-22 19:00:00	Joel Freeland	joel-freeland	PF	\N	82	\N	225	Gran Canaria (Spain)	Aldershot, England	1987-02-07	\N	\N	\N	19.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	200777
+562	2006-06-22 19:00:00	Paul Davis	paul-davis	C	\N	83	\N	270	Michigan State	Rochester, MI	1984-07-21	\N	\N	4	21.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	12.9	0.2	0.7	5.7	6.5	10.6	1.9	1.2	1	2.9	3.6	20.4	0.64	0.574	0.052	0.505	0.343	27.1	0.44	0.67	\N	0.173	0.075	0.248	\N	\N	\N	\N	\N	200781
+563	2006-06-22 19:00:00	Ryan Hollins	ryan-hollins	C	\N	84	\N	230	UCLA	Pasadena, CA	1984-10-10	\N	\N	4	21.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	6.8	0	0	3.3	5.5	8	0.5	0.4	1.5	1.9	4.3	11.7	0.623	0.619	0	0.806	0.304	16.9	0.17	0.26	\N	0.101	0.118	0.22	\N	\N	\N	\N	\N	200797
+564	2006-06-22 19:00:00	Hilton Armstrong	hilton-armstrong	C	\N	82.25	88	240	UConn	Peekskill, NY	1984-11-23	\N	\N	4	21.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.5	7.4	0	0.1	3.5	5.1	8.6	1	0.8	4.1	2.9	3.6	12.6	0.64	0.611	0.01	0.686	0.317	16.3	0.28	0.32	\N	0.102	0.148	0.25	\N	\N	\N	\N	\N	200756
+565	2006-06-22 19:00:00	Adam Morrison	adam-morrison	SF	\N	79.75	82	198	Gonzaga	Spokane, WA	1984-07-20	\N	\N	3	21.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	9.1	18.4	2.2	5.2	7.2	9.3	5.4	1.7	1	0.3	2.3	2	27.7	0.605	0.556	0.28	0.504	0.368	\N	\N	0.74	\N	\N	\N	\N	\N	\N	\N	\N	\N	200747
+566	2006-06-22 19:00:00	Damir Markota	damir-markota	PF	\N	82	\N	225	Cibona Zagreb (Croatia)	Stockholm, Sweden	1985-12-26	\N	\N	\N	20.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.3	11.3	1.9	5.8	1.5	2.4	9.1	1.1	0.7	0.6	2.6	3.3	13.9	0.555	0.545	0.512	0.215	0.338	\N	\N	0.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	200806
+567	2006-06-22 19:00:00	Josh Boone	josh-boone	PF	\N	82	\N	237	UConn	Sykesville, MD	1984-11-21	\N	\N	3	21.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.3	9.5	0	0	3	5.4	9.3	0.9	0.5	2.7	1.6	2.8	13.7	0.566	0.564	0	0.572	0.296	17.6	0.24	0.52	\N	0.069	0.121	0.191	\N	\N	\N	\N	\N	200767
+568	2006-06-22 19:00:00	Sergio Rodriguez	sergio-rodriguez	PG	\N	75	\N	175	Estudiantes (Spain)	Canary Islands, Spain	1986-06-12	\N	\N	\N	20.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	11.7	0.9	3.5	2.3	3.3	3.9	7.4	2.1	0.1	4.9	3.7	13.1	0.493	0.463	0.298	0.285	0.328	\N	\N	1.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	200771
+569	2006-06-22 19:00:00	Guillermo Diaz	guillermo-diaz	PG	\N	74	\N	192	Miami	San Juan, Puerto Rico	1985-03-04	\N	\N	3	21.28	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	14.1	2.3	6.4	3.6	4.6	3	2.9	1.2	0.2	2	1.8	17.6	0.543	0.499	0.458	0.325	0.371	26.6	0.7	1.45	\N	0.087	0.047	0.134	\N	\N	\N	\N	\N	200799
+570	2006-06-22 19:00:00	Marcus Williams	marcus-williams	PG	\N	75.25	79	215	UConn	Los Angeles, CA	1985-12-03	\N	\N	3	20.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	3.9	9.6	1.1	2.8	4.4	5.1	4.2	9.3	1	0.2	4	1.8	13.3	0.555	0.466	0.294	0.534	0.362	20.5	2.07	2.33	\N	0.073	0.089	0.162	\N	\N	\N	\N	\N	200766
+571	2006-06-22 19:00:00	Andrea Bargnani	andrea-bargnani	PF	\N	82	\N	225	Benetton Treviso (Italy)	Rome, Italy	1985-10-26	\N	\N	\N	20.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	13.2	2.1	5.4	3.6	4.8	8.2	0.7	2.3	1.9	2.7	5	18.9	0.609	0.578	0.405	0.36	0.363	\N	\N	0.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	200745
+572	2006-06-22 19:00:00	Shannon Brown	shannon-brown	SG	\N	76	\N	205	Michigan State	Maywood, IL	1985-11-29	\N	\N	3	20.54	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	13	1.9	4.9	3.5	4.2	4.5	2.8	1.5	0.2	2.6	2.3	17.6	0.585	0.54	0.379	0.326	0.37	25.4	0.64	1.09	\N	0.11	0.04	0.151	\N	\N	\N	\N	\N	200769
+573	2006-06-22 19:00:00	Will Blalock	will-blalock	PG	\N	72.5	78	194	Iowa State	Boston, MA	1983-09-08	\N	\N	3	22.77	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	13.3	1.6	4	2	3.1	3.3	6.2	2.2	0.1	3	1.8	15.5	0.525	0.506	0.298	0.23	0.341	\N	\N	2.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	200807
+574	2007-06-22 19:00:00	Aaron Brooks	aaron-brooks	PG	\N	71.75	76	161	Oregon	Seattle, WA	1985-01-14	\N	\N	4	22.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	12.9	2.2	5.5	3.2	3.8	4.2	4.2	1.3	0.2	2.5	2.5	17.3	0.589	0.546	0.428	0.294	0.377	24.4	0.98	1.67	\N	0.112	0.068	0.177	\N	\N	\N	\N	\N	201166
+575	2007-06-22 19:00:00	Alando Tucker	alando-tucker	SF	\N	78	\N	205	Wisconsin	Lockport, IL	1984-02-11	\N	\N	4	23.34	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	16.6	1.2	3.7	5	7.6	6	2.2	1	0.3	1.8	1.4	21.8	0.54	0.506	0.226	0.457	0.333	32.8	0.49	1.22	\N	0.098	0.105	0.2	\N	\N	\N	\N	\N	201169
+576	2007-06-22 19:00:00	Greg Oden	greg-oden	C	\N	84	88.25	257	Ohio State	Indianapolis, IN	1988-01-23	\N	\N	\N	19.39	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	11.9	0	0	4.8	7.6	11.9	0.8	0.7	4.1	2.5	3.4	19.5	0.626	0.616	0	0.638	0.307	\N	\N	0.33	\N	\N	\N	\N	\N	\N	\N	\N	\N	201141
+577	2007-06-22 19:00:00	Jeff Green	jeff-green	SF	\N	81.5	85.25	228	Georgetown	Hyattsville, MD	1986-08-28	\N	\N	3	20.8	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	11.2	1.1	2.8	2.9	3.8	6.9	3.4	0.9	1.3	2.8	2.7	15.4	0.596	0.56	0.251	0.338	0.348	24.6	0.83	1.22	\N	0.114	0.088	0.205	\N	\N	\N	\N	\N	201145
+578	2007-06-22 19:00:00	Al Thornton	al-thornton	SF	\N	79	85	221	Florida State	Perry, GA	1983-12-07	\N	\N	4	23.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8	15.2	1.2	2.7	5.5	6.9	8.3	0.8	1.7	1.3	2.9	3.1	22.7	0.616	0.57	0.176	0.457	0.355	30	0.17	0.28	\N	0.165	0.077	0.242	\N	\N	\N	\N	\N	201154
+579	2007-06-22 19:00:00	Jermareo Davidson	jermareo-davidson	PF	\N	83	88	230	Alabama	Marietta, GA	1984-11-15	\N	\N	4	22.58	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.5	13.6	0.1	0.6	4.4	5.6	9.2	1.6	0.9	2.6	1.9	2	15.6	0.479	0.413	0.044	0.413	0.326	\N	\N	0.88	\N	\N	\N	\N	\N	\N	\N	\N	\N	201176
+580	2007-06-22 19:00:00	Thaddeus Young	thaddeus-young	SF	PF	79.5	83.5	210	Georgia Tech	Memphis, TN	1988-06-21	\N	\N	1	18.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.9	14.5	1.5	3.7	2	2.7	5.9	2.5	1.5	0.5	2.6	2.4	17.5	0.552	0.531	0.251	0.189	0.353	\N	\N	0.94	\N	\N	\N	\N	\N	\N	\N	\N	\N	201152
+581	2007-06-22 19:00:00	Stephane Lasme	stephane-lasme	PF	\N	79	86	213	Massachusetts	Port-Gentil, Gabon	1982-12-17	\N	\N	4	24.49	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	9.6	0	0	4.2	6.7	11.2	1	1	6	2.8	4	15.9	0.622	0.611	0	0.696	0.306	20.2	0.26	0.35	\N	0.119	0.182	0.297	\N	\N	\N	\N	\N	201186
+582	2007-06-22 19:00:00	Kyrylo Fesenko	kyrylo-fesenko	C	\N	85	\N	245	SK Cherkassy (Ukraine)	Dnipropetrovsk, Ukraine	1986-12-24	\N	\N	\N	20.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201178
+583	2007-06-22 19:00:00	Glen Davis	glen-davis	PF	\N	81	\N	289	LSU	Baton Rouge, LA	1986-01-01	\N	\N	3	21.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	13	0.6	1.7	4.9	6.9	10.7	2.3	1.1	1	2.9	2.4	18.1	0.556	0.507	0.133	0.53	0.33	27.6	0.53	0.8	\N	0.094	0.114	0.209	\N	\N	\N	\N	\N	201175
+584	2007-06-22 19:00:00	Yi Jianlian	yi-jianlian	PF	\N	84	\N	242	Guangdong (China)	Heshan, China	1984-10-27	\N	\N	\N	22.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201146
+585	2007-06-22 19:00:00	Acie Law	acie-law	PG	\N	75.5	78.5	186	Texas A&M	Dallas, TX	1985-01-25	\N	\N	4	22.39	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.5	1.2	2.6	4.5	5.8	3.5	5.3	1.2	0	2.7	2.6	19.2	0.591	0.544	0.192	0.428	0.354	27.8	1.11	1.92	\N	0.132	0.073	0.205	\N	\N	\N	\N	\N	201151
+586	2007-06-22 19:00:00	Al Horford	al-horford	PF	C	81.75	84.75	246	Florida	Puerto Plata, Dominican Republic	1986-06-03	\N	\N	3	21.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	10.4	0	0.1	4.4	6.9	12.2	2.8	1	2.4	2.3	3.2	17.1	0.624	0.608	0.007	0.66	0.309	\N	\N	1.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	201143
+587	2007-06-22 19:00:00	Rudy Fernandez	rudy-fernandez	SG	\N	77	\N	185	Joventut Badalona (Spain)	Palma de Mallorca, Spain	1985-04-04	\N	\N	\N	22.2	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	14.4	3.3	8.2	4.8	5.7	5.1	3.4	2.9	0.2	3.1	3.2	21.5	0.629	0.581	0.569	0.398	0.393	\N	\N	1.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	201164
+588	2007-06-22 19:00:00	Carl Landry	carl-landry	PF	\N	80.5	83	248	Purdue	Milwaukee, WI	1983-09-19	\N	\N	4	23.74	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.6	12.8	0.1	0.7	7	9.6	8.7	1.5	1.4	1.1	3.5	3.4	22.4	0.645	0.602	0.052	0.755	0.317	29.9	0.33	0.41	\N	0.201	0.124	0.325	\N	\N	\N	\N	\N	201171
+589	2007-06-22 19:00:00	Demetris Nichols	demetris-nichols	SF	\N	79.5	84.25	211	Syracuse	Barrington, RI	1984-09-04	\N	\N	4	22.78	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	14.9	3	7.1	3.3	3.9	5.6	1.6	1.4	1.1	2.3	2.2	19.6	0.586	0.547	0.477	0.264	0.39	25	0.39	0.7	\N	0.118	0.076	0.194	\N	\N	\N	\N	\N	201193
+590	2007-06-22 19:00:00	Aaron Gray	aaron-gray	C	\N	85.75	87.25	271	Pittsburgh	Emmaus, PA	1984-12-07	\N	\N	4	22.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	12.8	0	0	3.2	5.9	12.1	2.2	0.5	2.2	1.9	3.2	17.7	0.567	0.565	0	0.46	0.296	\N	\N	1.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	201189
+591	2007-06-22 19:00:00	Chris Richard	chris-richard	PF	\N	80.75	88.5	252	Florida	Lakeland, FL	1984-12-25	\N	\N	4	22.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	7	0	0	2.6	4.1	7.3	0.8	0.6	0.6	2.3	4.6	12.3	0.683	0.69	0	0.585	0.307	\N	\N	0.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	201181
+592	2007-06-22 19:00:00	Gabe Pruitt	gabe-pruitt	PG	\N	76	\N	170	USC	Los Angeles, CA	1986-04-19	\N	\N	3	21.16	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.3	10.5	2	5.7	2.8	3.6	3.1	4.7	2	0.3	2	2.3	13.5	0.558	0.512	0.548	0.34	0.366	\N	\N	2.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	201172
+593	2007-06-22 19:00:00	Sean Williams	sean-williams	PF	\N	82	\N	235	Boston College	Arlington, TX	1986-09-13	\N	\N	3	20.75	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	8.6	0	0	4.2	6	7.8	1.3	1.6	5.6	2.6	3.6	13.6	0.595	0.548	0	0.696	0.317	20	0.37	0.51	\N	0.091	0.108	0.19	\N	\N	\N	\N	\N	201157
+594	2007-06-22 19:00:00	Morris Almond	morris-almond	SG	\N	78	\N	225	Rice	Powder Springs, GA	1985-02-02	\N	\N	4	22.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.9	18.3	2.6	5.7	8.1	9.6	7.1	1.2	1.3	0.8	3.7	2.3	28.4	0.621	0.554	0.311	0.524	0.385	\N	\N	0.34	\N	\N	\N	\N	\N	\N	\N	\N	\N	201165
+595	2007-06-22 19:00:00	Mike Conley	mike-conley	PG	\N	72.75	77.75	175	Ohio State	Indianapolis, IN	1987-10-11	\N	\N	1	19.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	9	0.6	2	2.9	4.2	3.9	7	2.5	0.3	2.5	1.8	12.9	0.584	0.552	0.223	0.466	0.326	\N	\N	2.77	\N	\N	\N	\N	\N	\N	\N	\N	\N	201144
+596	2007-06-22 19:00:00	Daequan Cook	daequan-cook	SG	\N	77.75	80.25	203	Ohio State	Dayton, OH	1987-04-28	\N	\N	1	20.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	14.8	2.5	6.1	2.2	3.1	7.8	1.9	1.3	0.5	2.6	3.1	17.9	0.548	0.53	0.41	0.208	0.362	\N	\N	0.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	201161
+597	2007-06-22 19:00:00	Taurean Green	taurean-green	PG	\N	72.75	74.25	173	Florida	Boca Raton, FL	1986-11-28	\N	\N	3	20.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	9.4	2.2	5.5	3.8	4.5	2.6	4	1.1	0	2.9	1.6	14.4	0.623	0.562	0.582	0.478	0.378	\N	\N	1.37	\N	\N	\N	\N	\N	\N	\N	\N	\N	201192
+598	2007-06-22 19:00:00	Joakim Noah	joakim-noah	C	\N	84	85.25	223	Florida	New York, NY	1985-02-25	\N	\N	3	22.3	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	9.9	0	0	4.6	6.9	11.7	3.1	1.6	2.5	3.5	3.1	16.7	0.631	0.609	0.004	0.698	0.313	\N	\N	0.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	201149
+599	2007-06-22 19:00:00	Marc Gasol	marc-gasol	C	\N	85	\N	280	Akasvayu Girona (Spain)	Barcelona, Spain	1985-01-29	\N	\N	\N	22.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	10	0.2	0.5	4.6	7.1	8.7	1.9	1.4	1.4	1.9	3.3	17.2	0.64	0.624	0.053	0.713	0.315	\N	\N	0.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	201188
+600	2007-06-22 19:00:00	Julian Wright	julian-wright	SF	\N	80.5	86.25	211	Kansas	Chicago Heights, IL	1987-05-20	\N	\N	2	20.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	11.9	0.1	0.4	2.5	4.1	10.2	2.8	1.9	1.7	3.1	3.2	15.7	0.566	0.553	0.038	0.344	0.307	22.8	0.64	0.9	\N	0.084	0.168	0.252	\N	\N	\N	\N	\N	201153
+601	2007-06-22 19:00:00	Brandan Wright	brandan-wright	PF	\N	82	87.75	200	North Carolina	Nashville, TN	1987-10-05	\N	\N	1	19.69	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.1	12.5	0	0	3.2	5.6	8.1	1.3	1.3	2.3	2.1	2	19.4	0.637	0.646	0	0.445	0.299	\N	\N	0.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	201148
+602	2007-06-22 19:00:00	Ramon Sessions	ramon-sessions	PG	\N	75.75	76.25	185	Nevada	Myrtle Beach, SC	1986-04-11	\N	\N	3	21.18	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.9	10.9	0.7	1.8	4.1	5	5.6	5.6	1	0.2	3	1.4	14.6	0.552	0.482	0.161	0.461	0.348	22.8	1.22	1.87	\N	0.07	0.062	0.132	\N	\N	\N	\N	\N	201196
+603	2007-06-22 19:00:00	Derrick Byars	derrick-byars	SG	\N	79	\N	220	Vanderbilt	Memphis, TN	1984-04-25	\N	\N	4	23.14	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.9	15.2	2.7	7.1	2.9	4.1	5.6	3.9	1.6	0.1	2.7	2.7	19.4	0.567	0.544	0.47	0.268	0.365	\N	\N	1.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	201182
+604	2007-06-22 19:00:00	Kevin Durant	kevin-durant	SF	\N	82.25	88.75	215	Texas	Prince George's County, MD	1988-09-29	\N	\N	1	18.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.8	18.6	2.4	5.8	6	7.3	11.2	1.3	1.9	1.9	2.8	2	25.9	0.587	0.536	0.314	0.396	0.375	33.2	0.26	0.46	\N	0.15	0.131	0.28	\N	\N	\N	\N	\N	201142
+605	2007-06-22 19:00:00	Wilson Chandler	wilson-chandler	SF	\N	80	\N	220	DePaul	Benton Harbor, MI	1987-05-10	\N	\N	2	20.1	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	14.4	1.3	3.9	2.3	3.6	7.8	1.6	0.7	1.6	1.8	3.2	16.6	0.516	0.495	0.271	0.248	0.334	\N	\N	0.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	201163
+606	2007-06-22 19:00:00	Rodney Stuckey	rodney-stuckey	SG	PG	76.5	79.25	207	Eastern Washington	Kent, WA	1986-04-21	\N	\N	2	21.15	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.5	18.7	1.6	6	8	9.5	5	6	2.6	0.3	3.7	2.5	26.6	0.573	0.496	0.321	0.507	0.364	\N	\N	1.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	201155
+607	2007-06-22 19:00:00	Spencer Hawes	spencer-hawes	C	\N	84.75	84.5	244	Washington	Seattle, WA	1988-04-28	\N	\N	1	19.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	14.6	0	0.1	3	3.9	7.9	2.4	0.6	2.2	3.1	2.8	18.5	0.563	0.533	0.008	0.27	0.326	25.8	0.54	0.77	\N	0.089	0.107	0.196	\N	\N	\N	\N	\N	201150
+608	2007-06-22 19:00:00	Javaris Crittenton	javaris-crittenton	PG	\N	76.75	77.5	194	Georgia Tech	Atlanta, GA	1987-12-31	\N	\N	1	19.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12.6	1.3	3.6	3.9	5	4.3	6.6	2.3	0.1	4.5	2.4	16.5	0.552	0.501	0.288	0.393	0.352	\N	\N	1.48	\N	\N	\N	\N	\N	\N	\N	\N	\N	201159
+609	2007-06-22 19:00:00	Tiago Splitter	tiago-splitter	C	\N	83	\N	236	TAU Cerámica (Spain)	Blumenau, Brazil	1985-01-01	\N	\N	\N	22.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201168
+610	2007-06-22 19:00:00	Arron Afflalo	arron-afflalo	SG	\N	77	\N	215	UCLA	Compton, CA	1985-10-15	\N	\N	3	21.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	13.8	2.6	7	3.1	3.8	3	2.1	0.7	0.2	1.9	2	18.5	0.589	0.556	0.509	0.276	0.377	\N	\N	1.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	201167
+611	2007-06-22 19:00:00	Nick Fazekas	nick-fazekas	PF	\N	83	\N	235	Nevada	Arvada, CO	1985-06-17	\N	\N	4	21.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	9.2	16.2	1	2.4	4.8	5.6	13.2	2.1	0.9	1.8	2.4	2.7	24.2	0.641	0.6	0.149	0.346	0.36	29.9	0.44	0.88	\N	0.198	0.12	0.314	\N	\N	\N	\N	\N	201174
+612	2007-06-22 19:00:00	Corey Brewer	corey-brewer	SF	SG	79.75	80.25	185	Florida	Portland, TN	1986-03-05	\N	\N	3	21.28	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12	1.3	4	3.8	5.2	5.8	3.7	2.3	0.5	3.1	2.4	16.5	0.57	0.531	0.334	0.435	0.344	\N	\N	1.17	\N	\N	\N	\N	\N	\N	\N	\N	\N	201147
+613	2007-06-22 19:00:00	Nick Young	nick-young	SG	\N	78.75	84	206	USC	Reseda, CA	1985-06-01	\N	\N	3	22.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7	13.3	1.3	2.9	3.7	4.7	5	1.5	0.8	0.3	2.6	2.7	19	0.61	0.574	0.22	0.349	0.356	\N	\N	0.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	201156
+614	2007-06-22 19:00:00	Marco Belinelli	marco-belinelli	SG	\N	77	\N	200	Fortitudo Bologna (Italy)	San Giovanni in Persiceto, Italy	1986-03-25	\N	\N	\N	21.22	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	14.6	2.6	7.9	3.3	4.4	2.2	1.6	2	0.1	2.6	3.3	17.9	0.536	0.499	0.54	0.303	0.369	\N	\N	0.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	201158
+615	2007-06-22 19:00:00	Jared Dudley	jared-dudley	SF	\N	79.25	79	219	Boston College	San Diego, CA	1985-07-10	\N	\N	4	21.93	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	10.8	1.2	2.8	4.4	6	7.8	2.8	1.3	0.3	2.4	2.1	17.8	0.652	0.618	0.254	0.55	0.349	23	0.73	1.15	\N	0.153	0.049	0.201	\N	\N	\N	\N	\N	201162
+616	2007-06-22 19:00:00	Herbert Hill	herbert-hill	PF	C	81.75	86.25	232	Providence	Kinston, NC	1984-10-01	\N	\N	4	22.7	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.7	13.6	0	0	2.9	4.8	10	1.6	1.1	3.3	3.2	3.3	20.4	0.639	0.64	0.003	0.355	0.304	\N	\N	0.51	\N	\N	\N	\N	\N	\N	\N	\N	\N	201195
+617	2007-06-22 19:00:00	Jason Smith	jason-smith	PF	\N	83.5	82.75	233	Colorado State	Kersey, CO	1986-03-02	\N	\N	3	21.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7	12	0	0.1	6.1	8	12.1	2.3	0.6	1.9	4.1	3.7	20	0.635	0.579	0.01	0.662	0.327	\N	\N	0.57	\N	\N	\N	\N	\N	\N	\N	\N	\N	201160
+618	2008-06-22 19:00:00	Robin Lopez	robin-lopez	C	\N	84.5	89.5	255	Stanford	Fresno, CA	1988-04-01	\N	\N	2	20.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	10.7	0	0	3.5	5.4	8.3	0.9	0.7	3.4	2.6	3.8	15	0.565	0.536	0.004	0.504	0.311	22.7	0.24	0.35	\N	0.082	0.186	0.267	\N	\N	\N	\N	\N	201577
+619	2008-06-22 19:00:00	Nikola Pekovic	nikola-pekovic	C	\N	83	\N	290	Panathinaikos (Greece)	Pljevlja, Montenegro	1986-01-03	\N	\N	\N	22.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.3	14.2	0	0	5.4	6.9	9.2	1.1	0.9	0.8	2.8	4.3	22	0.627	0.584	0	0.486	0.327	\N	\N	0.4	\N	\N	\N	\N	\N	\N	\N	\N	\N	201593
+620	2008-06-22 19:00:00	Joe Crawford	joe-crawford	SG	\N	76	77.75	213	Kentucky	Detroit, MI	1986-06-17	\N	\N	4	22	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	14.3	2.2	6.2	3.5	4.6	3.9	2.3	0.6	0.2	3	2.9	19.2	0.581	0.547	0.431	0.324	0.365	28.9	0.55	0.77	\N	0.123	0.024	0.147	\N	\N	\N	\N	\N	201621
+621	2008-06-22 19:00:00	Joey Dorsey	joey-dorsey	PF	C	79.25	85.75	265	Memphis	Baltimore, MD	1983-12-16	\N	\N	4	24.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.1	6.3	0	0	1.7	4.5	13.6	0.8	1.5	2.8	1.5	4	9.8	0.584	0.647	0	0.713	0.273	13.1	0.27	0.49	\N	0.058	0.251	0.313	\N	\N	\N	\N	\N	201595
+622	2008-06-22 19:00:00	Sasha Kaun	sasha-kaun	C	\N	82.75	88	247	Kansas	Tomsk, Russia	1985-05-08	\N	\N	4	23.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	9	0	0	3.4	6.2	7.8	0.6	0.9	2.5	1.6	4.9	14.5	0.607	0.619	0	0.693	0.295	\N	\N	0.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	201619
+623	2008-06-22 19:00:00	Joe Alexander	joe-alexander	SF	\N	80.25	83.5	220	West Virginia	Silver Spring, MD	1986-12-16	\N	\N	3	21.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.9	15	0.3	1.3	5	6.1	7.3	2.8	0.8	1.7	2.5	3.3	19.2	0.536	0.474	0.086	0.409	0.336	28.9	0.58	1.1	\N	0.077	0.137	0.215	\N	\N	\N	\N	\N	201570
+624	2008-06-22 19:00:00	Serge Ibaka	serge-ibaka	PF	\N	82	\N	235	L'Hospitalet (Spain)	Brazzaville, Congo	1989-09-18	\N	\N	\N	18.74	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201586
+625	2008-06-22 19:00:00	Nathan Jawai	nathan-jawai	PF	C	82	\N	280	Cairns (Australia)	Bamaga, Australia	1986-10-10	\N	\N	\N	21.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201605
+626	2008-06-22 19:00:00	Walter Sharpe	walter-sharpe	PF	\N	81	\N	245	UAB	Birmingham, AL	1986-07-18	\N	\N	3	21.91	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.2	15.7	0	0.4	4.1	7.8	9.9	2.4	1.7	2.6	4.1	4.3	20.5	0.528	0.523	0.023	0.5	0.293	33	0.51	0.59	\N	0.067	0.161	0.227	\N	\N	\N	\N	\N	201594
+627	2008-06-22 19:00:00	Jerryd Bayless	jerryd-bayless	PG	SG	75	75.5	204	Arizona	Phoenix, AZ	1988-08-20	\N	\N	1	19.82	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	12.7	2	4.9	6.3	7.5	2.8	4.1	1	0.1	3	2.2	19.9	0.612	0.536	0.384	0.59	0.372	29.2	0.86	1.36	\N	0.149	0.03	0.179	\N	\N	\N	\N	\N	201573
+628	2008-06-22 19:00:00	Kosta Koufos	kosta-koufos	C	\N	84	\N	265	Ohio State	Canton, OH	1989-02-24	\N	\N	1	19.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8	15.7	0.8	2.3	2.4	3.6	8.9	0.7	0.6	2.4	2	2.9	19.2	0.551	0.533	0.144	0.229	0.329	\N	\N	0.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	201585
+629	2008-06-22 19:00:00	George Hill	george-hill	PG	\N	74.5	81	181	IU Indianapolis	Indianapolis, IN	1986-05-04	\N	\N	3	22.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	12.3	1.5	3.3	6.1	7.5	6.6	4.2	1.7	0.4	2.9	2.7	21	0.661	0.605	0.27	0.606	0.363	28.1	0.86	1.46	\N	0.193	0.071	0.265	\N	\N	\N	\N	\N	201588
+630	2008-06-22 19:00:00	Sonny Weems	sonny-weems	SG	SF	77.5	82	193	Arkansas	West Memphis, AR	1986-07-08	\N	\N	4	21.94	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	14.3	1.8	4.9	2.1	2.6	5.1	3	1.5	0.3	3.2	2.5	17.2	0.552	0.527	0.344	0.179	0.364	25.4	0.68	0.93	\N	0.082	0.06	0.142	\N	\N	\N	\N	\N	201603
+631	2008-06-22 19:00:00	Kyle Weaver	kyle-weaver	SG	\N	78	\N	201	Washington State	Beloit, WI	1986-02-18	\N	\N	4	22.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.3	9.3	0.7	2.1	3.9	5.3	5.7	4.7	1.9	0.8	3	2.1	13.2	0.561	0.503	0.221	0.577	0.336	\N	\N	1.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	201602
+632	2008-06-22 19:00:00	Courtney Lee	courtney-lee	SG	\N	77	\N	200	Western Kentucky	Indianapolis, IN	1985-10-03	\N	\N	4	22.7	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.6	18.1	2.3	5.8	4.9	6	5.8	2.5	2.2	0.9	2.8	2.9	24.5	0.585	0.541	0.32	0.331	0.375	\N	\N	0.89	\N	\N	\N	\N	\N	\N	\N	\N	\N	201584
+633	2008-06-22 19:00:00	Darnell Jackson	darnell-jackson	PF	\N	79.75	83.25	241	Kansas	Midwest City, OK	1985-11-07	\N	\N	4	22.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	10.1	0.1	0.2	3.8	5.5	9.9	1.6	1.1	0.7	1.9	3.3	16.6	0.65	0.63	0.022	0.546	0.317	\N	\N	0.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	201616
+634	2008-06-22 19:00:00	Brook Lopez	brook-lopez	C	\N	84.5	89.5	258	Stanford	Fresno, CA	1988-04-01	\N	\N	2	20.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8	17	0	0.3	6.6	8.4	9.6	1.6	0.7	2.4	2.5	2.9	22.6	0.537	0.468	0.015	0.494	0.33	33.7	0.34	0.64	\N	0.096	0.168	0.26	\N	\N	\N	\N	\N	201572
+635	2008-06-22 19:00:00	Omer Asik	omer-asik	C	\N	84	\N	255	Fenerbahce (Turkey)	Bursa, Turkey	1986-07-04	\N	\N	\N	21.95	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	9.5	0	0.1	3.7	7.1	10.6	0.8	1.4	4	2.7	3.4	15.1	0.584	0.595	0.014	0.743	0.293	\N	\N	0.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	201600
+636	2008-06-22 19:00:00	Sean Singletary	sean-singletary	PG	\N	72	76.5	184	Virginia	Philadelphia, PA	1985-09-06	\N	\N	4	22.78	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	15.3	1.9	5.1	6.1	7.1	4.1	6.5	1.9	0	4.1	2.8	21	0.562	0.487	0.332	0.466	0.371	29.9	1.26	1.58	\N	0.107	0.061	0.164	\N	\N	\N	\N	\N	201606
+637	2008-06-22 19:00:00	Mike Taylor	mike-taylor	PG	\N	74	79.25	166	Idaho Stampede (G League)	Milwaukee, WI	1986-01-21	\N	\N	\N	22.4	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201446
+638	2008-06-22 19:00:00	Danilo Gallinari	danilo-gallinari	SF	\N	81	\N	220	Olimpia Milano (Italy)	Sant'Angelo Lodigiano, Italy	1988-08-08	\N	\N	\N	19.85	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.3	11.8	1.8	4.7	5.7	6.8	5.7	1.6	2	0.5	1.8	2.8	18.2	0.604	0.527	0.4	0.577	0.369	\N	\N	0.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	201568
+639	2008-06-22 19:00:00	Michael Beasley	michael-beasley	SF	PF	80.25	84.25	239	Kansas State	Cheverly, MD	1989-01-09	\N	\N	1	19.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	10.6	20	1.2	3.3	7.5	9.6	14.1	1.3	1.5	1.9	3.3	2.9	29.9	0.61	0.563	0.165	0.484	0.351	35	0.27	0.4	\N	0.207	0.207	0.411	\N	\N	\N	\N	\N	201563
+640	2008-06-22 19:00:00	Marreese Speights	marreese-speights	PF	\N	82	\N	245	Florida	St. Petersburg, FL	1987-08-04	\N	\N	2	20.87	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.9	14.3	0	0	3.7	5.4	11.9	1.4	0.6	2	2.6	3.4	21.5	0.64	0.624	0	0.376	0.316	\N	\N	0.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	201578
+641	2008-06-22 19:00:00	Jason Thompson	jason-thompson	PF	C	83	\N	250	Rider	Mount Laurel, NJ	1986-06-21	\N	\N	4	21.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.4	15	0.3	1	4.1	7	12.6	2.8	1.1	2.8	3	3.1	21.2	0.579	0.571	0.069	0.466	0.307	29	0.6	0.94	\N	0.119	0.116	0.234	\N	\N	\N	\N	\N	201574
+642	2008-06-22 19:00:00	Ryan Anderson	ryan-anderson	PF	\N	82	\N	240	California	Sacramento, CA	1988-05-06	\N	\N	2	20.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	15.6	2.1	5.2	5.8	6.6	10.9	1.6	0.4	0.6	2.5	2.4	23.2	0.618	0.559	0.333	0.424	0.379	29.4	0.33	0.64	\N	0.163	0.041	0.203	\N	\N	\N	\N	\N	201583
+643	2008-06-22 19:00:00	Russell Westbrook	russell-westbrook	PG	\N	75.5	79.75	192	UCLA	Hawthorne, CA	1988-11-12	\N	\N	2	19.59	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	10.7	0.7	2.1	2.9	4.1	4.2	4.6	1.7	0.2	2.6	2.5	13.6	0.538	0.499	0.197	0.384	0.332	21.8	1.12	1.74	\N	0.061	0.1	0.161	\N	\N	\N	\N	\N	201566
+644	2008-06-22 19:00:00	Kevin Love	kevin-love	PF	\N	81.5	83.25	255	UCLA	Lake Oswego, OR	1988-09-07	\N	\N	1	19.77	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	12.6	0.9	2.6	6.2	8	12.9	2.3	0.8	1.7	2.4	2.3	21.2	0.644	0.595	0.202	0.635	0.343	27	0.52	0.96	\N	0.194	0.197	0.391	\N	\N	\N	\N	\N	201567
+645	2008-06-22 19:00:00	Derrick Rose	derrick-rose	PG	\N	74.5	80	196	Memphis	Chicago, IL	1988-10-04	\N	\N	1	19.7	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	13.4	1.1	3.2	4.5	6.3	5.6	5.8	1.5	0.5	3.3	2.1	18.4	0.56	0.517	0.239	0.47	0.338	26	1.17	1.77	\N	0.096	0.13	0.226	\N	\N	\N	\N	\N	201565
+646	2008-06-22 19:00:00	Goran Dragic	goran-dragic	PG	\N	75	\N	180	Union Olimpija (Slovenia)	Ljubljana, Slovenia	1986-05-06	\N	\N	\N	22.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.1	10.3	0.9	3.3	1.7	2.4	3.8	4	1.5	0.4	3.3	4.2	12.7	0.556	0.544	0.324	0.235	0.332	\N	\N	1.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	201609
+647	2008-06-22 19:00:00	Eric Gordon	eric-gordon	SG	\N	75.25	81	222	Indiana	Indianapolis, IN	1988-12-25	\N	\N	1	19.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	13.8	2.3	6.7	7.5	9	3.4	2.5	1.4	0.6	3.7	2.2	21.7	0.601	0.515	0.489	0.652	0.375	30.8	0.49	0.68	\N	0.151	0.065	0.216	\N	\N	\N	\N	\N	201569
+648	2008-06-22 19:00:00	Nicolas Batum	nicolas-batum	SF	\N	80	\N	200	Le Mans (France)	Lisieux, France	1998-12-14	\N	\N	\N	9.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.3	10.4	1.2	3.6	2.6	3.5	5.8	4.3	1.8	0.9	2.9	2.5	14.3	0.59	0.561	0.342	0.333	0.343	\N	\N	1.46	\N	\N	\N	\N	\N	\N	\N	\N	\N	201587
+649	2008-06-22 19:00:00	Malik Hairston	malik-hairston	SG	\N	77.25	81	204	Oregon	Detroit, MI	1987-02-23	\N	\N	4	21.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	12.4	1.9	4.4	3.7	5.1	5.5	2.4	0.7	1	2	3.3	18.6	0.63	0.603	0.358	0.412	0.358	24.2	0.58	1.2	\N	0.143	0.041	0.184	\N	\N	\N	\N	\N	201612
+650	2008-06-22 19:00:00	Roy Hibbert	roy-hibbert	C	\N	86	\N	278	Georgetown	Adelphi, MD	1986-12-11	\N	\N	4	21.51	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	11.8	0.1	0.1	3.7	5.8	8.7	2.5	0.7	3	2.3	3.7	18.3	0.626	0.614	0.01	0.49	0.312	25.9	0.64	1.11	\N	0.157	0.148	0.304	\N	\N	\N	\N	\N	201579
+651	2008-06-22 19:00:00	Darrell Arthur	darrell-arthur	PF	\N	80.5	82.75	216	Kansas	Dallas, TX	1988-03-25	\N	\N	2	20.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	14.3	0.1	0.4	2.9	4.1	9.1	1.2	0.7	1.9	2.7	4.3	18.6	0.569	0.546	0.03	0.289	0.319	\N	\N	0.44	\N	\N	\N	\N	\N	\N	\N	\N	\N	201589
+652	2008-06-22 19:00:00	Mario Chalmers	mario-chalmers	PG	\N	73	\N	190	Kansas	Anchorage, AK	1986-05-19	\N	\N	3	22.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	9.8	2.2	4.8	3	4	3.7	5.2	3	0.7	2.3	3	15.3	0.656	0.631	0.491	0.409	0.366	\N	\N	2.25	\N	\N	\N	\N	\N	\N	\N	\N	\N	201596
+653	2008-06-22 19:00:00	Brandon Rush	brandon-rush	SG	\N	78	\N	210	Kansas	Kansas City, MO	1985-07-07	\N	\N	3	22.94	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	13.2	2.6	6.1	2.1	2.7	6.2	2.6	1	1	2.2	1.9	16.2	0.557	0.531	0.461	0.208	0.374	\N	\N	1.17	\N	\N	\N	\N	\N	\N	\N	\N	\N	201575
+654	2008-06-22 19:00:00	Anthony Randolph	anthony-randolph	PF	\N	82.25	87	197	LSU	Pasadena, CA	1989-07-15	\N	\N	1	18.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	14	0.1	0.7	4.1	5.9	9.3	1.3	1.2	2.5	3.3	3	17.1	0.511	0.467	0.048	0.421	0.306	28	0.3	0.41	\N	0.043	0.091	0.138	\N	\N	\N	\N	\N	201576
+656	2008-06-22 19:00:00	Alexis Ajinca	alexis-ajinca	C	\N	86	\N	248	Hyères-Toulon (France)	Saint-Étienne, France	1988-05-06	\N	\N	\N	20.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	11.1	0.3	0.7	4.5	5.5	10.2	1.7	0.9	3.3	3.2	7.4	16.6	0.606	0.548	0.06	0.5	0.337	\N	\N	0.54	\N	\N	\N	\N	\N	\N	\N	\N	\N	201582
+657	2008-06-22 19:00:00	Semih Erden	semih-erden	C	\N	83	\N	240	Fenerbahce (Turkey)	Istanbul, Turkey	1986-07-28	\N	\N	\N	21.88	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.6	9.2	0	0	3.4	5	7.9	1.1	1.2	1.6	2.9	5.8	12.5	0.543	0.5	0	0.541	0.314	\N	\N	0.39	\N	\N	\N	\N	\N	\N	\N	\N	\N	201623
+658	2009-06-22 19:00:00	Jordan Hill	jordan-hill	PF	\N	82.25	85.5	232	Arizona	Newberry, SC	1987-07-27	\N	\N	3	21.89	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.5	13.9	0	0	3.5	5.3	11.1	1.5	0.9	1.7	2.9	3	18.4	0.56	0.537	0	0.382	0.311	28.2	0.34	0.52	\N	0.099	0.069	0.168	\N	\N	\N	\N	\N	201941
+659	2009-06-22 19:00:00	Jeff Ayres	jeff-ayres	PF	\N	82	85	240	Arizona State	Ontario, CA	1987-04-29	\N	\N	4	22.13	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	9.5	0	0	3.6	4.6	9.1	1	0.5	0.9	1.4	3	16.1	0.69	0.66	0.003	0.483	0.328	21.1	0.32	0.72	\N	0.179	0.081	0.256	\N	\N	\N	\N	\N	201965
+660	2009-06-22 19:00:00	James Johnson	james-johnson	SF	PF	79.75	84.75	257	Wake Forest	Cheyenne, WY	1987-02-20	\N	\N	2	22.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	13.1	0.8	2.6	2.6	3.8	10	2.4	1.7	1.8	2.8	3.5	17.7	0.593	0.574	0.2	0.287	0.331	\N	\N	0.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	201949
+661	2009-06-22 19:00:00	Derrick Brown	derrick-brown	SF	PF	80.5	86.5	225	Xavier	Dayton, OH	1987-09-08	\N	\N	3	21.77	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	11.7	1.4	3.1	3.5	4.7	7.4	2.4	0.9	1	2.1	3	16.7	0.597	0.562	0.267	0.401	0.35	\N	\N	1.11	\N	\N	\N	\N	\N	\N	\N	\N	\N	201974
+662	2009-06-22 19:00:00	Tyreke Evans	tyreke-evans	SG	PG	77.25	83.25	221	Memphis	Chester, PA	1989-09-19	\N	\N	1	19.74	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	17	1.1	4.2	4.6	6.5	6.6	4.8	2.6	1	4.5	3	21.2	0.529	0.489	0.246	0.384	0.337	33.1	0.91	1.08	\N	0.09	0.179	0.269	\N	\N	\N	\N	\N	201936
+663	2009-06-22 19:00:00	Brandon Jennings	brandon-jennings	PG	\N	73	\N	169	Lottomatica Roma (Italy)	Compton, CA	1989-09-23	\N	\N	\N	19.73	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	12.3	1.1	4.6	2	2.9	3.2	4	3.5	0.1	2.7	4.2	12.5	0.457	0.425	0.374	0.234	0.334	\N	\N	1.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	201943
+664	2009-06-22 19:00:00	Austin Daye	austin-daye	SF	PF	82.75	86.75	192	Gonzaga	Irvine, CA	1988-06-05	\N	\N	2	21.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	13.4	1.4	3.4	3.1	4.4	9.3	1.5	1	2.8	2.9	3.9	17.3	0.56	0.532	0.252	0.327	0.347	26	0.3	0.51	\N	0.094	0.161	0.255	\N	\N	\N	\N	\N	201948
+665	2009-06-22 19:00:00	Jrue Holiday	jrue-holiday	PG	SG	76.25	79	199	UCLA	Chatsworth, CA	1990-06-12	\N	\N	1	19.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	9.4	1	3.3	1.7	2.3	5	4.9	2.1	0.7	2.8	2.8	11.2	0.532	0.504	0.353	0.249	0.338	19.3	1.23	1.72	\N	0.051	0.088	0.139	\N	\N	\N	\N	\N	201950
+666	2009-06-22 19:00:00	Taj Gibson	taj-gibson	PF	\N	81.75	88	214	USC	Brooklyn, NY	1985-06-24	\N	\N	3	23.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	9.6	0	0	3.7	5.6	9.6	1.3	1	3.1	2.2	3.1	15.3	0.621	0.601	0	0.576	0.312	\N	\N	0.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	201959
+667	2009-06-22 19:00:00	Taylor Griffin	taylor-griffin	SF	PF	79	\N	238	Oklahoma	Oklahoma City, OK	1986-04-18	\N	\N	4	23.16	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	7.8	0.2	0.5	3	4.3	7	1.6	1.6	1.2	2.1	3.3	11.5	0.587	0.547	0.06	0.558	0.32	16.2	0.49	0.77	\N	0.074	0.085	0.159	\N	\N	\N	\N	\N	201981
+668	2009-06-22 19:00:00	Ty Lawson	ty-lawson	PG	\N	72.5	72.75	197	North Carolina	Clinton, MD	1987-11-03	\N	\N	3	21.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	11.7	1.8	3.7	5.7	7.1	3.6	7.9	2.6	0.2	2.3	2	20	0.659	0.607	0.316	0.608	0.366	21.4	1.66	3.48	\N	0.168	0.095	0.263	\N	\N	\N	\N	\N	201951
+669	2009-06-22 19:00:00	Eric Maynor	eric-maynor	PG	\N	75.25	74.5	164	VCU	Raeford, NC	1987-06-11	\N	\N	4	22.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	16	2	5.5	5.9	7.3	3.6	6.3	1.7	0.2	3	2.4	22.7	0.583	0.524	0.341	0.453	0.368	\N	\N	2.08	\N	\N	\N	\N	\N	\N	\N	\N	\N	201953
+670	2009-06-22 19:00:00	Terrence Williams	terrence-williams	SG	SF	78.25	81	213	Louisville	Seattle, WA	1987-06-28	\N	\N	4	21.97	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	11.1	1.6	4.2	1.9	3.3	9	5.3	2.4	0.8	2.4	1.8	13.2	0.517	0.504	0.378	0.298	0.331	\N	\N	2.15	\N	\N	\N	\N	\N	\N	\N	\N	\N	201944
+671	2009-06-22 19:00:00	Nando de Colo	nando-de-colo	PG	\N	77	\N	190	Cholet (France)	Sainte-Catherine-lès-Arras, France	1987-06-23	\N	\N	\N	21.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	14.3	2.1	5.9	4	4.5	4.5	4.2	1.3	0.1	3.1	3.5	18.7	0.57	0.517	0.414	0.318	0.377	\N	\N	1.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	201986
+672	2009-06-22 19:00:00	Earl Clark	earl-clark	PF	SF	82.25	86.5	228	Louisville	Plainfield, NJ	1988-01-17	\N	\N	3	21.41	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12.5	0.9	2.7	2.6	3.9	9.1	3.4	1.1	1.4	3.4	2	14.9	0.517	0.492	0.215	0.314	0.325	\N	\N	1	\N	\N	\N	\N	\N	\N	\N	\N	\N	201947
+673	2009-06-22 19:00:00	Lester Hudson	lester-hudson	PG	\N	75	\N	190	UT Martin	Memphis, TN	1984-08-07	\N	\N	4	24.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	9.8	21.8	3.3	9.3	4.6	5.2	7.9	4.2	2.3	0.6	3.3	2.7	27.5	0.566	0.525	0.429	0.241	0.399	36.4	0.76	1.27	\N	0.149	0.114	0.264	\N	\N	\N	\N	\N	201991
+674	2009-06-22 19:00:00	Nick Calathes	nick-calathes	PG	\N	78	\N	194	Florida	Winter Park, FL	1989-02-07	\N	\N	2	20.35	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.2	12.8	2.2	5.6	4.1	5.7	5.8	6.9	2	0.2	3.6	2.1	18.5	0.599	0.568	0.44	0.449	0.357	\N	\N	1.94	\N	\N	\N	\N	\N	\N	\N	\N	\N	201979
+675	2009-06-22 19:00:00	Jon Brockman	jon-brockman	PF	\N	79	\N	255	Washington	Snohomish, WA	1987-03-20	\N	\N	4	22.24	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	12.5	0	0	4.4	6.8	13.6	1.4	1.1	0.1	2.3	3.5	17.6	0.557	0.526	0.003	0.546	0.309	\N	\N	0.6	\N	\N	\N	\N	\N	\N	\N	\N	\N	201972
+676	2009-06-22 19:00:00	Omri Casspi	omri-casspi	SF	\N	81.25	81.25	211	Maccabi Tel Aviv (Israel)	Holon, Israel	1988-06-22	\N	\N	\N	20.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.2	1.2	2.6	3.5	4.5	6.4	0.9	1.7	0.4	2.3	4.9	18	0.585	0.549	0.194	0.34	0.352	\N	\N	0.39	\N	\N	\N	\N	\N	\N	\N	\N	\N	201956
+677	2009-06-22 19:00:00	Marcus Thornton	marcus-thornton	SG	\N	75.75	77	194	LSU	Baton Rouge, LA	1987-06-05	\N	\N	4	22.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.3	17.5	2.5	6.5	4.8	6.5	6.2	2.4	1.8	0.4	2.1	2.3	23.8	0.58	0.544	0.371	0.369	0.368	30.9	0.5	1.17	\N	0.151	0.086	0.237	\N	\N	\N	\N	\N	201977
+678	2009-06-22 19:00:00	Wayne Ellington	wayne-ellington	SG	\N	77.25	78.5	202	North Carolina	Wynnewood, PA	1987-11-29	\N	\N	3	21.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.9	2.6	6.4	2.7	3.5	5.8	3.1	1.1	0.2	1.9	1.8	18.8	0.604	0.579	0.458	0.252	0.375	21.5	0.67	1.63	\N	0.121	0.069	0.19	\N	\N	\N	\N	\N	201961
+679	2009-06-22 19:00:00	Patrick Beverley	patrick-beverley	PG	\N	73	\N	180	Arkansas	Chicago, IL	1988-07-12	\N	\N	2	20.93	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.1	10	2	5.2	2.6	4	7	2.6	1.3	0.5	2.1	2.6	12.8	0.537	0.511	0.521	0.4	0.345	19	0.68	1.22	\N	0.051	0.071	0.122	\N	\N	\N	\N	\N	201976
+680	2009-06-22 19:00:00	Darren Collison	darren-collison	PG	\N	73.5	75	166	UCLA	Rancho Cucamonga, CA	1987-08-23	\N	\N	4	21.81	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	11.2	1.3	3.4	3.7	4.1	2.7	5.4	1.9	0.2	2.8	1.7	16.4	0.624	0.568	0.302	0.366	0.369	23.1	1.23	1.91	\N	0.138	0.058	0.196	\N	\N	\N	\N	\N	201954
+681	2009-06-22 19:00:00	Jonas Jerebko	jonas-jerebko	PF	SF	81	\N	220	Angelico Biella (Italy)	Kinna, Sweden	1987-03-02	\N	\N	\N	22.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.2	10	1	2.8	1.5	2	7.9	1	1.8	0.5	2	4	12.9	0.591	0.569	0.278	0.196	0.346	\N	\N	0.51	\N	\N	\N	\N	\N	\N	\N	\N	\N	201973
+682	2009-06-22 19:00:00	Tyler Hansbrough	tyler-hansbrough	PF	\N	81.5	83.5	234	North Carolina	Poplar Bluff, MO	1985-11-03	\N	\N	4	23.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	15.2	0.3	0.8	8.7	10.4	9.7	1.2	1.5	0.4	2.2	2.7	24.6	0.613	0.524	0.053	0.682	0.345	27.4	0.21	0.54	\N	0.163	0.097	0.26	\N	\N	\N	\N	\N	201946
+683	2009-06-22 19:00:00	Jodie Meeks	jodie-meeks	SG	\N	76	76.5	211	Kentucky	Norcross, GA	1987-08-21	\N	\N	3	21.82	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	16.5	3.4	8.4	6.1	6.8	3.6	1.8	1.4	0.1	2.8	2	24.9	0.629	0.566	0.507	0.412	0.404	30.9	0.38	0.66	\N	0.204	0.036	0.239	\N	\N	\N	\N	\N	201975
+684	2009-06-22 19:00:00	Jermaine Taylor	jermaine-taylor	SG	\N	76.75	80.75	207	UCF	Tavares, FL	1986-12-08	\N	\N	4	22.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	10.6	22.1	3.3	8.9	5	6.2	5.9	2.1	1.4	0.9	3.2	2	29.6	0.591	0.556	0.404	0.281	0.39	39.3	0.45	0.67	\N	0.198	0.057	0.251	\N	\N	\N	\N	\N	201966
+685	2009-06-22 19:00:00	Toney Douglas	toney-douglas	PG	\N	74	78	183	Florida State	Jonesboro, GA	1986-03-16	\N	\N	4	23.25	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	15.1	2.4	6.2	5.3	6.5	3.9	2.9	1.8	0.4	2.4	2.1	21.1	0.581	0.525	0.412	0.433	0.375	29	0.7	1.17	\N	0.144	0.053	0.197	\N	\N	\N	\N	\N	201962
+686	2009-06-22 19:00:00	James Harden	james-harden	SG	\N	77.25	82.75	222	Arizona State	Los Angeles, CA	1989-08-26	\N	\N	2	19.81	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	13	1.7	4.7	5.9	7.8	5.6	4.2	1.7	0.3	3.4	2.8	20.2	0.607	0.553	0.361	0.597	0.354	32.5	0.9	1.25	\N	0.163	0.064	0.23	\N	\N	\N	\N	\N	201935
+687	2009-06-22 19:00:00	Christian Eyenga	christian-eyenga	SF	\N	79	\N	210	CB Prat (Spain)	Kinshasa, DR Congo	1989-06-22	\N	\N	\N	19.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2	8	0	0	2	4	0	0	0	2	0	4	6	0.303	0.25	0	0.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	201963
+688	2009-06-22 19:00:00	Jeff Teague	jeff-teague	PG	\N	73.5	79.5	175	Wake Forest	Indianapolis, IN	1988-06-10	\N	\N	2	21.02	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	13.5	1.6	3.7	6.5	8	3.7	4	2.1	0.7	3.8	2.5	21.2	0.615	0.546	0.275	0.59	0.365	\N	\N	1.06	\N	\N	\N	\N	\N	\N	\N	\N	\N	201952
+689	2009-06-22 19:00:00	Stephen Curry	stephen-curry	PG	\N	75.25	75.5	181	Davidson	Charlotte, NC	1988-03-14	\N	\N	3	21.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	9.8	21.6	4.1	10.6	6.9	7.9	4.7	5.9	2.7	0.3	4	2.5	30.6	0.604	0.549	0.489	0.365	0.411	38.3	1.05	1.5	\N	0.224	0.126	0.346	\N	\N	\N	\N	\N	201939
+690	2009-06-22 19:00:00	Jonny Flynn	jonny-flynn	PG	\N	72.75	76	196	Syracuse	Niagara Falls, NY	1989-02-06	\N	\N	2	20.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	12.1	1.1	3.6	4.6	5.8	2.6	6.4	1.4	0.2	3.3	1.4	16.8	0.567	0.507	0.298	0.481	0.348	\N	\N	1.97	\N	\N	\N	\N	\N	\N	\N	\N	\N	201938
+691	2009-06-22 19:00:00	Dante Cunningham	dante-cunningham	PF	\N	80.25	83	227	Villanova	Clinton, MD	1987-04-22	\N	\N	4	22.15	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	14	0	0.1	3.7	5.3	8.5	1.4	1.4	1.4	2.5	3.1	18.4	0.557	0.525	0.004	0.383	0.317	\N	\N	0.57	\N	\N	\N	\N	\N	\N	\N	\N	\N	201967
+692	2009-06-22 19:00:00	Byron Mullens	byron-mullens	C	\N	85.25	85.5	258	Ohio State	Canal Winchester, OH	1989-02-14	\N	\N	1	20.33	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	10.1	0	0.1	2.8	5	8.3	0.5	0.9	2	2.7	3.6	15.7	0.629	0.638	0.005	0.495	0.298	24	0.14	0.18	\N	0.137	0.06	0.197	\N	\N	\N	\N	\N	201957
+693	2009-06-22 19:00:00	Blake Griffin	blake-griffin	PF	\N	82	83.25	248	Oklahoma	Oklahoma City, OK	1989-03-16	\N	\N	2	20.25	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	9.3	14.2	0.1	0.2	5.9	10	15.6	2.5	1.2	1.3	3.6	2.8	24.5	0.648	0.657	0.017	0.706	0.304	30.8	0.53	0.69	\N	0.209	0.12	0.333	\N	\N	\N	\N	\N	201933
+694	2009-06-22 19:00:00	Gerald Henderson	gerald-henderson	SG	\N	77	82.25	215	Duke	Caldwell, NJ	1987-12-09	\N	\N	3	21.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7	15.5	1.3	4	4.7	6.2	6	3	1.5	0.9	2.6	2.1	20	0.542	0.494	0.258	0.397	0.349	28.3	0.64	1.14	\N	0.091	0.109	0.2	\N	\N	\N	\N	\N	76993
+695	2009-06-22 19:00:00	Sam Young	sam-young	SF	\N	78.75	82.75	223	Pittsburgh	Washington, DC	1985-06-01	\N	\N	4	24.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.2	16.3	1.7	4.6	3.6	4.8	7.1	1.3	1.1	0.9	2.8	1.9	21.7	0.582	0.554	0.279	0.296	0.353	29	0.24	0.45	\N	0.136	0.108	0.241	\N	\N	\N	\N	\N	201970
+696	2009-06-22 19:00:00	Danny Green	danny-green	SF	\N	78.5	82	208	North Carolina	North Babylon, NY	1987-06-22	\N	\N	4	21.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	13.5	2.7	6.4	1.8	2.1	6.2	3.6	2.3	1.8	2.2	2.9	17.2	0.592	0.569	0.471	0.156	0.386	20.5	0.8	1.65	\N	0.104	0.138	0.242	\N	\N	\N	\N	\N	201980
+697	2009-06-22 19:00:00	Ricky Rubio	ricky-rubio	PG	\N	76	\N	180	DKV Joventut (Spain)	El Masnou, Spain	1990-10-21	\N	\N	\N	18.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.1	10.3	1.5	3.6	5.1	6.4	4.5	9.5	3.6	0.1	5	3.8	14.8	0.552	0.469	0.346	0.623	0.36	\N	\N	1.91	\N	\N	\N	\N	\N	\N	\N	\N	\N	201937
+698	2009-06-22 19:00:00	Robert Vaden	robert-vaden	SG	\N	77	\N	205	UAB	Indianapolis, IN	1985-03-03	\N	\N	4	24.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	15.2	3.3	9.4	2.1	2.9	4.9	2	1	0.6	2.4	1.8	17.4	0.527	0.504	0.621	0.192	0.379	27.5	0.43	0.83	\N	0.068	0.077	0.145	\N	\N	\N	\N	\N	201987
+699	2009-06-22 19:00:00	Patty Mills	patty-mills	PG	\N	72.5	74	175	Saint Mary's	Canberra, Australia	1988-08-11	\N	\N	2	20.85	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.8	16.8	2.8	8.2	3.5	4.1	2.6	4.2	2.4	0.2	3.1	1.8	19.8	0.529	0.485	0.489	0.244	0.387	30	0.86	1.35	\N	0.083	0.088	0.166	\N	\N	\N	\N	\N	201988
+700	2009-06-22 19:00:00	Victor Claver	victor-claver	SF	\N	81	\N	224	Pamesa Valencia (Spain)	Valencia, Spain	1988-08-30	\N	\N	\N	20.79	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	8.1	1.4	3.7	2.1	3.2	6.9	1.4	1.5	0.9	2	3.3	12	0.623	0.609	0.458	0.396	0.339	\N	\N	0.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	201964
+701	2009-06-22 19:00:00	Rodrigue Beaubois	rodrigue-beaubois	PG	\N	74.25	81.75	182	Cholet (France)	Pointe-à-Pitre, Guadeloupe	1988-02-24	\N	\N	\N	21.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	13.5	2.2	6.8	1.2	2	4.1	3.8	1.8	0.7	3.1	4.6	16.1	0.557	0.553	0.506	0.148	0.339	\N	\N	1.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	201958
+702	2009-06-22 19:00:00	Hasheem Thabeet	hasheem-thabeet	C	\N	86.5	90.25	267	UConn	Dar es Salaam, Tanzania	1987-02-16	\N	\N	3	22.33	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	8.7	0	0	4.2	6.7	12.2	0.5	0.7	4.8	2.1	2.8	15.4	0.646	0.64	0	0.763	0.307	19	0.15	0.25	\N	0.133	0.196	0.328	\N	\N	\N	\N	\N	201934
+703	2009-06-22 19:00:00	Chase Budinger	chase-budinger	SF	\N	79	79	206	Arizona	Carlsbad, CA	1988-05-22	\N	\N	3	21.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	12.5	1.8	4.6	3.4	4.3	5.9	3.2	1.4	0.4	2.3	1.8	17.2	0.594	0.554	0.368	0.342	0.365	24.6	0.77	1.39	\N	0.118	0.039	0.158	\N	\N	\N	\N	\N	201978
+704	2010-06-22 19:00:00	Ed Davis	ed-davis	PF	\N	81.75	84	227	North Carolina	Washington, DC	1989-06-05	\N	\N	2	21.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.2	10.8	0	0	4.9	7.4	12.4	1.2	0.6	3.6	2.6	2.4	17.4	0.607	0.578	0	0.688	0.312	21.5	0.32	0.48	26.4	0.112	0.081	0.193	116.5	93.3	\N	\N	\N	202334
+705	2010-06-22 19:00:00	Jordan Crawford	jordan-crawford	SG	\N	76.5	79	198	Xavier	Detroit, MI	1988-10-23	\N	\N	2	21.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.2	17.7	2.5	6.3	3.7	4.8	5.2	3.2	1.5	0.2	2.7	1.8	22.5	0.564	0.532	0.359	0.274	0.371	30.8	0.65	1.19	25.4	0.143	0.063	0.206	115.2	98.4	\N	\N	\N	202348
+706	2010-06-22 19:00:00	Ekpe Udoh	ekpe-udoh	C	\N	81.75	88.5	237	Baylor	Edmond, OK	1987-05-20	\N	\N	3	23.07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	11.1	0.2	0.7	3.2	4.6	10	2.8	0.8	3.8	2.5	2.5	14.2	0.535	0.499	0.067	0.415	0.316	22.1	0.65	1.11	24.9	0.108	0.082	0.193	114.3	93.3	\N	\N	\N	202327
+707	2010-06-22 19:00:00	Elliot Williams	elliot-williams	SG	\N	76	\N	180	Memphis	Memphis, TN	1989-06-20	\N	\N	2	20.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	12.3	1.9	5.2	6.2	8.1	4.3	4.1	1.4	0.1	3.2	2.2	19.4	0.599	0.536	0.423	0.66	0.359	27.7	0.87	1.28	23.6	0.145	0.053	0.198	116.7	101.2	\N	\N	\N	202343
+708	2010-06-22 19:00:00	Landry Fields	landry-fields	SG	\N	79	\N	210	Stanford	Long Beach, CA	1988-06-27	\N	\N	4	21.97	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	15.7	0.9	2.7	5.6	8	8.7	2.8	1.6	0.8	2.6	2	21.8	0.56	0.519	0.17	0.508	0.333	31.5	0.62	1.07	28.9	0.145	0.062	0.207	113.7	99	\N	\N	\N	202361
+709	2010-06-22 19:00:00	Evan Turner	evan-turner	SG	\N	79	80	214	Ohio State	Chicago, IL	1988-10-27	\N	\N	3	21.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.7	14.8	0.6	1.8	4.5	5.9	9.2	6	1.8	0.9	4.4	2.8	20.5	0.581	0.54	0.12	0.4	0.338	33.1	1.13	1.36	30	0.144	0.101	0.245	111.2	88.5	\N	\N	\N	202323
+710	2010-06-22 19:00:00	Pape Sy	pape-sy	SF	\N	79	\N	224	STB Le Havre (France)	Loudéac, France	1988-04-05	\N	\N	\N	22.2	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4	7.9	1	2.5	4.2	5.8	4.3	3.4	1.6	0.2	3	4.7	13.1	0.616	0.57	0.312	0.742	0.34	\N	\N	1.14	\N	\N	\N	\N	\N	\N	\N	\N	\N	202377
+711	2010-06-22 19:00:00	Greivis Vasquez	greivis-vasquez	PG	SG	78.5	79	211	Maryland	Caracas, Venezuela	1987-01-16	\N	\N	4	23.41	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	16.5	2.2	6.2	4.4	5.2	4.9	6.7	1.8	0.4	3.6	2.2	20.8	0.549	0.496	0.374	0.314	0.377	30.2	1.17	1.87	25.6	0.143	0.068	0.207	113.6	97.7	\N	\N	\N	202349
+712	2010-06-22 19:00:00	Cole Aldrich	cole-aldrich	C	\N	83.25	88.75	236	Kansas	Bloomington, MN	1988-10-31	\N	\N	3	21.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	9.9	0	0	4	5.9	13.2	1.2	1	4.7	2.1	3.4	15.2	0.596	0.562	0	0.6	0.314	19.9	0.29	0.55	27.9	0.125	0.12	0.245	121.2	83.1	\N	\N	\N	202332
+713	2010-06-22 19:00:00	Devin Ebanks	devin-ebanks	SF	\N	80.25	84.25	208	West Virginia	Brooklyn, NY	1989-10-28	\N	\N	2	20.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.5	9.8	0.1	0.9	3.6	4.7	8.5	2.6	1.1	0.7	2.3	1.7	12.7	0.527	0.462	0.095	0.483	0.317	20.1	0.73	1.11	19.7	0.09	0.072	0.158	111.7	96.4	\N	\N	\N	202365
+714	2010-06-22 19:00:00	Tibor Pleiss	tibor-pleiss	C	\N	85	\N	240	Brose Baskets (Germany)	Bergisch Gladbach, Germany	1989-11-02	\N	\N	\N	20.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.4	12.2	0	0	4	4.3	10.8	0.4	1.1	1.8	2.9	4.3	14.8	0.516	0.441	0	0.353	\N	\N	\N	0.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	202353
+715	2010-06-22 19:00:00	Damion James	damion-james	SF	\N	79.75	84.75	227	Texas	Nacogdoches, TX	1987-10-07	\N	\N	4	22.69	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	14.7	1.3	3.3	5.4	8	12.2	1.2	2	1.4	2.4	3.5	21.4	0.578	0.544	0.224	0.549	0.338	26.3	0.23	0.48	28.8	0.148	0.105	0.253	119.8	87.8	\N	\N	\N	202345
+716	2010-06-22 19:00:00	Ryan Reid	ryan-reid	PF	\N	80	\N	235	Florida State	Lauderdale Lakes, FL	1986-10-30	\N	\N	4	23.63	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.2	8.5	0	0	2.4	3.9	6.3	1.8	0.9	0.8	2.6	2.4	10.7	0.516	0.491	0	0.461	0.303	18	0.56	0.69	13.7	0.04	0.08	0.119	100.2	94.3	\N	\N	\N	202385
+717	2010-06-22 19:00:00	Greg Monroe	greg-monroe	PF	C	83	86.25	247	Georgetown	Harvey, LA	1990-06-04	\N	\N	2	20.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.2	11.9	0.2	0.8	4.3	6.5	10.1	4	1.3	1.6	3.5	2.7	17	0.567	0.534	0.07	0.543	0.312	26.7	0.84	1.14	25.2	0.11	0.079	0.189	110	93.9	\N	\N	\N	202328
+718	2010-06-22 19:00:00	Kevin Seraphin	kevin-seraphin	PF	\N	81	\N	260	Cholet Basket (France)	Cayenne, French Guiana	1989-12-07	\N	\N	\N	20.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	11.5	0	0	1.8	3.1	10	1.1	0.4	2	2.4	4.4	13.8	0.533	0.525	0	0.268	0.299	\N	\N	0.46	\N	\N	\N	\N	\N	\N	\N	\N	\N	202338
+719	2010-06-22 19:00:00	Quincy Pondexter	quincy-pondexter	SF	\N	79	\N	215	Washington	Fresno, CA	1988-03-10	\N	\N	4	22.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.6	14.4	0.6	1.6	5.8	7	8.2	2	1.4	0.7	2.1	2.8	21.5	0.608	0.547	0.11	0.487	0.345	25.6	0.44	0.93	28.1	0.179	0.069	0.251	127	96.6	\N	\N	\N	202347
+720	2010-06-22 19:00:00	Magnum Rolle	magnum-rolle	PF	\N	83	\N	235	Louisiana Tech	Freeport, Bahamas	1986-02-23	\N	\N	4	24.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	12.9	0	0	3.3	5	10	1	0.9	2.5	2.4	3.3	16.5	0.541	0.514	0	0.383	0.312	24.2	0.24	0.42	24	0.101	0.062	0.164	110.9	98.3	\N	\N	\N	202375
+721	2010-06-22 19:00:00	Patrick Patterson	patrick-patterson	PF	\N	81.25	85.25	240	Kentucky	Huntington, WV	1989-03-14	\N	\N	3	21.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.2	10.7	0.7	2	2.6	3.7	8.1	1	0.8	1.5	1.2	1.7	15.6	0.624	0.607	0.184	0.348	0.329	18	0.31	0.88	23.8	0.147	0.076	0.223	133.1	94.9	\N	\N	\N	202335
+722	2010-06-22 19:00:00	Xavier Henry	xavier-henry	SG	\N	78.5	83.25	210	Kansas	Oklahoma City, OK	1991-03-15	\N	\N	1	19.25	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	12.9	2.5	6	3.3	4.2	5.7	1.9	2	0.7	2.5	2.4	17.6	0.591	0.555	0.466	0.325	0.374	23.4	0.42	0.77	21.5	0.113	0.085	0.198	116.3	93	\N	\N	\N	202333
+723	2010-06-22 19:00:00	Darington Hobson	darington-hobson	SG	SF	78.5	81.25	204	New Mexico	\N	1987-09-29	\N	\N	3	22.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.9	13.5	1.2	3.3	4	6.1	9.9	4.9	1.3	0.5	3.2	2.1	17	0.52	0.484	0.246	0.453	0.333	26.9	1.09	1.54	23.5	0.102	0.075	0.177	108.8	95.6	\N	\N	\N	202359
+724	2010-06-22 19:00:00	Luke Harangody	luke-harangody	PF	\N	79.75	81.5	240	Notre Dame	Schererville, IN	1988-01-02	\N	\N	4	22.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	8.9	18.5	0.9	2.9	5.1	6.5	9.9	1.7	0.5	0.7	2	2.5	23.8	0.552	0.506	0.16	0.351	0.344	34.6	0.34	0.87	29.3	0.162	0.04	0.206	116	104	\N	\N	\N	202376
+725	2010-06-22 19:00:00	Craig Brackins	craig-brackins	PF	\N	81.75	84	229	Iowa State	\N	1987-10-09	\N	\N	3	22.68	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	14.6	0.9	2.8	3.7	4.9	8.7	2.2	0.8	1.2	2.2	2	16.9	0.498	0.45	0.19	0.337	0.34	26.1	0.5	1.01	20.2	0.078	0.064	0.142	105.6	98	\N	\N	\N	202342
+726	2010-06-22 19:00:00	Dexter Pittman	dexter-pittman	C	\N	83.5	90	303	Texas	Rosenberg, TX	1988-03-02	\N	\N	4	22.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	11.9	0	0	4.2	7.5	11.1	0.9	0.7	3.5	3.3	5	19.7	0.638	0.654	0	0.631	0.297	23.6	0.22	0.28	27.6	0.13	0.08	0.21	117.3	93.4	\N	\N	\N	202354
+727	2010-06-22 19:00:00	Eric Bledsoe	eric-bledsoe	PG	SG	73.5	79.5	192	Kentucky	Birmingham, AL	1989-12-09	\N	\N	1	20.52	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.6	10	1.6	4.1	2.6	3.9	3.7	3.4	1.7	0.4	3.6	2.6	13.4	0.566	0.54	0.41	0.394	0.342	20.4	0.82	0.96	14.5	0.053	0.075	0.125	102.6	95.7	\N	\N	\N	202339
+728	2010-06-22 19:00:00	Solomon Alabi	solomon-alabi	C	\N	84.75	89	237	Florida State	Kaduna, Nigeria	1988-03-21	\N	\N	2	22.24	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	10.9	0	0	4.7	6	8.7	0.7	0.9	3.3	2.7	3.3	16.4	0.596	0.534	0	0.546	0.33	22.8	0.19	0.26	24	0.107	0.102	0.21	114.4	87.8	\N	\N	\N	202374
+729	2010-06-22 19:00:00	Dominique Jones	dominique-jones	SG	\N	77	81.25	216	South Florida	Lake Wales, FL	1988-10-15	\N	\N	3	21.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	14.5	1.5	4.9	6.1	8.3	5.9	3.5	1.6	0.6	2.9	2.7	20.7	0.562	0.503	0.339	0.572	0.349	30.8	0.79	1.24	26.6	0.141	0.062	0.203	113.9	98.8	\N	\N	\N	202346
+730	2010-06-22 19:00:00	Jerome Jordan	jerome-jordan	C	\N	84.75	89.25	244	Tulsa	Kingston, Jamaica	1986-09-29	\N	\N	4	23.71	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.4	11.6	0	0	5.9	8.6	10.9	1.5	0.6	2.8	2.7	3.4	18.6	0.595	0.549	0	0.746	0.316	26	0.38	0.56	27.4	0.13	0.088	0.215	115.6	92.2	\N	\N	\N	202366
+731	2010-06-22 19:00:00	Paul George	paul-george	SF	\N	80.75	83.25	214	Fresno State	Palmdale, CA	1990-05-02	\N	\N	2	20.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	13.6	2.2	6.2	4.5	4.9	7.9	3.3	2.4	0.9	3.5	3.1	18.2	0.572	0.506	0.46	0.364	0.384	27.9	0.8	0.94	24.3	0.096	0.075	0.175	107.6	94.9	\N	\N	\N	202331
+732	2010-06-22 19:00:00	Larry Sanders	larry-sanders	C	\N	82.5	89.75	222	VCU	Fort Pierce, FL	1988-11-21	\N	\N	3	21.57	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.5	14	0.2	0.6	4.1	6.4	12.2	1.3	1	3.4	2.2	3.9	19.2	0.563	0.54	0.044	0.455	0.308	26.7	0.29	0.59	29.5	0.136	0.094	0.23	116.4	90.8	\N	\N	\N	202336
+733	2010-06-22 19:00:00	Terrico White	terrico-white	SG	\N	77	81	203	Ole Miss	Memphis, TN	1990-03-07	\N	\N	2	20.28	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.3	14.6	2	5.8	2.8	3.9	5.2	1.7	1	0.2	1.5	2	17.3	0.526	0.498	0.4	0.266	0.354	23.9	0.38	1.16	19.1	0.109	0.044	0.149	114.2	103.9	\N	\N	\N	202358
+734	2010-06-22 19:00:00	Jarvis Varnado	jarvis-varnado	PF	C	82	87.5	210	Mississippi State	Brownsville, TN	1988-03-01	\N	\N	4	22.29	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.8	10	0	0	4	6.6	11.6	1	0.8	5.4	2.2	2.8	15.6	0.597	0.582	0	0.665	0.305	21.6	0.29	0.45	28.4	0.109	0.112	0.221	115.7	86	\N	\N	\N	202363
+735	2010-06-22 19:00:00	Jeremy Evans	jeremy-evans	PF	SF	81	\N	196	Western Kentucky	Crossett, AR	1987-10-24	\N	\N	4	22.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.5	8.4	0.1	0.5	2.6	3.7	9.4	1	1.1	2.4	1.4	3.9	13.6	0.668	0.656	0.057	0.441	0.318	16.8	0.35	0.69	25.7	0.142	0.071	0.218	133.1	96	\N	\N	\N	202379
+736	2010-06-22 19:00:00	Andy Rautins	andy-rautins	SG	\N	77	79	192	Syracuse	DeWitt, NY	1986-11-02	\N	\N	4	23.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.1	9.4	3.1	7.6	2.1	2.6	3.7	5.4	2.2	0.3	3.1	2.4	13.4	0.632	0.603	0.811	0.273	0.387	18.4	1.3	1.74	18.5	0.102	0.074	0.172	116.8	96	\N	\N	\N	202360
+737	2010-06-22 19:00:00	Nemanja Bjelica	nemanja-bjelica	PF	\N	82	\N	223	Red Star Belgrade (Serbia)	Belgrade, Serbia	1988-05-09	\N	\N	\N	22.1	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	7.3	1.9	3.5	2.1	3	6.7	1.6	1.1	0	1.9	5.6	13.7	0.791	0.796	0.481	0.407	\N	\N	\N	0.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	202357
+738	2010-06-22 19:00:00	Avery Bradley	avery-bradley	SG	\N	75.25	79.25	180	Texas	Tacoma, WA	1990-11-26	\N	\N	1	19.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.7	13.2	1.5	4	1.3	2.4	3.5	2.5	1.6	0.6	1.9	2.9	14.2	0.496	0.489	0.304	0.179	0.324	20.4	0.61	1.37	14.9	0.064	0.064	0.128	106.7	98.6	\N	\N	\N	202340
+739	2010-06-22 19:00:00	Lazar Hayward	lazar-hayward	SF	\N	77.75	84.75	226	Marquette	Buffalo, NY	1986-11-26	\N	\N	4	23.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.3	16.9	2.1	6.1	3.5	4.2	8.4	1.7	2.1	0.6	2.2	3.8	20.2	0.536	0.495	0.362	0.247	0.374	31.6	0.35	0.78	25.7	0.117	0.08	0.197	110.1	94.1	\N	\N	\N	202351
+740	2010-06-22 19:00:00	Luke Babbitt	luke-babbitt	SF	\N	80.75	83.25	218	Nevada	Reno, NV	1989-06-20	\N	\N	2	20.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	14.3	1.2	2.9	5.7	6.2	8.7	2.1	1	0.8	2.3	2.5	21.2	0.614	0.542	0.201	0.432	0.371	26.8	0.41	0.89	27.7	0.171	0.041	0.213	124.1	104.3	\N	\N	\N	202337
+741	2010-06-22 19:00:00	John Wall	john-wall	PG	\N	76	81.25	196	Kentucky	Raleigh, NC	1990-09-06	\N	\N	1	19.78	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	12.2	1	3.2	4.9	6.5	4.4	6.7	1.8	0.5	4.2	2	17.2	0.562	0.503	0.26	0.53	0.342	25.7	1.35	1.62	22.3	0.115	0.081	0.196	111.7	94.1	\N	\N	\N	202322
+742	2010-06-22 19:00:00	Daniel Orton	daniel-orton	C	\N	81.5	88.25	269	Kentucky	Oklahoma City, OK	1990-08-06	\N	\N	1	19.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	3.4	6.5	0	0.1	2.4	4.5	9	1.1	1.5	3.8	2.7	6.3	9.3	0.533	0.527	0.022	0.692	0.293	15	0.33	0.39	15.5	0.024	0.104	0.135	98.5	86.9	\N	\N	\N	202350
+743	2010-06-22 19:00:00	Wesley Johnson	wesley-johnson	SF	\N	79.25	85	206	Syracuse	Corsicana, TX	1987-07-11	\N	\N	3	22.93	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	12.1	1.5	3.6	3.3	4.3	8.8	2.3	1.7	1.9	2.4	2.1	17	0.6	0.564	0.299	0.352	0.356	22.1	0.5	0.96	24.2	0.121	0.095	0.216	118.8	90.4	\N	\N	\N	202325
+744	2010-06-22 19:00:00	Derrick Favors	derrick-favors	PF	C	82.25	88	245	Georgia Tech	Atlanta, GA	1991-07-15	\N	\N	1	18.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.5	10.7	0	0	3.3	5.2	11	1.3	1.2	2.7	3.3	3.4	16.3	0.621	0.611	0.003	0.488	0.307	21.8	0.36	0.41	24.5	0.093	0.101	0.194	111.5	88.6	\N	\N	\N	202324
+745	2010-06-22 19:00:00	Trevor Booker	trevor-booker	PF	\N	79.5	81.75	236	Clemson	Whitmire, SC	1987-11-25	\N	\N	4	22.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.9	13.2	0.3	1.2	3.7	6.3	9.8	3	1.6	1.6	2.3	2.3	17.8	0.549	0.533	0.094	0.474	0.305	24.6	0.71	1.31	26.4	0.122	0.102	0.224	115.4	89	\N	\N	\N	202344
+746	2010-06-22 19:00:00	Hassan Whiteside	hassan-whiteside	C	\N	83.5	91	227	Marshall	Gastonia, NC	1989-06-13	\N	\N	1	21.01	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.8	12.9	0.1	0.2	4.5	7.6	12.3	0.4	0.8	7.4	2.6	3.3	18.1	0.548	0.528	0.016	0.586	0.304	25.8	0.09	0.16	29.1	0.09	0.112	0.202	107.9	85.8	\N	\N	\N	202355
+747	2010-06-22 19:00:00	Armon Johnson	armon-johnson	PG	\N	75.25	80	195	Nevada	Reno, NV	1989-02-23	\N	\N	3	21.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	13.6	0.5	2.2	2.5	3.6	3.5	5.8	0.9	0.4	3.5	1.9	16.4	0.537	0.515	0.161	0.267	0.32	25.7	1.18	1.66	18.8	0.085	0.017	0.102	106.3	110.5	\N	\N	\N	202356
+748	2010-06-22 19:00:00	Derrick Caracter	derrick-caracter	PF	\N	81.5	84.25	280	UTEP	Fanwood, NJ	1988-05-04	\N	\N	3	22.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.4	13.1	0.2	0.8	4	6	10.9	1.5	1.3	1.2	3.9	4.1	19	0.598	0.575	0.057	0.456	0.317	27.4	0.33	0.39	23.9	0.089	0.1	0.189	106.4	88.4	\N	\N	\N	202382
+749	2010-06-22 19:00:00	Willie Warren	willie-warren	PG	SG	75.75	78	208	Oklahoma	Fort Worth, TX	1989-10-22	\N	\N	2	20.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	12.8	1.6	5.2	5.4	6.7	3.7	4.6	1.1	0.1	4.2	2.5	18.2	0.567	0.5	0.401	0.525	0.357	28.7	0.97	1.08	19	0.083	0.012	0.1	104.4	111.2	\N	\N	\N	202378
+750	2010-06-22 19:00:00	Gordon Hayward	gordon-hayward	SF	\N	80	79.75	211	Butler	Brownsburg, IN	1990-03-23	\N	\N	2	20.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	10.8	1.4	4.6	5.2	6.3	8.9	1.8	1.2	0.9	2.5	2.3	16.6	0.601	0.527	0.429	0.579	0.357	24.7	0.49	0.73	24.3	0.129	0.097	0.223	117.1	90.1	\N	\N	\N	202330
+751	2010-06-22 19:00:00	James Anderson	james-anderson	SG	SF	77.75	80.5	208	Oklahoma State	Junction City, AR	1989-03-25	\N	\N	3	21.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.2	15.8	2.4	7	6.7	8.3	6.1	2.6	1.5	0.6	2.5	2.8	23.5	0.596	0.532	0.439	0.522	0.373	31.5	0.52	1.03	29.2	0.185	0.06	0.246	121.3	99.2	\N	\N	\N	202341
+752	2010-06-22 19:00:00	Lance Stephenson	lance-stephenson	SG	\N	77.75	82.5	227	Cincinnati	Brooklyn, NY	1990-09-05	\N	\N	1	19.78	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.1	13.8	0.6	2.7	3	4.5	6.8	3.2	1.2	0.2	3	2.5	15.7	0.493	0.462	0.198	0.323	0.319	26.2	0.73	1.04	17.9	0.058	0.054	0.117	101.4	100.3	\N	\N	\N	202362
+753	2010-06-22 19:00:00	Gani Lawal	gani-lawal	PF	\N	81	84	233	Georgia Tech	Norcross, GA	1988-11-07	\N	\N	3	21.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.7	12.6	0	0	4.9	8.6	11.8	0.6	0.6	1.9	3	2.9	18.2	0.547	0.529	0.003	0.683	0.299	26.1	0.13	0.19	22.8	0.082	0.095	0.176	106.5	90.6	\N	\N	\N	202371
+754	2011-06-22 19:00:00	Jeremy Tyler	jeremy-tyler	PF	C	82.5	89	262	Tokyo Apache (Japan)	San Diego, CA	1991-06-21	\N	\N	\N	19.99	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	202719
+755	2011-06-22 19:00:00	Andrew Goudelock	andrew-goudelock	PG	\N	74.75	76.25	198	Charleston	\N	1988-12-07	\N	\N	4	22.52	37	35.2	8.6	18.9	0.455	3.5	8.7	0.407	3	3.6	0.821	3.9	4.2	0.9	0.2	3.2	1.8	23.7	8.8	19.3	3.6	8.9	3	3.7	4	4.3	0.9	0.2	3.3	1.8	24.2	0.575	0.549	0.461	0.192	0.396	34.5	0.77	1.32	26.7	0.163	0.037	0.2	115.1	105.7	7.4	-1.4	6	202726
+756	2011-06-22 19:00:00	Reggie Jackson	reggie-jackson	PG	\N	75	\N	208	Boston College	\N	1990-04-16	\N	\N	3	21.17	34	34.1	6.4	12.8	0.503	2.1	5	0.42	3.2	4	0.796	4.3	4.5	1.1	0.5	2.4	1.7	18.2	6.8	13.5	2.2	5.2	3.4	4.2	4.5	4.7	1.1	0.6	2.5	1.8	19.2	0.618	0.585	0.389	0.315	0.371	27.2	1.09	1.88	26.9	0.172	0.021	0.193	122.8	109.8	8.9	0.9	9.8	202704
+757	2011-06-22 19:00:00	Kyrie Irving	kyrie-irving	PG	\N	75.5	76	191	Duke	\N	1992-03-23	\N	\N	1	19.23	11	27.5	5	9.5	0.529	1.6	3.5	0.462	5.8	6.5	0.901	3.4	4.3	1.5	0.5	2.5	2.1	17.5	6.5	12.4	2.1	4.6	7.6	8.4	4.4	5.6	1.9	0.7	3.2	2.7	22.8	0.697	0.615	0.375	0.683	0.385	26.4	1.13	1.74	32.5	0.238	0.079	0.317	135.1	92.7	9.8	5	14.8	202681
+758	2011-06-22 19:00:00	Tyler Honeycutt	tyler-honeycutt	SF	\N	80.25	81	187	UCLA	\N	1990-07-15	\N	\N	2	20.92	33	35	4.4	10.8	0.406	1.7	4.6	0.362	2.4	3.2	0.736	7.2	2.8	0.9	2	3	1.6	12.8	4.5	11.1	1.7	4.7	2.4	3.3	7.4	2.9	0.9	2.1	3.1	1.6	13.1	0.519	0.483	0.428	0.299	0.353	22.3	0.75	0.93	17.4	0.042	0.073	0.114	99.7	96.3	3.6	3.5	7.1	202715
+759	2011-06-22 19:00:00	Kawhi Leonard	kawhi-leonard	SF	\N	79	87	227	San Diego State	\N	1991-06-29	\N	\N	2	19.96	36	32.6	5.9	13.2	0.444	0.7	2.4	0.291	3.1	4	0.759	10.6	2.5	1.4	0.6	2.1	2.5	15.5	6.5	14.6	0.8	2.6	3.4	4.5	11.7	2.8	1.6	0.6	2.3	2.7	17.1	0.512	0.471	0.181	0.305	0.337	27.6	0.58	1.2	26.5	0.123	0.109	0.232	112.5	86.3	5.3	3.9	9.2	202695
+760	2011-06-22 19:00:00	Kyle Singler	kyle-singler	SF	\N	80.5	82	228	Duke	\N	1988-05-04	\N	\N	4	23.12	37	34.8	5.9	13.8	0.43	1.7	5.2	0.321	3.4	4.2	0.806	6.8	1.6	0.9	0.3	1.9	2.6	16.9	6.1	14.2	1.7	5.4	3.5	4.3	7.1	1.7	1	0.3	2	2.7	17.5	0.536	0.491	0.379	0.305	0.362	24.7	0.36	0.86	20	0.115	0.078	0.19	114.8	95.1	4.6	1.8	6.4	202713
+761	2011-06-22 19:00:00	Josh Harrellson	josh-harrellson	PF	C	82	\N	275	Kentucky	\N	1989-02-12	\N	\N	4	22.34	38	28.5	3.3	5.5	0.611	0.1	0.3	0.2	0.9	1.5	0.589	8.7	0.8	0.9	1.5	0.7	2.4	7.6	4.2	6.9	0.1	0.3	1.1	1.9	10.9	1	1.2	1.9	0.9	3	9.6	0.616	0.615	0.048	0.269	0.303	12.5	0.41	1.07	22.3	0.118	0.085	0.203	134.3	92.6	4.9	3.8	8.7	202725
+762	2011-06-22 19:00:00	Jordan Hamilton	jordan-hamilton	SF	SG	80.5	81.5	228	Texas	\N	1990-10-06	\N	\N	2	20.69	36	32.2	6.8	15.3	0.44	2.5	6.5	0.385	2.6	3.4	0.779	7.7	2.1	0.9	0.6	2.1	1.8	18.6	7.5	17.1	2.8	7.3	3	3.8	8.6	2.4	1	0.7	2.4	2	20.8	0.55	0.522	0.424	0.221	0.377	29.1	0.5	0.99	25.6	0.138	0.093	0.231	115.5	90.6	8.3	3.1	11.4	202706
+763	2011-06-22 19:00:00	Alec Burks	alec-burks	SG	\N	78	82	193	Colorado	\N	1991-07-20	\N	\N	2	19.91	38	31.4	6.6	14.1	0.469	0.7	2.5	0.292	6.6	7.9	0.825	6.5	2.9	1.1	0.3	2.6	2.3	20.5	7.6	16.1	0.8	2.9	7.5	9.1	7.5	3.4	1.2	0.4	3	2.7	23.5	0.574	0.495	0.179	0.564	0.347	32.3	0.61	1.13	29.4	0.188	0.034	0.221	120.2	106	8	0	8.1	202692
+764	2011-06-22 19:00:00	Tobias Harris	tobias-harris	SF	\N	79.75	83	223	Tennessee	\N	1992-07-15	\N	\N	1	18.92	34	29.2	5.4	11.8	0.46	0.7	2.2	0.303	3.8	5	0.753	7.3	1.3	0.7	0.9	1.8	2.1	15.3	6.7	14.6	0.8	2.8	4.6	6.2	9	1.6	0.9	1.1	2.2	2.5	18.9	0.54	0.489	0.189	0.423	0.338	27.2	0.38	0.71	23.8	0.117	0.06	0.177	112.7	98.8	5.5	1.8	7.3	202699
+765	2011-06-22 19:00:00	Vernon Macklin	vernon-macklin	PF	\N	81	\N	245	Florida	\N	1986-09-25	\N	\N	4	24.72	37	24.5	5.2	8.7	0.593	0	0	\N	1.2	2.8	0.451	5.4	0.8	0.4	0.7	1.7	2.5	11.6	7.6	12.8	0	0	1.8	4.1	7.9	1.2	0.5	1	2.5	3.6	17	0.578	0.593	0	0.317	0.283	25.1	0.31	0.48	22.2	0.097	0.062	0.159	110	98.5	3.1	1.4	4.5	202731
+766	2011-06-22 19:00:00	Iman Shumpert	iman-shumpert	SG	\N	77.5	81.5	222	Georgia Tech	Oak Park, IL	1990-06-26	\N	\N	3	20.97	31	32	5.7	14.1	0.406	1.4	4.9	0.278	4.5	5.6	0.806	5.9	3.5	2.7	0.2	2.3	2.8	17.3	6.4	15.8	1.5	5.5	5.1	6.4	6.6	3.9	3.1	0.2	2.6	3.1	19.5	0.517	0.454	0.346	0.401	0.357	29.1	0.88	1.5	25.4	0.113	0.085	0.198	109.8	92.8	5.4	4.2	9.6	202697
+767	2011-06-22 19:00:00	Kenneth Faried	kenneth-faried	PF	\N	79.5	84	225	Morehead State	\N	1989-11-19	\N	\N	4	21.57	35	34.7	6.7	10.7	0.623	0	0	\N	4	6.9	0.577	14.5	1.1	1.9	2.3	2.6	3.1	17.3	6.9	11.1	0	0	4.1	7.1	15	1.1	2	2.4	2.7	3.2	17.9	0.619	0.623	0	0.644	0.3	24.5	0.3	0.4	34.7	0.155	0.118	0.273	121	84	6.2	2.3	8.5	202702
+768	2011-06-22 19:00:00	Justin Harper	justin-harper	PF	\N	80.75	83.75	228	Richmond	\N	1989-08-30	\N	\N	4	21.79	37	31.8	6.6	12.4	0.534	2.1	4.6	0.448	2.5	3.2	0.797	6.9	1.2	0.6	1.2	1.5	2.2	17.9	7.5	14	2.4	5.3	2.9	3.6	7.8	1.3	0.7	1.4	1.7	2.5	20.2	0.642	0.618	0.375	0.257	0.374	26.8	0.33	0.77	29	0.163	0.078	0.241	123.6	94.9	8.2	1.5	9.7	202712
+769	2011-06-22 19:00:00	Jon Leuer	jon-leuer	PF	\N	83.5	84	223	Wisconsin	\N	1989-05-14	\N	\N	4	22.09	34	33.5	6.7	14.2	0.47	1.6	4.3	0.37	3.3	3.9	0.843	7.2	1.6	0.5	0.9	1.6	2.2	18.3	7.2	15.3	1.7	4.6	3.6	4.2	7.8	1.8	0.5	0.9	1.7	2.4	19.6	0.568	0.526	0.302	0.277	0.367	31.1	0.41	1.04	28.7	0.162	0.06	0.221	118.3	99.7	7.9	1.8	9.8	202720
+770	2011-06-22 19:00:00	Jan Vesely	jan-vesely	PF	\N	83	\N	239	Partizan Belgrade (Serbia)	Ostrava, Czechia	1990-04-24	\N	\N	\N	21.15	15	27	3.9	7.3	0.536	0.7	1.9	0.357	1.6	3.6	0.444	3.6	1.1	1.3	0.9	1.6	3	10.1	5.2	9.8	0.9	2.5	2.1	4.8	4.8	1.4	1.7	1.2	2.1	4	13.5	0.56	0.582	0.255	0.491	0.299	\N	\N	0.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	202686
+771	2011-06-22 19:00:00	Travis Leslie	travis-leslie	SG	\N	76.25	82.5	205	Georgia	\N	1990-03-29	\N	\N	3	21.22	33	32.2	5.4	10.9	0.492	0.4	1.3	0.302	3.3	4.1	0.801	7.2	2.9	1.2	0.6	2.2	1.9	14.4	6	12.2	0.4	1.5	3.7	4.6	8	3.3	1.4	0.7	2.4	2.1	16.1	0.561	0.51	0.119	0.378	0.338	24.4	0.84	1.37	24.9	0.128	0.064	0.196	116.9	98.1	6.5	2.3	8.9	202727
+772	2011-06-22 19:00:00	Keith Benson	keith-benson	C	PF	83	87.75	217	Oakland	\N	1988-08-13	\N	\N	4	22.84	35	32.4	6.6	12.1	0.547	0.3	0.7	0.391	4.5	7	0.643	10.1	1.1	0.8	3.6	1.9	3.1	17.9	7.3	13.4	0.3	0.7	5	7.8	11.2	1.2	0.9	4	2.1	3.4	20	0.584	0.558	0.055	0.578	0.318	24.9	0.25	0.58	28.8	0.141	0.06	0.201	120.2	98.9	3.6	1.9	5.4	202728
+773	2011-06-22 19:00:00	Charles Jenkins	charles-jenkins	PG	SG	75.25	79.5	216	Hofstra	\N	1989-02-28	\N	\N	4	22.3	33	37.3	7.5	14.6	0.517	2	4.8	0.42	5.5	6.7	0.824	3.4	4.8	1.7	0.7	2.2	2	22.6	7.3	14.1	1.9	4.6	5.3	6.5	3.2	4.6	1.7	0.6	2.1	1.9	21.8	0.635	0.585	0.326	0.459	0.37	28.7	1.1	2.16	31.4	0.208	0.029	0.237	128	107.8	8.4	1.2	9.6	202724
+774	2011-06-22 19:00:00	Bismack Biyombo	bismack-biyombo	C	\N	81	\N	243	Fuenlabrada (Spain)	Lubumbashi, DR Congo	1992-08-28	\N	\N	\N	18.8	14	17.1	2.3	4.1	0.552	0	0	\N	1.9	3.4	0.553	5.1	0.3	0.4	2.3	1.7	2	6.4	4.8	8.7	0	0	3.9	7.1	10.7	0.6	0.8	4.8	3.6	4.2	13.6	0.56	0.552	0	0.81	0.297	\N	\N	0.17	\N	\N	\N	\N	\N	\N	\N	\N	\N	202687
+775	2011-06-22 19:00:00	Chandler Parsons	chandler-parsons	SF	\N	81.75	81.5	221	Florida	\N	1988-10-25	\N	\N	4	22.64	36	34.1	4.3	9	0.48	1.2	3.3	0.368	1.5	2.7	0.557	7.8	3.8	0.9	0.4	2.3	1.9	11.3	4.5	9.5	1.3	3.4	1.6	2.8	8.2	4	1	0.4	2.4	2	11.9	0.551	0.546	0.362	0.3	0.321	19.2	1.12	1.68	19.7	0.088	0.072	0.163	112.4	96	5.1	3.2	8.3	202718
+776	2011-06-22 19:00:00	Isaiah Thomas	isaiah-thomas	PG	\N	70.25	73.75	186	Washington	\N	1989-02-07	\N	\N	3	22.35	35	31.9	5.4	12.1	0.445	1.7	4.9	0.349	4.3	6	0.719	3.5	6.1	1.3	0.1	3	2.1	16.8	6.1	13.6	1.9	5.6	4.9	6.8	4	6.9	1.5	0.1	3.4	2.4	19	0.563	0.517	0.408	0.498	0.354	26.2	1.25	2.05	22.9	0.143	0.054	0.197	117.4	100.8	6.2	1.9	8.1	202738
+777	2011-06-22 19:00:00	Norris Cole	norris-cole	PG	\N	73.75	74.25	174	Cleveland State	\N	1988-10-13	\N	\N	4	22.67	36	35.7	7	15.9	0.439	1.4	4.1	0.342	6.3	7.4	0.853	5.8	5.3	2.2	0.1	2.7	2.4	21.7	7	16	1.4	4.2	6.4	7.5	5.9	5.4	2.2	0.1	2.7	2.4	21.9	0.558	0.483	0.26	0.465	0.363	32.1	1.15	1.97	30	0.174	0.084	0.258	117.7	92.8	6.7	3.5	10.2	202708
+778	2011-06-22 19:00:00	Cory Joseph	cory-joseph	PG	\N	75.25	77.5	186	Texas	Toronto, ON	1991-08-20	\N	\N	1	19.82	36	32.4	3.8	8.9	0.422	1.4	3.5	0.413	1.4	2	0.699	3.6	3	1	0.3	1.5	1.8	10.4	4.2	9.9	1.6	3.9	1.6	2.3	4	3.4	1.1	0.3	1.7	2	11.6	0.526	0.503	0.391	0.227	0.348	17.3	1	2.02	15.1	0.075	0.075	0.151	112.7	95	2.7	3.8	6.5	202709
+779	2011-06-22 19:00:00	Malcolm Lee	malcolm-lee	SG	\N	77.5	81.75	198	UCLA	\N	1990-05-22	\N	\N	3	21.07	33	33.1	4.3	9.8	0.437	1.2	4	0.295	3.4	4.4	0.778	3.1	2	0.7	0.2	1.7	2.4	13.1	4.6	10.6	1.3	4.3	3.7	4.7	3.3	2.2	0.7	0.2	1.8	2.6	14.3	0.553	0.497	0.409	0.446	0.349	20.8	0.62	1.2	15.3	0.088	0.04	0.132	113.2	104.2	2.1	1.2	3.3	202723
+780	2011-06-22 19:00:00	Nikola Mirotić	nikola-mirotic	PF	\N	82	\N	220	Real Madrid (Spain)	Titograd, Montenegro	1991-02-11	\N	\N	\N	20.34	49	16.3	2.8	5.3	0.517	0.6	1.6	0.403	1.3	1.6	0.868	3.6	0.6	0.6	0.4	0.9	1.4	7.5	6.1	11.7	1.4	3.5	3	3.4	7.9	1.3	1.3	0.9	1.9	3.1	16.5	0.618	0.577	0.295	0.291	0.367	\N	\N	0.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	202703
+781	2011-06-22 19:00:00	Trey Thompkins	trey-thompkins	PF	\N	81.75	85	239	Georgia	\N	1990-05-29	\N	\N	3	21.05	30	31.2	6.5	13.4	0.481	0.8	2.5	0.311	2.7	4	0.689	7.6	1.4	1.1	1.7	2.5	2.2	16.4	7.5	15.5	0.9	2.8	3.2	4.6	8.8	1.6	1.3	1.9	2.9	2.6	18.9	0.536	0.51	0.184	0.295	0.331	29.9	0.37	0.55	24.2	0.081	0.085	0.162	104.3	93	3.9	2.9	6.8	202717
+782	2011-06-22 19:00:00	Brandon Knight	brandon-knight	PG	SG	75.25	78.75	177	Kentucky	\N	1991-12-02	\N	\N	1	19.54	38	35.9	5.7	13.5	0.423	2.3	6.1	0.377	3.6	4.5	0.795	4	4.2	0.7	0.2	3.2	2.2	17.3	5.7	13.5	2.3	6.1	3.6	4.5	4	4.2	0.7	0.2	3.2	2.2	17.4	0.553	0.508	0.45	0.333	0.371	27	0.87	1.32	19.3	0.106	0.053	0.156	109.9	101.5	4.5	0.9	5.5	202688
+783	2011-06-22 19:00:00	Darius Morris	darius-morris	PG	SG	77.25	79.5	190	Michigan	\N	1991-01-03	\N	\N	2	20.45	35	34.8	5.7	11.7	0.489	0.5	1.8	0.25	3.1	4.3	0.715	4	6.7	1	0	2.9	2.1	15	5.9	12.1	0.5	1.9	3.2	4.5	4.1	6.9	1.1	0	3	2.2	15.5	0.545	0.509	0.156	0.367	0.324	27.3	1.62	2.28	22.7	0.125	0.049	0.174	111.4	102.1	4.5	1.8	6.3	202721
+784	2011-06-22 19:00:00	Kemba Walker	kemba-walker	PG	\N	73	75.5	184	UConn	\N	1990-05-08	\N	\N	3	21.11	41	37.6	7.7	18	0.428	1.8	5.5	0.33	6.3	7.7	0.819	5.4	4.5	1.9	0.2	2.3	1.4	23.5	7.4	17.2	1.7	5.3	6	7.3	5.2	4.3	1.8	0.2	2.2	1.3	22.5	0.543	0.478	0.307	0.426	0.364	32.4	0.86	1.98	29.9	0.189	0.062	0.251	121.2	98.9	9.2	3.9	13.1	202689
+785	2011-06-22 19:00:00	Chris Singleton	chris-singleton	SF	\N	81	85	230	Florida State	\N	1989-11-21	\N	\N	3	21.57	28	29.1	4.4	10.2	0.434	1.3	3.4	0.368	3	4.5	0.667	6.8	1.2	2	1.5	2.2	3.2	13.1	5.5	12.6	1.5	4.2	3.7	5.6	8.4	1.5	2.4	1.8	2.7	4	16.2	0.531	0.495	0.332	0.441	0.341	24.5	0.36	0.54	21.9	0.074	0.118	0.192	105.6	84.2	3.3	5.6	9	202698
+786	2011-06-22 19:00:00	Klay Thompson	klay-thompson	SG	SF	79.25	81	206	Washington State	\N	1990-02-08	\N	\N	3	21.35	34	34.7	7.1	16.2	0.436	2.9	7.2	0.398	4.6	5.4	0.838	5.2	3.7	1.6	0.9	3.4	2.9	21.6	7.3	16.8	3	7.5	4.7	5.6	5.4	3.9	1.7	1	3.5	3	22.4	0.574	0.525	0.446	0.336	0.388	32.8	0.76	1.1	26.1	0.126	0.075	0.197	109.8	95.8	6.8	3	9.8	202691
+787	2011-06-22 19:00:00	Tristan Thompson	tristan-thompson	PF	\N	80.75	85.25	227	Texas	Toronto, ON	1991-03-13	\N	\N	1	20.26	36	30.7	4.8	8.8	0.546	0	0	\N	3.5	7.3	0.487	7.8	1.3	0.9	2.4	1.8	2.8	13.1	5.6	10.3	0	0	4.1	8.5	9.2	1.5	1.1	2.8	2.1	3.3	15.4	0.536	0.546	0	0.829	0.288	22.4	0.36	0.7	24.2	0.101	0.098	0.199	112.5	89.3	4.4	4.5	8.9	202684
+788	2011-06-22 19:00:00	Nolan Smith	nolan-smith	PG	\N	75.5	77.5	188	Duke	\N	1988-07-25	\N	\N	4	22.89	37	34	7	15.4	0.458	1.5	4.4	0.35	5.1	6.2	0.813	4.5	5.1	1.2	0.1	3.2	1.9	20.6	7.4	16.2	1.6	4.7	5.3	6.6	4.7	5.4	1.3	0.1	3.4	2.1	21.8	0.564	0.508	0.287	0.405	0.361	30.7	0.99	1.6	25.7	0.162	0.073	0.235	116.8	96	7.5	2.3	9.9	202701
+789	2011-06-22 19:00:00	Josh Selby	josh-selby	PG	SG	75	77.25	195	Kansas	Baltimore, MD	1991-03-27	\N	\N	1	20.22	26	20.4	2.8	7.4	0.373	1.3	3.6	0.362	1.1	1.4	0.757	2.2	2.2	0.8	0	2	1.7	7.9	4.9	13.1	2.3	6.4	1.9	2.5	3.9	3.8	1.4	0.1	3.6	3	14	0.489	0.461	0.487	0.192	0.365	24.4	0.73	1.06	11.9	0.03	0.068	0.098	95.5	96.5	0.3	2.1	2.4	202729
+790	2011-06-22 19:00:00	Jimmer Fredette	jimmer-fredette	PG	SG	74.5	76.5	196	BYU	\N	1989-02-25	\N	\N	4	22.3	37	35.8	9.4	20.7	0.452	3.4	8.5	0.396	6.8	7.6	0.894	3.4	4.3	1.3	0	3.5	1.3	28.9	9.4	20.8	3.4	8.5	6.9	7.7	3.5	4.4	1.3	0	3.6	1.3	29.1	0.594	0.533	0.409	0.369	0.402	37.8	0.76	1.22	30.9	0.2	0.057	0.257	118	100	10	0.8	10.8	202690
+791	2011-06-22 19:00:00	Derrick Williams	derrick-williams	PF	SF	80.75	85.5	248	Arizona	\N	1991-05-25	\N	\N	2	20.06	38	30	5.9	10	0.595	1.1	1.9	0.568	6.5	8.7	0.746	8.3	1.1	1	0.7	2.6	2.8	19.5	7.1	12	1.3	2.3	7.8	10.4	9.9	1.4	1.2	0.8	3.2	3.3	23.4	0.69	0.65	0.195	0.871	0.357	28.9	0.3	0.43	32.8	0.21	0.067	0.277	128.8	97.3	9.6	2.5	12.1	202682
+792	2011-06-22 19:00:00	Markieff Morris	markieff-morris	PF	\N	81.25	82.75	241	Kansas	Philadelphia, PA	1989-09-02	\N	\N	3	21.79	38	24.4	5.1	8.7	0.589	0.7	1.6	0.424	2.7	4	0.673	8.3	1.4	0.8	1.1	2.1	2.8	13.6	7.6	12.9	1	2.3	4	5.9	12.3	2.1	1.2	1.7	3	4.2	20.1	0.642	0.627	0.178	0.462	0.335	25.5	0.43	0.68	29.1	0.156	0.104	0.259	121.5	88.1	6.7	3.6	10.3	202693
+793	2011-06-22 19:00:00	Shelvin Mack	shelvin-mack	PG	\N	74.5	79.5	209	Butler	\N	1990-04-22	\N	\N	3	21.15	38	32.1	5.3	13	0.408	2.3	6.5	0.354	3.2	4.1	0.769	4.5	3.4	0.8	0.1	2.4	1.7	16	5.9	14.6	2.6	7.3	3.5	4.6	5	3.9	0.9	0.1	2.7	1.9	18	0.537	0.496	0.499	0.316	0.371	28.6	0.87	1.41	21	0.108	0.053	0.164	109.9	100.9	5.6	1	6.6	202714
+794	2011-06-22 19:00:00	Lavoy Allen	lavoy-allen	PF	\N	81	\N	225	Temple	\N	1989-02-04	\N	\N	4	22.36	33	33.9	4.7	9.7	0.48	0.2	0.5	0.294	2.1	3	0.697	8.6	2.3	0.7	1.8	1.6	2.3	11.6	5	10.3	0.2	0.5	2.2	3.2	9.1	2.4	0.7	2	1.7	2.4	12.3	0.519	0.488	0.053	0.308	0.318	19.8	0.69	1.39	20.3	0.079	0.086	0.164	110	93.1	2.6	3.1	5.6	202730
+795	2011-06-22 19:00:00	Jordan Williams	jordan-williams	PF	\N	81	84.25	247	Maryland	\N	1990-10-11	\N	\N	2	20.68	33	32.5	6.5	12	0.538	0	0	\N	4	6.9	0.575	11.8	0.6	0.7	1.4	1.6	2.4	16.9	7.1	13.3	0	0	4.4	7.6	13	0.7	0.8	1.5	1.8	2.7	18.7	0.552	0.538	0	0.576	0.3	24.5	0.16	0.4	25.2	0.116	0.097	0.212	115.1	89.9	4.3	2	6.3	202716
+796	2011-06-22 19:00:00	Donatas Motiejunas	donatas-motiejunas	PF	\N	84	\N	222	Benetton Treviso (Italy)	Kaunas, Lithuania	1990-09-20	\N	\N	\N	20.74	46	26.3	4.3	8.7	0.499	0.5	1.5	0.328	3.1	4.6	0.686	4.8	1	1.1	0.5	2.1	2.7	12.3	6	11.9	0.7	2	4.3	6.2	6.6	1.3	1.5	0.7	2.8	3.7	16.8	0.565	0.526	0.167	0.524	0.327	\N	\N	0.46	\N	\N	\N	\N	\N	\N	\N	\N	\N	202700
+797	2012-06-22 19:00:00	Tony Wroten	tony-wroten	SG	PG	78	81	203	Washington	\N	1993-04-13	\N	\N	1	19.18	35	30.3	5.7	12.8	0.443	0.3	1.6	0.161	4.4	7.5	0.583	5	3.7	1.9	0.4	3.8	2.7	16	6.7	15.2	0.3	1.9	5.2	8.9	6	4.4	2.2	0.4	4.5	3.2	18.9	0.488	0.453	0.125	0.591	0.3	31.2	0.79	0.98	20.4	0.06	0.06	0.121	98.8	98.7	2.5	2.2	4.7	203100
+798	2012-06-22 19:00:00	Khris Middleton	khris-middleton	SF	\N	80.25	82.75	216	Texas A&M	\N	1991-08-12	\N	\N	3	20.85	20	28.8	5.1	12.3	0.415	1	3.9	0.26	2	2.6	0.75	5	2.3	1	0.3	2.2	1.9	13.2	6.4	15.4	1.3	4.8	2.4	3.3	6.2	2.8	1.2	0.3	2.7	2.3	16.5	0.486	0.455	0.313	0.211	0.344	29.7	0.67	1.05	18.9	0.049	0.063	0.111	98	97.6	4.3	1.9	6.2	203114
+799	2012-06-22 19:00:00	Will Barton	will-barton	SG	SF	78	81.75	174	Memphis	\N	1991-01-06	\N	\N	2	21.44	35	35.3	6.6	12.9	0.509	1.1	3.1	0.346	3.8	5.1	0.749	8	2.9	1.4	0.7	2.1	2.1	18	6.7	13.2	1.1	3.1	3.9	5.2	8.1	3	1.5	0.7	2.2	2.2	18.4	0.587	0.55	0.237	0.396	0.343	25.8	0.67	1.36	26.6	0.149	0.084	0.233	119.3	92.3	6.9	2.8	9.8	203115
+800	2012-06-22 19:00:00	Robert Sacre	robert-sacre	C	\N	84	\N	260	Gonzaga	\N	1989-06-06	\N	\N	4	23.03	33	26.3	3.5	6.9	0.511	0	0.1	0	4.5	6	0.761	6.3	0.7	0.4	1.4	1.8	2.2	11.6	4.9	9.5	0	0.1	6.2	8.2	8.6	1	0.5	1.9	2.5	3	15.9	0.595	0.511	0.009	0.86	0.326	22.9	0.25	0.4	22.3	0.12	0.074	0.194	116.8	95.1	2.4	2.2	4.6	203135
+801	2012-06-22 19:00:00	Arnett Moultrie	arnett-moultrie	PF	\N	82.75	86.25	233	Mississippi State	\N	1990-11-18	\N	\N	3	21.58	30	35.8	6	10.9	0.549	0.3	0.6	0.444	4.1	5.3	0.78	10.5	1.2	0.8	0.8	2.4	2.2	16.4	6	11	0.3	0.6	4.2	5.3	10.5	1.2	0.8	0.8	2.4	2.2	16.5	0.61	0.561	0.055	0.485	0.339	23.3	0.3	0.48	25.2	0.134	0.052	0.186	118.3	100.4	4.8	0.4	5.2	203102
+802	2012-06-22 19:00:00	Jae Crowder	jae-crowder	SF	\N	78.5	81.25	241	Marquette	\N	1990-07-06	\N	\N	4	21.95	35	32.9	6.2	12.5	0.498	1.7	5.1	0.345	3.4	4.6	0.735	8.4	2.1	2.5	1	1.3	2.7	17.5	6.8	13.6	1.9	5.5	3.7	5.1	9.2	2.3	2.7	1.1	1.4	2.9	19.2	0.598	0.568	0.406	0.372	0.355	23.4	0.58	1.66	28.8	0.156	0.108	0.264	125.7	85.9	8.4	5.4	13.8	203109
+803	2012-06-22 19:00:00	Kevin Murphy	kevin-murphy	SG	\N	78.25	78.75	194	Tennessee Tech	\N	1990-03-06	\N	\N	3	22.28	33	34.5	7.2	16.3	0.444	2.4	5.8	0.416	3.8	5.2	0.721	5.2	2.3	0.8	0.2	3.3	2.2	20.6	7.6	17	2.5	6	3.9	5.4	5.5	2.4	0.9	0.2	3.4	2.2	21.5	0.549	0.518	0.353	0.32	0.365	32.3	0.5	0.7	20.8	0.095	0.032	0.13	105.6	106	2.8	-2.2	0.6	203122
+804	2012-06-22 19:00:00	Furkan Aldemir	furkan-aldemir	PF	\N	82	\N	230	Galatasaray (Turkey)	Konak, Turkey	1991-08-09	\N	\N	\N	20.85	15	16.8	2.3	4.1	0.557	0	0	\N	2.1	2.6	0.795	4.8	0.5	0.7	0.4	1.1	2.3	6.6	4.9	8.7	0	0	4.4	5.6	10.3	1	1.4	0.9	2.4	4.9	14.1	0.622	0.557	0	0.639	0.33	\N	\N	0.41	\N	\N	\N	\N	\N	\N	\N	\N	\N	203128
+805	2012-06-22 19:00:00	Mike Scott	mike-scott	PF	\N	80.75	82.75	241	Virginia	\N	1988-07-16	\N	\N	4	23.92	32	31.2	6.7	11.9	0.563	0.2	0.6	0.3	4.3	5.4	0.808	8.3	1.2	0.7	0.5	2.1	1.8	18	7.7	13.8	0.2	0.7	5	6.2	9.5	1.3	0.8	0.5	2.4	2	20.7	0.62	0.571	0.052	0.45	0.334	30.9	0.35	0.55	30.7	0.168	0.104	0.272	118.4	87.4	7.7	2.6	10.4	203118
+806	2012-06-22 19:00:00	Draymond Green	draymond-green	PF	\N	79.5	85.25	236	Michigan State	\N	1990-03-04	\N	\N	4	22.29	37	33.2	5.7	12.8	0.449	1.4	3.6	0.388	3.4	4.7	0.723	10.6	3.8	1.5	0.9	3	2.8	16.2	6.2	13.8	1.5	3.9	3.7	5.1	11.5	4.1	1.6	1	3.3	3.1	17.6	0.542	0.504	0.284	0.367	0.349	28.2	0.86	1.26	26.1	0.114	0.117	0.231	109.6	83.6	6.5	5.6	12.1	203110
+807	2012-06-22 19:00:00	Kim English	kim-english	SG	\N	77.75	78.5	192	Missouri	\N	1988-09-24	\N	\N	4	23.73	35	33.6	4.9	9.4	0.521	2.2	4.9	0.459	2.5	3.4	0.725	4.2	1.6	1.3	0.3	1.7	2.4	14.5	5.2	10	2.4	5.2	2.7	3.7	4.5	1.7	1.4	0.3	1.8	2.5	15.5	0.658	0.64	0.518	0.366	0.365	20	0.43	0.95	20.6	0.126	0.044	0.17	123.7	102.6	5.8	1.3	7.1	203119
+808	2012-06-22 19:00:00	Kostas Papanikolaou	kostas-papanikolaou	SF	\N	80	\N	230	Olympiacos (Greece)	Trikala, Greece	1990-07-31	\N	\N	\N	21.88	45	20.1	2.5	4.8	0.516	0.6	1.8	0.342	1.3	2	0.663	4	0.7	0.7	0.4	0.6	1.7	6.8	4.4	8.6	1.1	3.1	2.3	3.5	7.1	1.2	1.2	0.7	1	3	12.3	0.599	0.579	0.367	0.414	0.331	\N	\N	1.15	\N	\N	\N	\N	\N	\N	\N	\N	\N	203123
+809	2012-06-22 19:00:00	Maurice Harkless	maurice-harkless	SF	\N	80.75	84	207	St. John's	\N	1993-05-11	\N	\N	1	19.1	32	36.1	6	13.3	0.452	0.5	2.5	0.215	2.9	4.3	0.676	8.6	1.5	1.6	1.4	2.5	2.3	15.5	6	13.3	0.5	2.5	2.9	4.3	8.6	1.5	1.6	1.4	2.5	2.3	15.5	0.504	0.472	0.185	0.326	0.319	24.9	0.39	0.59	21.1	0.062	0.045	0.111	102.3	102	3	1	4	203090
+810	2012-06-22 19:00:00	Bradley Beal	bradley-beal	SG	\N	76.75	80	202	Florida	\N	1993-06-28	\N	\N	1	18.97	37	34.2	4.7	10.6	0.445	1.7	5	0.339	3.6	4.7	0.769	6.7	2.2	1.4	0.8	2.1	2.1	14.8	5	11.2	1.8	5.3	3.8	4.9	7.1	2.4	1.4	0.9	2.2	2.2	15.5	0.575	0.525	0.473	0.44	0.358	23	0.55	1.05	22	0.114	0.066	0.18	115.4	96.9	5.4	2.9	8.4	203078
+811	2012-06-22 19:00:00	Marquis Teague	marquis-teague	PG	\N	74	79.25	180	Kentucky	\N	1993-02-28	\N	\N	1	19.3	40	32.6	3.6	8.8	0.412	0.7	2	0.325	2.1	3	0.714	2.5	4.8	0.9	0.3	2.7	2.3	10	4	9.7	0.7	2.2	2.3	3.3	2.8	5.3	1	0.3	3	2.5	11.1	0.491	0.449	0.227	0.338	0.332	20.2	1.27	1.75	13.2	0.052	0.055	0.107	101.7	99.5	0.8	1.4	2.3	203104
+812	2012-06-22 19:00:00	John Henson	john-henson	PF	\N	82.5	89	216	North Carolina	\N	1990-12-28	\N	\N	3	21.47	35	29.1	5.9	11.7	0.5	0	0	\N	2	3.9	0.511	9.9	1.3	0.6	2.9	1.3	1.6	13.7	7.2	14.5	0	0	2.4	4.8	12.3	1.6	0.7	3.6	1.6	1.9	16.9	0.505	0.5	0	0.329	0.291	23.1	0.35	0.98	24.7	0.09	0.106	0.196	110.2	86.6	4	5	9	203089
+813	2012-06-22 19:00:00	Damian Lillard	damian-lillard	PG	\N	74.75	79.75	189	Weber State	\N	1990-07-15	\N	\N	4	21.92	32	34.5	7.2	15.5	0.467	2.9	7.2	0.409	7.1	8	0.887	5	4	1.5	0.2	2.3	1.9	24.5	7.5	16.1	3.1	7.5	7.4	8.4	5.2	4.2	1.5	0.2	2.4	2	25.5	0.635	0.562	0.465	0.519	0.396	33	0.82	1.73	34	0.243	0.051	0.29	128.4	101.6	9.1	0.7	9.8	203081
+814	2012-06-22 19:00:00	Meyers Leonard	meyers-leonard	C	\N	85.25	87	250	Illinois	\N	1992-02-27	\N	\N	2	20.3	32	31.8	5.3	9.1	0.584	0	0.3	0.091	2.9	4	0.732	8.2	1.3	0.5	1.9	2.1	2.9	13.6	6	10.3	0	0.4	3.3	4.5	9.3	1.5	0.5	2.1	2.4	3.3	15.3	0.618	0.586	0.038	0.436	0.322	22	0.45	0.63	24.1	0.114	0.071	0.181	115.5	95.9	3.6	3.6	7.2	203086
+815	2012-06-22 19:00:00	Orlando Johnson	orlando-johnson	SG	\N	77.25	83.25	224	UC Santa Barbara	\N	1989-03-11	\N	\N	4	23.27	31	34.4	6.7	14.8	0.451	2.3	5.3	0.427	4.1	5.9	0.698	5.8	2.9	1.1	0.7	2.5	1.8	19.7	7	15.5	2.4	5.5	4.3	6.1	6	3.1	1.1	0.8	2.6	1.9	20.6	0.56	0.527	0.357	0.397	0.36	30.5	0.62	1.2	26	0.15	0.045	0.195	115.5	102.6	6.5	-0.2	6.3	203111
+816	2012-06-22 19:00:00	Jeffery Taylor	jeffery-taylor	SF	SG	79.25	78.25	213	Vanderbilt	\N	1989-05-23	\N	\N	4	23.07	36	32.1	5.8	11.8	0.493	1.8	4.3	0.423	2.6	4.4	0.605	5.6	1.7	1.3	0.4	2.2	1.9	16.1	6.5	13.3	2.1	4.9	3	4.9	6.2	1.9	1.4	0.5	2.5	2.1	18.1	0.58	0.57	0.366	0.369	0.343	26.4	0.48	0.78	23.7	0.124	0.055	0.18	114.4	99.8	6.2	1.8	8	203106
+817	2012-06-22 19:00:00	Tomas Satoransky	tomas-satoransky	PG	SG	79.5	79.25	201	Sevilla (Spain)	Prague, Czechia	1991-10-30	\N	\N	\N	20.63	34	17.3	1.8	4.1	0.429	0.4	1.3	0.273	0.9	1.3	0.705	2.2	1.4	0.6	0	1.4	2.1	4.8	3.7	8.6	0.7	2.7	1.9	2.7	4.6	2.9	1.2	0.1	2.9	4.5	10	0.507	0.471	0.314	0.314	0.329	\N	\N	0.98	\N	\N	\N	\N	\N	\N	\N	\N	\N	203107
+818	2012-06-22 19:00:00	Justin Hamilton	justin-hamilton	C	\N	84	\N	260	LSU	\N	1990-04-01	\N	\N	4	22.21	33	30	4.8	9.7	0.494	0.1	0.4	0.25	3.2	4.2	0.781	7.2	0.9	0.8	1.3	1.7	2.5	12.9	5.7	11.6	0.1	0.4	3.9	5	8.7	1.1	0.9	1.6	2.1	3	15.5	0.553	0.498	0.038	0.428	0.33	22.6	0.31	0.53	22.7	0.105	0.069	0.174	113.1	96.5	3.8	2.1	5.9	203120
+819	2012-06-22 19:00:00	Andre Drummond	andre-drummond	C	\N	83.75	90.25	279	UConn	\N	1993-08-10	\N	\N	1	18.85	34	28.4	4.6	8.6	0.538	0	0.1	0	0.8	2.6	0.295	7.6	0.4	0.8	2.7	1.5	2.2	10	5.8	10.9	0	0.1	1	3.3	9.6	0.6	1	3.4	1.9	2.8	12.7	0.509	0.538	0.007	0.301	0.261	20.9	0.16	0.29	21.9	0.058	0.062	0.12	103.1	97.3	2	2.9	4.9	203083
+820	2012-06-22 19:00:00	Tyler Zeller	tyler-zeller	C	\N	84.5	84	247	North Carolina	\N	1990-01-17	\N	\N	4	22.41	38	28.2	5.8	10.5	0.553	0	0	\N	4.8	5.9	0.808	9.6	0.9	0.9	1.5	1.9	2.7	16.3	7.4	13.4	0	0	6.1	7.5	12.3	1.2	1.1	2	2.5	3.4	20.9	0.616	0.553	0	0.563	0.332	24.5	0.26	0.49	29.9	0.172	0.093	0.265	125.6	89.7	6.8	3.9	10.7	203092
+821	2012-06-22 19:00:00	Tornike Shengelia	tornike-shengelia	PF	\N	81	\N	217	Spirou Charleroi (Belgium)	Tbilisi, Georgia	1991-10-05	\N	\N	\N	20.7	9	20.7	3.1	6.9	0.452	0.4	1.6	0.286	1.7	2.4	0.682	4.3	1	0.3	0.1	1.7	3.4	8.3	5.4	12	0.8	2.7	2.9	4.3	7.5	1.7	0.6	0.2	2.9	6	14.5	0.518	0.484	0.226	0.355	0.328	\N	\N	0.6	\N	\N	\N	\N	\N	\N	\N	\N	\N	203129
+822	2012-06-22 19:00:00	Robbie Hummel	robbie-hummel	SF	\N	80.5	80.5	218	Purdue	\N	1989-03-08	\N	\N	4	23.28	35	32.2	5.5	13.3	0.417	2.1	5.4	0.383	3.2	3.9	0.825	7.2	1.9	0.7	1.2	0.9	2.1	16.4	6.2	14.8	2.3	6	3.6	4.4	8	2.1	0.7	1.3	1	2.3	18.3	0.54	0.495	0.404	0.295	0.375	26.3	0.48	2.06	25.7	0.149	0.05	0.199	120.1	101.6	7.8	1.6	9.4	203133
+823	2012-06-22 19:00:00	Terrence Jones	terrence-jones	PF	\N	81.5	86.25	252	Kentucky	\N	1992-01-09	\N	\N	2	20.44	38	29.3	4.7	9.3	0.5	0.4	1.3	0.327	2.6	4.2	0.627	7.2	1.3	1.3	1.8	1.6	2.4	12.3	5.7	11.4	0.5	1.6	3.2	5.1	8.8	1.6	1.6	2.2	2	2.9	15.1	0.547	0.523	0.138	0.446	0.316	22.4	0.39	0.82	24.3	0.111	0.097	0.208	115.3	88.9	5.2	4.9	10.2	203093
+824	2012-06-22 19:00:00	Jared Sullinger	jared-sullinger	PF	\N	81	85.25	268	Ohio State	\N	1992-03-04	\N	\N	2	20.29	37	30.4	6.2	11.9	0.519	0.4	1.1	0.4	4.7	6.2	0.768	9.2	1.2	1.2	1.1	1.9	2.9	17.5	7.3	14.1	0.5	1.3	5.6	7.3	10.9	1.5	1.4	1.3	2.3	3.5	20.7	0.591	0.538	0.091	0.519	0.339	27.9	0.31	0.65	30.2	0.171	0.107	0.281	121.8	86	7.5	4.1	11.7	203096
+825	2012-06-22 19:00:00	Doron Lamb	doron-lamb	SG	PG	76.75	78.75	199	Kentucky	\N	1991-11-06	\N	\N	2	20.61	40	31.2	4.4	9.2	0.474	1.9	4.1	0.466	3.1	3.7	0.826	2.7	1.5	0.5	0.1	1.1	1.8	13.7	5	10.6	2.2	4.7	3.5	4.3	3.1	1.7	0.5	0.1	1.3	2.1	15.8	0.624	0.577	0.442	0.404	0.376	19.7	0.45	1.36	19.2	0.147	0.051	0.199	131.1	101	5.3	1.9	7.3	203117
+826	2012-06-22 19:00:00	Andrew Nicholson	andrew-nicholson	PF	\N	81.5	88	234	St. Bonaventure	\N	1989-12-08	\N	\N	4	22.52	32	30.1	6.9	12	0.571	0.7	1.7	0.434	4	5.2	0.776	8.4	1	0.7	2	2.5	2.8	18.5	8.2	14.4	0.9	2	4.8	6.2	10.1	1.2	0.8	2.4	3	3.4	22.1	0.638	0.601	0.138	0.429	0.347	29.5	0.32	0.41	31.6	0.166	0.071	0.241	120.1	95.2	7.2	2.1	9.4	203094
+827	2012-06-22 19:00:00	Jeremy Lamb	jeremy-lamb	SG	\N	77.25	83	179	UConn	\N	1992-05-30	\N	\N	2	20.05	34	37.2	6.4	13.4	0.478	2.1	6.2	0.336	2.9	3.6	0.81	4.9	1.7	1.2	0.6	2	1.7	17.7	6.2	12.9	2	6	2.8	3.4	4.7	1.6	1.2	0.6	1.9	1.6	17.1	0.589	0.556	0.465	0.267	0.367	23.9	0.42	0.85	22.1	0.123	0.041	0.164	117.6	103.3	5.7	2	7.8	203087
+828	2012-06-22 19:00:00	John Jenkins	john-jenkins	SG	\N	76.25	80.5	212	Vanderbilt	\N	1991-03-06	\N	\N	3	21.28	35	33.6	6.2	13.1	0.474	3.8	8.7	0.439	3.7	4.4	0.837	2.9	1.2	0.8	0.3	1.6	1.2	19.9	6.6	14	4.1	9.3	3.9	4.7	3.1	1.3	0.9	0.3	1.7	1.3	21.3	0.656	0.62	0.666	0.334	0.407	26.2	0.32	0.76	26	0.184	0.037	0.221	129.4	104.3	10.3	1.5	11.8	203098
+829	2012-06-22 19:00:00	Quincy Miller	quincy-miller	SF	\N	82	85.25	219	Baylor	Chicago, IL	1992-11-18	\N	\N	1	19.58	37	24.4	3.7	8.4	0.447	0.6	1.9	0.348	2.5	3.1	0.816	4.9	1.4	0.7	0.6	1.8	1.9	10.6	5.5	12.3	1	2.8	3.7	4.5	7.3	2.1	1	1	2.6	2.8	15.7	0.541	0.485	0.223	0.369	0.35	23.9	0.49	0.8	19.4	0.093	0.058	0.155	110.1	98.8	3.4	1.9	5.3	203113
+830	2012-06-22 19:00:00	Austin Rivers	austin-rivers	SG	\N	77	79.25	203	Duke	\N	1992-08-01	\N	\N	1	19.88	34	33.2	5.1	11.8	0.433	1.7	4.7	0.365	3.6	5.4	0.658	3.4	2.1	1	0	2.3	2.2	15.5	5.5	12.8	1.8	5.1	3.9	5.9	3.7	2.3	1.1	0	2.5	2.4	16.8	0.538	0.505	0.396	0.458	0.345	25.2	0.52	0.9	16.9	0.085	0.035	0.124	107.8	104.7	3.2	0.8	4	203085
+831	2012-06-22 19:00:00	Royce White	royce-white	PF	\N	80	84	261	Iowa State	\N	1991-04-10	\N	\N	2	21.19	34	31.5	5.1	9.6	0.534	0.1	0.4	0.333	3	6	0.498	9.3	5	1.2	0.9	3.8	2.6	13.4	5.9	11	0.1	0.4	3.4	6.9	10.6	5.7	1.3	1.1	4.4	3	15.3	0.536	0.54	0.037	0.625	0.291	26.5	1.3	1.31	22.8	0.078	0.075	0.153	103.3	95.4	4.3	3.8	8.2	203091
+832	2012-06-22 19:00:00	Miles Plumlee	miles-plumlee	C	\N	83.75	84.75	252	Duke	\N	1988-09-01	\N	\N	4	23.79	34	20.5	2.6	4.3	0.61	0	0	\N	1.4	2.2	0.632	7.1	0.5	0.5	0.9	1.2	2.3	6.6	4.6	7.5	0	0	2.5	3.9	12.5	0.9	0.9	1.7	2.2	4	11.7	0.621	0.61	0	0.521	0.308	16.1	0.32	0.43	21.8	0.109	0.069	0.178	121.1	96.4	4.1	2.1	6.2	203101
+833	2012-06-22 19:00:00	Quincy Acy	quincy-acy	PF	\N	79.75	86.75	224	Baylor	\N	1990-10-06	\N	\N	4	21.7	38	29.7	4.2	7.2	0.577	0.1	0.1	0.6	3.6	4.6	0.782	7.4	1	0.9	1.8	1.9	3.1	12	5	8.7	0.1	0.2	4.3	5.5	9	1.2	1.1	2.2	2.3	3.7	14.5	0.638	0.582	0.018	0.635	0.33	19	0.34	0.54	23.5	0.124	0.071	0.198	123.1	95.3	3.4	3.4	6.9	203112
+834	2012-06-22 19:00:00	Dion Waiters	dion-waiters	SG	\N	76	79.25	221	Syracuse	\N	1991-12-01	\N	\N	2	20.54	37	24.1	4.6	9.6	0.476	1.1	3.1	0.363	2.3	3.2	0.729	2.3	2.5	1.8	0.3	1.3	1.9	12.6	6.9	14.4	1.7	4.6	3.5	4.8	3.4	3.7	2.7	0.5	1.9	2.8	18.9	0.565	0.534	0.317	0.331	0.351	26.7	0.79	1.92	26.3	0.144	0.076	0.224	118.6	93.9	6	4.8	10.8	203079
+835	2012-06-22 19:00:00	Bernard James	bernard-james	C	\N	82	87	230	Florida State	\N	1985-02-07	\N	\N	4	27.36	35	28	4.5	7.4	0.606	0	0	\N	1.8	3.3	0.552	8.1	0.5	0.7	2.3	2.1	1.9	10.8	5.8	9.5	0	0	2.4	4.3	10.4	0.6	1	3	2.7	2.5	13.9	0.602	0.606	0	0.448	0.297	20	0.18	0.22	23.3	0.082	0.094	0.176	109.8	89.1	3.6	4	7.6	203108
+836	2012-06-22 19:00:00	Festus Ezeli	festus-ezeli	C	\N	83.5	89.75	264	Vanderbilt	\N	1989-10-21	\N	\N	4	22.65	26	23.2	3.4	6.3	0.539	0	0	\N	3.2	5.3	0.604	5.9	0.3	0.4	2	2.2	3.2	10.1	5.3	9.9	0	0	5	8.3	9.2	0.5	0.7	3.1	3.5	4.9	15.6	0.567	0.539	0	0.842	0.304	25.2	0.12	0.14	21	0.073	0.066	0.139	103.4	96.1	0.4	3.3	3.7	203105
+837	2012-06-22 19:00:00	Anthony Davis	anthony-davis	PF	C	82.5	89.5	222	Kentucky	\N	1993-03-11	\N	\N	1	19.27	40	32	5.3	8.4	0.623	0.1	0.5	0.15	3.6	5.1	0.709	10.4	1.3	1.4	4.7	1	2	14.2	5.9	9.5	0.1	0.6	4	5.7	11.7	1.4	1.5	5.2	1.2	2.2	15.9	0.654	0.628	0.059	0.602	0.311	18.8	0.4	1.22	35.1	0.184	0.128	0.309	139	80.7	9.1	8.1	17.2	203076
+838	2012-06-22 19:00:00	Kris Joseph	kris-joseph	SF	SG	79	83	215	Syracuse	\N	1988-12-17	\N	\N	4	23.5	37	32.2	4.4	10.5	0.421	1.4	4	0.345	3.2	4.2	0.745	4.7	1.5	1.4	0.6	1.5	1.7	13.4	5	11.8	1.5	4.5	3.5	4.7	5.3	1.7	1.5	0.7	1.7	1.9	15	0.534	0.486	0.379	0.403	0.351	22.5	0.39	1.02	19.7	0.101	0.067	0.168	113.7	96.7	4.4	2.2	6.6	203126
+839	2012-06-22 19:00:00	Ognjen Kuzmić	ognjen-kuzmic	C	\N	84	\N	250	Clinicas Rincón (Spain)	Doboj, Bosnia and Herzegovina	1990-05-16	\N	\N	\N	22.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203136
+840	2012-06-22 19:00:00	Jared Cunningham	jared-cunningham	SG	\N	77	78.5	188	Oregon State	\N	1991-05-22	\N	\N	3	21.07	36	34.6	5.5	12.2	0.45	1.4	4.1	0.338	5.5	7.5	0.737	3.8	2.8	2.5	0.4	2.8	2.4	17.9	5.7	12.7	1.4	4.3	5.8	7.8	4	2.9	2.6	0.4	2.9	2.5	18.7	0.568	0.507	0.336	0.614	0.348	26	0.6	0.99	22.1	0.109	0.051	0.161	111.4	100.5	3.4	1.6	5	203099
+841	2012-06-22 19:00:00	Tyshawn Taylor	tyshawn-taylor	PG	\N	76	78.25	177	Kansas	\N	1990-04-12	\N	\N	4	22.18	39	33.4	5.8	12.2	0.477	1.5	3.9	0.382	3.5	5.1	0.688	2.3	4.8	1.3	0.2	3.5	2	16.6	6.2	13.1	1.6	4.2	3.8	5.5	2.5	5.1	1.4	0.2	3.8	2.1	17.9	0.569	0.538	0.321	0.42	0.345	27.5	1.08	1.35	19.8	0.095	0.064	0.16	106.9	97.7	5	2.2	7.2	203116
+842	2012-06-22 19:00:00	Thomas Robinson	thomas-robinson	PF	\N	80.75	87.25	244	Kansas	Washington, DC	1991-03-17	\N	\N	3	21.25	39	31.8	6.7	13.3	0.505	0.2	0.4	0.5	4.2	6.1	0.682	11.9	1.8	1.1	0.9	2.7	2.7	17.7	7.6	15	0.2	0.4	4.7	6.9	13.4	2.1	1.2	1	3	3.1	20.1	0.549	0.512	0.027	0.462	0.318	30	0.44	0.69	27.4	0.119	0.113	0.232	109.8	84.6	5.4	3.4	8.8	203080
+843	2012-06-22 19:00:00	Fab Melo	fab-melo	C	\N	84	86.5	255	Syracuse	\N	1990-06-20	\N	\N	2	21.99	30	25.4	3.3	5.8	0.566	0	0	\N	1.3	2	0.633	5.8	0.7	0.5	2.9	1.4	2.8	7.8	4.6	8.2	0	0	1.8	2.8	8.3	1	0.7	4.2	2	4	11	0.581	0.566	0	0.347	0.308	16.5	0.3	0.49	20.7	0.079	0.079	0.157	112.9	94.2	1	4.3	5.3	203097
+844	2012-06-22 19:00:00	Darius Miller	darius-miller	SF	\N	79.5	81	233	Kentucky	\N	1990-03-21	\N	\N	4	22.24	40	26.1	3.6	7.6	0.474	1.4	3.7	0.376	1.4	1.7	0.797	2.8	2.1	0.8	0.3	1.5	2.2	9.9	4.9	10.4	1.9	5.1	1.9	2.4	3.8	2.8	1.1	0.4	2	3	13.7	0.593	0.566	0.493	0.228	0.365	19.2	0.75	1.41	18.1	0.111	0.061	0.173	119.8	98.3	4.5	3.1	7.5	203121
+845	2012-06-22 19:00:00	Harrison Barnes	harrison-barnes	SF	\N	80	83.25	228	North Carolina	Ames, IA	1992-05-30	\N	\N	2	20.05	38	29.2	6	13.7	0.44	1.3	3.6	0.358	3.7	5.1	0.723	5.2	1.1	1.1	0.3	1.9	1.8	17.1	7.4	16.9	1.6	4.4	4.6	6.3	6.4	1.4	1.3	0.4	2.4	2.2	21	0.528	0.487	0.263	0.374	0.349	28.1	0.26	0.58	21.2	0.112	0.068	0.18	111.1	96.1	4.5	2.3	6.8	203084
+846	2012-06-22 19:00:00	Evan Fournier	evan-fournier	SG	\N	79	\N	205	Poitiers Basket (France)	Saint-Maurice, France	1992-10-29	\N	\N	\N	19.63	30	26	4.9	11.5	0.425	1.3	4.6	0.277	3	3.9	0.754	3.2	2.2	1.5	0.1	2.2	3.1	14	6.8	16	1.8	6.3	4.1	5.5	4.4	3.1	2.1	0.2	3	4.3	19.5	0.524	0.48	0.396	0.341	0.354	\N	\N	1.02	\N	\N	\N	\N	\N	\N	\N	\N	\N	203095
+847	2012-06-22 19:00:00	Kendall Marshall	kendall-marshall	PG	\N	76.25	77.5	198	North Carolina	\N	1991-08-19	\N	\N	2	20.83	36	33	2.9	6.3	0.467	0.8	2.2	0.354	1.5	2.2	0.696	2.6	9.8	1.2	0.2	2.8	1.6	8.1	3.2	6.8	0.8	2.4	1.7	2.4	2.8	10.6	1.3	0.2	3.1	1.7	8.9	0.558	0.529	0.351	0.351	0.333	13.9	3.24	3.48	17.2	0.087	0.061	0.148	114.9	98.4	3.8	2.8	6.6	203088
+848	2012-06-22 19:00:00	Terrence Ross	terrence-ross	SG	\N	79	79.25	197	Washington	\N	1991-02-05	\N	\N	2	21.36	35	31.1	6.1	13.4	0.457	2.1	5.5	0.371	2.1	2.7	0.766	6.4	1.4	1.3	0.9	2	2.8	16.4	7.1	15.6	2.4	6.4	2.4	3.1	7.4	1.6	1.5	1.1	2.3	3.3	19	0.558	0.534	0.413	0.2	0.368	25.3	0.36	0.7	22.3	0.11	0.066	0.18	113.6	96.8	5.1	2.8	7.9	203082
+849	2013-06-22 19:00:00	Trey Burke	trey-burke	PG	\N	73.25	77.5	187	Michigan	\N	1992-11-12	\N	\N	2	20.59	39	35.3	6.6	14.4	0.462	1.9	5.1	0.384	3.4	4.3	0.801	3.2	6.7	1.6	0.5	2.2	1.9	18.6	6.8	14.6	2	5.2	3.5	4.3	3.2	6.8	1.6	0.5	2.2	1.9	19	0.569	0.53	0.354	0.296	0.367	28.3	1.32	3.02	28.7	0.194	0.052	0.25	123.4	100	9.4	3.7	13.1	203504
+850	2013-06-22 19:00:00	Jeff Withey	jeff-withey	C	\N	84.5	86	222	Kansas	\N	1990-03-07	\N	\N	4	23.28	37	30.9	5	8.6	0.582	0	0	1	3.7	5.2	0.714	8.5	0.9	0.8	3.9	2	2.1	13.7	5.8	10	0	0	4.3	6	9.9	1.1	0.9	4.6	2.3	2.4	16	0.621	0.583	0.003	0.604	0.32	21.5	0.29	0.48	27.2	0.119	0.112	0.231	117.8	84.2	4.9	6.6	11.5	203481
+851	2013-06-22 19:00:00	Lorenzo Brown	lorenzo-brown	PG	\N	77.25	79	189	NC State	Roswell, GA	1990-08-26	\N	\N	3	22.81	33	34.2	4.2	10.1	0.419	0.6	2.3	0.263	3.3	4.2	0.771	4.3	7.2	2	0.6	3.5	2	12.4	4.5	10.7	0.6	2.4	3.4	4.5	4.6	7.6	2.1	0.6	3.6	2.1	13	0.509	0.449	0.228	0.419	0.335	22.8	1.61	2.1	19.9	0.081	0.046	0.128	105.6	102	3.5	2	5.5	203485
+852	2013-06-22 19:00:00	Archie Goodwin	archie-goodwin	SG	\N	77.25	81.5	189	Kentucky	\N	1994-08-17	\N	\N	1	18.83	33	31.8	4.8	10.8	0.44	0.5	1.9	0.266	4.1	6.4	0.637	4.6	2.7	1.1	0.5	3.1	2.9	14.1	5.4	12.3	0.6	2.2	4.6	7.3	5.2	3	1.2	0.5	3.5	3.3	16	0.509	0.464	0.179	0.594	0.316	27.2	0.62	0.87	16.9	0.061	0.057	0.118	100.1	99.1	1	1.1	2.1	203462
+853	2013-06-22 19:00:00	Raul Neto	raul-neto	PG	\N	74	\N	172	Gipuzkoa Basket (Spain)	Belo Horizonte, Brazil	1992-05-19	\N	\N	\N	21.08	34	24.5	3.1	6.7	0.461	0.7	1.7	0.39	1.7	2.1	0.792	2.4	2.9	1	0.1	1.8	2.5	8.5	4.5	9.8	1	2.5	2.5	3.1	3.5	4.3	1.5	0.1	2.6	3.7	12.5	0.553	0.511	0.259	0.316	0.349	\N	\N	1.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	203526
+854	2013-06-22 19:00:00	Victor Oladipo	victor-oladipo	SG	\N	76.25	81.25	213	Indiana	\N	1992-05-04	\N	\N	3	21.12	36	28.4	5.1	8.4	0.599	0.8	1.9	0.441	2.7	3.6	0.746	6.3	2.1	2.2	0.8	2.3	2.5	13.6	6.4	10.7	1.1	2.4	3.4	4.6	8	2.6	2.8	1	2.9	3.1	17.3	0.671	0.648	0.224	0.428	0.347	22.2	0.68	0.89	28.9	0.165	0.102	0.262	125.7	87.3	8.9	6.2	15.1	203506
+855	2013-06-22 19:00:00	Pierre Jackson	pierre-jackson	PG	\N	70.5	70	176	Baylor	\N	1991-08-29	\N	\N	4	21.8	36	34.8	6	14.1	0.427	2.4	6.8	0.359	5.3	6.7	0.8	3.8	7.1	1.5	0	3.4	2.2	19.8	6.2	14.5	2.5	7	5.5	6.9	3.9	7.3	1.6	0	3.5	2.3	20.5	0.574	0.514	0.484	0.474	0.375	29.5	1.38	2.09	26	0.169	0.051	0.224	117.5	100.1	8.5	2	10.5	203510
+856	2013-06-22 19:00:00	Kelly Olynyk	kelly-olynyk	PF	C	84	81.75	234	Gonzaga	\N	1991-04-19	\N	\N	3	22.16	32	26.4	6.7	10.7	0.629	0.3	0.9	0.3	4.1	5.3	0.776	7.3	1.7	0.7	1.1	2.4	2.3	17.8	9.2	14.6	0.4	1.3	5.6	7.2	10	2.3	0.9	1.5	3.3	3.1	24.3	0.675	0.642	0.088	0.497	0.333	30.7	0.49	0.71	36.2	0.222	0.09	0.317	127.1	89.9	10.4	3.6	13.9	203482
+857	2013-06-22 19:00:00	Andre Roberson	andre-roberson	SG	SF	79	83	206	Colorado	\N	1991-12-04	\N	\N	3	21.53	31	33.4	4.3	8.9	0.48	0.6	1.9	0.328	1.7	3.2	0.551	11.2	1.4	2.2	1.3	2.4	2.5	10.9	4.6	9.6	0.7	2	1.9	3.4	12.1	1.5	2.3	1.4	2.6	2.7	11.7	0.524	0.515	0.211	0.356	0.309	19.9	0.47	0.59	21.9	0.054	0.112	0.166	102.1	84.5	3.3	4.8	8.1	203460
+858	2013-06-22 19:00:00	Steven Adams	steven-adams	C	\N	84	88.5	255	Pittsburgh	Rotorua, New Zealand	1993-07-20	\N	\N	1	19.91	32	23.4	3.1	5.5	0.571	0	0	\N	1	2.2	0.443	6.3	0.6	0.7	2	1.1	1.6	7.2	4.8	8.4	0	0	1.5	3.4	9.8	1	1	3.1	1.7	2.5	11.1	0.555	0.571	0	0.4	0.282	17.7	0.31	0.57	23.2	0.085	0.101	0.187	112.9	87.6	4	4.2	8.1	203500
+859	2013-06-22 19:00:00	Anthony Bennett	anthony-bennett	PF	\N	79	\N	239	UNLV	\N	1993-03-14	\N	\N	1	20.26	35	27.1	5.8	10.8	0.533	1	2.7	0.375	3.5	5.1	0.701	8.1	1	0.7	1.2	1.9	2.3	16.1	7.7	14.4	1.4	3.6	4.7	6.7	10.8	1.3	0.9	1.6	2.5	3	21.4	0.609	0.58	0.253	0.467	0.343	27.5	0.32	0.52	28.3	0.147	0.093	0.24	117.6	89.6	6.1	2.5	8.6	203461
+860	2013-06-22 19:00:00	Carrick Felix	carrick-felix	SG	SF	78.25	81.25	203	Arizona State	\N	1990-08-17	\N	\N	4	22.83	35	35.3	5.4	10.8	0.5	1.5	4	0.374	2.3	3.5	0.664	8.1	1.6	1.4	1.1	2	3	14.6	5.5	11	1.5	4.1	2.4	3.6	8.3	1.7	1.5	1.1	2	3.1	14.9	0.586	0.569	0.368	0.323	0.34	21.3	0.45	0.81	21.5	0.097	0.068	0.165	112.7	96.2	3.7	2.3	6	203467
+861	2013-06-22 19:00:00	Gorgui Dieng	gorgui-dieng	C	\N	82.75	87.5	230	Louisville	Kébémer, Senegal	1990-01-18	\N	\N	3	23.41	33	31.1	3.8	7.1	0.534	0	0	\N	2.2	3.4	0.652	9.4	2	1.3	2.5	1.8	2.6	9.8	4.4	8.2	0	0	2.6	3.9	10.9	2.3	1.5	2.9	2.1	3	11.3	0.562	0.534	0	0.479	0.311	17	0.72	1.12	23.8	0.097	0.125	0.218	115.9	81.9	5.1	6.4	11.5	203476
+862	2013-06-22 19:00:00	Alex Abrines	alex-abrines	SG	SF	78	\N	190	Barcelona (Spain)	Palma, Spain	1993-08-01	\N	\N	\N	19.88	45	11	1.4	3.4	0.414	0.6	2	0.307	0.6	0.8	0.806	1	0.2	0.3	0.2	0.6	1.3	4	4.6	11	2	6.4	2.1	2.6	3.4	0.8	1.1	0.6	1.9	4.2	13.2	0.538	0.503	0.579	0.237	0.365	\N	\N	0.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	203518
+863	2013-06-22 19:00:00	Isaiah Canaan	isaiah-canaan	PG	\N	72	76.5	188	Murray State	\N	1991-05-21	\N	\N	4	22.07	31	36.5	6.9	16.1	0.431	3	8.2	0.37	4.9	6	0.822	3.5	4.3	1.5	0.1	3.2	1.9	21.8	6.8	15.9	3	8.1	4.8	5.9	3.5	4.2	1.5	0.1	3.1	1.8	21.5	0.576	0.525	0.509	0.371	0.386	30.9	0.89	1.36	25.2	0.159	0.046	0.209	116.1	101.6	5.8	0	5.8	203477
+864	2013-06-22 19:00:00	Peyton Siva	peyton-siva	PG	\N	73	75	181	Louisville	Seattle, WA	1990-10-24	\N	\N	4	22.65	40	31.2	3.5	8.6	0.404	1	3.3	0.288	2.1	2.5	0.867	2.4	5.7	2.3	0.2	2.7	2.6	10	4	9.9	1.1	3.8	2.5	2.8	2.7	6.6	2.6	0.2	3.1	3	11.6	0.513	0.459	0.384	0.285	0.358	20	1.72	2.15	17.5	0.074	0.096	0.17	106.6	89.1	2.6	4.7	7.3	203491
+865	2013-06-22 19:00:00	Grant Jerrett	grant-jerrett	PF	\N	82.25	86	232	Arizona	\N	1993-07-08	\N	\N	1	19.94	34	17.8	1.9	4.5	0.409	0.9	2.3	0.405	0.5	0.6	0.818	3.6	0.5	0.5	1	0.6	1.3	5.2	3.7	9.1	1.9	4.7	1.1	1.3	7.2	1.1	1	2	1.1	2.6	10.5	0.535	0.513	0.513	0.143	0.368	15.6	0.37	0.95	16.6	0.079	0.073	0.152	115.8	95.1	3.5	3.2	6.6	203511
+866	2013-06-22 19:00:00	Shabazz Muhammad	shabazz-muhammad	SF	\N	78.25	83	222	UCLA	\N	1992-11-13	\N	\N	1	20.59	32	30.8	6.3	14.3	0.443	1.3	3.3	0.377	4	5.6	0.711	5.2	0.8	0.7	0.1	1.6	1.7	17.9	7.4	16.6	1.5	3.9	4.7	6.6	6.1	1	0.8	0.1	1.9	1.9	20.9	0.528	0.487	0.232	0.395	0.346	29.8	0.19	0.53	21.9	0.118	0.032	0.15	110.1	105.4	5.8	-1.1	4.7	203498
+867	2013-06-22 19:00:00	Giannis Antetokounmpo	giannis-antetokounmpo	SF	\N	81	\N	196	Filathlitikos (Greece)	Athens, Greece	1994-12-06	\N	\N	\N	18.53	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203507
+868	2013-06-22 19:00:00	Tony Snell	tony-snell	SF	\N	79.25	83.5	198	New Mexico	\N	1991-11-10	\N	\N	3	21.6	35	31.2	4.1	9.7	0.422	1.8	4.7	0.39	2.5	2.9	0.843	2.6	2.9	0.8	0.5	2.1	1.3	12.5	4.7	11.2	2.1	5.4	2.8	3.4	3	3.3	1	0.6	2.4	1.5	14.4	0.562	0.516	0.481	0.299	0.375	22.8	0.98	1.4	17	0.077	0.055	0.132	107	99.5	4.1	2.1	6.2	203503
+869	2013-06-22 19:00:00	Allen Crabbe	allen-crabbe	SG	\N	78.25	83.25	197	California	\N	1992-04-09	\N	\N	3	21.19	33	36.2	6.5	14.2	0.459	1.9	5.6	0.348	3.4	4.2	0.813	6.1	2.6	1.1	0.7	2.5	2.1	18.4	6.5	14.1	1.9	5.5	3.4	4.2	6	2.6	1.1	0.7	2.5	2.1	18.3	0.568	0.528	0.393	0.297	0.366	26.6	0.61	1.05	22.3	0.11	0.06	0.171	110.8	97.8	6	2.4	8.4	203459
+870	2013-06-22 19:00:00	Seth Curry	seth-curry	PG	SG	75	76	179	Duke	Charlotte, NC	1990-08-23	\N	\N	4	22.82	35	32.3	5.6	12.1	0.465	2.7	6.2	0.438	3.5	4.3	0.809	2.5	1.5	0.9	0.2	1.2	1.7	17.5	6.3	13.5	3	6.9	3.9	4.8	2.8	1.7	1	0.2	1.3	1.9	19.5	0.617	0.577	0.512	0.358	0.386	24.5	0.4	1.29	22.7	0.159	0.042	0.202	124.8	102.4	8	1.8	9.8	203552
+871	2013-06-22 19:00:00	Jamaal Franklin	jamaal-franklin	SG	\N	77.25	83.25	191	San Diego State	\N	1991-07-21	\N	\N	3	21.91	32	33.1	5.2	12.5	0.411	1.3	4.6	0.272	5.3	6.8	0.781	9.5	3.3	1.6	0.8	3.4	2.6	16.9	5.6	13.6	1.4	5	5.8	7.5	10.3	3.6	1.7	0.9	3.7	2.8	18.4	0.536	0.461	0.367	0.546	0.35	29.9	0.72	0.95	24.8	0.095	0.106	0.2	104.9	85.7	4.2	4.3	8.5	203479
+872	2013-06-22 19:00:00	Ricky Ledo	ricky-ledo	SG	\N	78	79.25	197	Providence	Providence, RI	1992-09-10	\N	\N	1	20.77	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203495
+873	2013-06-22 19:00:00	Joffrey Lauvergne	joffrey-lauvergne	C	\N	83	\N	235	Partizan Belgrade (Serbia)	Mulhouse, France	1991-09-30	\N	\N	\N	21.71	21	14.7	2.4	4.7	0.51	0.4	0.8	0.471	1.4	2	0.732	3.8	0.5	0.2	0.2	1	2.3	6.6	5.8	11.5	0.9	2	3.5	4.8	9.2	1.3	0.6	0.5	2.3	5.6	16.1	0.587	0.551	0.173	0.418	0.344	\N	\N	0.55	\N	\N	\N	\N	\N	\N	\N	\N	\N	203530
+874	2013-06-22 19:00:00	Dewayne Dedmon	dewayne-dedmon	C	\N	83.5	88	239	USC	\N	1989-08-12	\N	\N	3	23.85	31	22.3	2.8	5.7	0.5	0	0.1	0	1	1.5	0.681	7	0.6	1.1	2.1	1.6	3	6.7	4.6	9.2	0	0.2	1.7	2.4	11.3	1	1.8	3.4	2.6	4.8	10.8	0.524	0.5	0.017	0.267	0.315	18.5	0.31	0.39	20.1	0.035	0.093	0.127	98.2	89.8	0.2	5.2	5.4	203473
+875	2013-06-22 19:00:00	Robert Covington	robert-covington	SF	PF	79.5	85.75	209	Tennessee State	\N	1990-12-14	\N	\N	4	22.51	23	31	5.6	12.8	0.435	1.7	4.5	0.388	4.2	4.9	0.85	8	1.3	2.2	1.7	2.4	2.8	17	6.5	14.9	2	5.2	4.9	5.7	9.3	1.5	2.5	2	2.8	3.2	19.8	0.564	0.503	0.35	0.384	0.374	28.1	0.36	0.54	27.9	0.129	0.073	0.208	113.7	94.1	4.4	1.9	6.3	203496
+876	2013-06-22 19:00:00	Mason Plumlee	mason-plumlee	C	\N	84.5	83	238	Duke	\N	1990-03-05	\N	\N	4	23.28	36	34.7	6.1	10.3	0.599	0	0	\N	4.8	7.1	0.681	9.9	1.9	1	1.4	2.9	2.6	17.1	6.4	10.6	0	0	5	7.3	10.3	2	1	1.5	3	2.7	17.7	0.628	0.599	0	0.688	0.315	24.5	0.47	0.68	26.3	0.138	0.083	0.221	117.2	92.2	5.9	3.6	9.5	203486
+877	2013-06-22 19:00:00	Rudy Gobert	rudy-gobert	C	\N	86	92.5	238	Cholet Basket (France)	Saint-Quentin, France	1992-06-26	\N	\N	\N	20.98	30	21.4	3.2	4.4	0.725	0	0.1	0	1.8	2.5	0.697	5	0.4	0.7	1.8	1.4	2.1	8.1	5.3	7.3	0	0.2	3	4.3	8.5	0.6	1.1	3	2.3	3.5	13.6	0.727	0.725	0.023	0.58	0.317	\N	\N	0.27	\N	\N	\N	\N	\N	\N	\N	\N	\N	203497
+878	2013-06-22 19:00:00	Nate Wolters	nate-wolters	PG	\N	76.75	75.75	196	South Dakota State	\N	1991-05-15	\N	\N	4	22.09	33	38.1	7.3	15.1	0.485	1.9	5.1	0.379	5.7	7	0.813	5.6	5.8	1.7	0.1	2.3	1.5	22.3	6.9	14.3	1.8	4.8	5.4	6.6	5.3	5.5	1.6	0.1	2.2	1.5	21.1	0.604	0.549	0.339	0.461	0.366	29.8	1.15	2.51	32	0.223	0.051	0.271	126.9	101	8.3	1.3	9.6	203489
+879	2013-06-22 19:00:00	Tony Mitchell	tony-mitchell	PF	\N	80.75	86.5	236	North Texas	\N	1992-04-07	\N	\N	2	21.19	32	32.4	4.4	9.9	0.44	0.9	3.1	0.3	3.3	4.9	0.675	8.5	0.8	1	2.7	2.4	2.9	13	4.9	11	1	3.5	3.7	5.5	9.5	0.9	1.1	3	2.7	3.2	14.4	0.53	0.487	0.314	0.494	0.331	22.7	0.25	0.33	20.8	0.062	0.069	0.127	102.5	95.9	1	1.2	2.2	203183
+880	2013-06-22 19:00:00	Lucas Nogueira	lucas-nogueira	C	\N	84	\N	220	Estudiantes (Spain)	São Gonçalo, Brazil	1992-07-26	\N	\N	\N	20.89	34	13.6	2.2	3.4	0.661	0	0	\N	0.9	1.4	0.667	3.4	0.3	0.5	1.1	0.6	1.8	5.4	5.9	9	0	0	2.5	3.7	9.1	0.7	1.2	3	1.5	4.8	14.4	0.668	0.661	0	0.417	0.313	\N	\N	0.47	\N	\N	\N	\N	\N	\N	\N	\N	\N	203512
+881	2013-06-22 19:00:00	Sergey Karasev	sergey-karasev	SG	SF	79	\N	205	Zenit (Russia)	Saint Petersburg, Russia	1993-10-26	\N	\N	\N	19.64	11	32.2	5.2	11.7	0.442	2.3	4.6	0.49	3.5	4.2	0.826	3	2.4	0.5	0.4	1.4	2.9	16.1	5.8	13.1	2.5	5.2	3.9	4.7	3.4	2.6	0.5	0.4	1.5	3.3	18	0.587	0.539	0.395	0.357	0.382	\N	\N	1.73	\N	\N	\N	\N	\N	\N	\N	\N	\N	203508
+882	2013-06-22 19:00:00	Cody Zeller	cody-zeller	PF	C	84.25	82.75	230	Indiana	\N	1992-10-05	\N	\N	2	20.7	36	29.5	5.5	9.8	0.564	0	0.1	0	5.4	7.2	0.757	8	1.3	1	1.3	2.3	2.2	16.5	6.7	12	0	0.1	6.6	8.8	9.8	1.6	1.3	1.5	2.7	2.7	20.1	0.624	0.564	0.006	0.734	0.325	26.5	0.36	0.58	29.8	0.181	0.094	0.275	124.5	89.5	7.2	3.8	11.1	203469
+883	2013-06-22 19:00:00	Nemanja Nedović	nemanja-nedovic	PG	\N	75	\N	190	Lietuvos Rytas (Lithuania)	Nova Varoš, Serbia	1991-06-16	\N	\N	\N	22	10	23.2	3.6	9.8	0.367	1.2	3.5	0.343	1.4	2	0.7	2.5	2.1	0.8	0.2	2.5	1.9	9.8	5.6	15.2	1.9	5.4	2.2	3.1	3.9	3.3	1.2	0.3	3.9	2.9	15.2	0.456	0.429	0.357	0.204	0.35	\N	\N	0.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	203517
+884	2013-06-22 19:00:00	Erick Green	erick-green	PG	\N	75	77.75	178	Virginia Tech	Winchester, VA	1991-05-09	\N	\N	4	22.11	32	36.4	8.2	17.2	0.475	1.9	4.9	0.389	6.8	8.3	0.816	4	3.8	1.3	0.2	2.2	1.4	25	8.1	17	1.9	4.8	6.7	8.2	3.9	3.7	1.3	0.2	2.1	1.4	24.7	0.592	0.53	0.285	0.485	0.367	32.4	0.83	1.75	31.6	0.213	0.01	0.223	123.6	111.4	10.1	1.3	11.4	203475
+885	2013-06-22 19:00:00	Shane Larkin	shane-larkin	PG	\N	71.5	70.75	171	Miami	\N	1992-10-02	\N	\N	2	20.71	36	36.4	5.1	10.6	0.479	1.9	4.7	0.406	2.4	3.1	0.777	3.8	4.6	2	0.1	2.3	1.6	14.5	5	10.5	1.9	4.7	2.4	3.1	3.8	4.5	1.9	0.1	2.3	1.6	14.3	0.6	0.569	0.445	0.293	0.363	21.3	1.23	2	22.6	0.131	0.07	0.198	119.2	95.9	5.2	3.8	9.1	203499
+886	2013-06-22 19:00:00	Nerlens Noel	nerlens-noel	C	\N	83.75	87.75	206	Kentucky	\N	1994-04-10	\N	\N	1	19.19	24	31.9	4.1	6.9	0.59	0	0	\N	2.3	4.3	0.529	9.5	1.6	2.1	4.4	1.9	2.6	10.5	4.6	7.8	0	0	2.6	4.9	10.7	1.8	2.4	5	2.1	2.9	11.8	0.583	0.59	0	0.627	0.293	17.4	0.55	0.84	27.3	0.084	0.12	0.204	112.9	82.3	4.3	7.8	12.1	203457
+887	2013-06-22 19:00:00	Solomon Hill	solomon-hill	SF	\N	79	81	226	Arizona	\N	1991-03-18	\N	\N	4	22.25	35	33	4.5	9.9	0.458	1.6	4.2	0.39	2.7	3.5	0.766	5.3	2.7	1.1	0.6	2.2	2.2	13.4	4.9	10.8	1.8	4.6	3	3.9	5.8	3	1.2	0.6	2.4	2.4	14.6	0.579	0.541	0.423	0.359	0.359	21.4	0.79	1.23	20.1	0.114	0.062	0.177	116.3	97.7	5.6	2.7	8.3	203524
+888	2013-06-22 19:00:00	Ryan Kelly	ryan-kelly	PF	\N	83.75	83.5	228	Duke	\N	1991-04-09	\N	\N	4	22.19	23	28.9	4.2	9.2	0.453	1.5	3.6	0.422	3	3.7	0.812	5.3	1.7	0.7	1.6	1	2.4	12.9	5.2	11.5	1.9	4.5	3.7	4.6	6.6	2.1	0.9	2	1.2	3	16	0.586	0.535	0.392	0.401	0.368	21.4	0.51	1.65	23.5	0.145	0.066	0.211	124.5	96.5	7.2	4	11.1	203527
+889	2013-06-22 19:00:00	Erik Murphy	erik-murphy	PF	\N	81.5	82.5	240	Florida	\N	1990-10-26	\N	\N	4	22.64	36	26.4	4.6	8.8	0.516	2	4.4	0.453	1.1	1.4	0.784	5.5	1.4	0.6	0.7	1.4	2.8	12.2	6.2	12	2.7	6	1.5	1.9	7.5	1.9	0.9	0.9	1.9	3.8	16.6	0.643	0.629	0.5	0.16	0.378	22.5	0.49	0.98	24.4	0.151	0.101	0.252	124.6	87	7.3	4.3	11.6	203513
+890	2013-06-22 19:00:00	Mike Muscala	mike-muscala	C	\N	83.5	85	230	Bucknell	\N	1991-07-01	\N	\N	4	21.96	34	31.7	6.7	13.1	0.509	0.1	0.5	0.25	5.3	6.7	0.789	11.1	2.3	0.5	2.4	1.7	2.2	18.7	7.6	14.9	0.1	0.5	6	7.6	12.6	2.6	0.6	2.7	1.9	2.5	21.3	0.575	0.513	0.036	0.509	0.328	31.6	0.59	1.34	35.7	0.196	0.111	0.308	121	84.5	8.6	3.9	12.5	203488
+891	2013-06-22 19:00:00	Alex Len	alex-len	C	\N	85	87.5	225	Maryland	Antratsyt, Ukraine	1993-06-16	\N	\N	2	20	38	26.4	4.6	8.5	0.534	0	0.2	0.125	2.8	4	0.686	7.8	1	0.2	2.1	1.6	2.7	11.9	6.2	11.6	0	0.3	3.8	5.5	10.7	1.3	0.3	2.8	2.2	3.6	16.2	0.57	0.535	0.025	0.472	0.316	22.8	0.34	0.62	24.5	0.12	0.08	0.199	116.2	93.1	3.6	3.2	6.8	203458
+892	2014-06-22 19:00:00	Shabazz Napier	shabazz-napier	PG	\N	73	75.25	175	UConn	Roxbury, MA	1991-07-14	\N	\N	4	22.93	40	35.1	5.3	12.4	0.429	2.2	5.4	0.405	5.2	6	0.87	5.9	4.9	1.8	0.3	2.9	2.1	18	5.5	12.7	2.2	5.5	5.3	6.1	6	5	1.9	0.3	2.9	2.2	18.5	0.591	0.517	0.433	0.48	0.381	27.5	1.12	1.71	25.5	0.14	0.088	0.225	118.9	94.9	7.5	4.5	12	203894
+893	2014-06-22 19:00:00	Marcus Smart	marcus-smart	PG	\N	75.25	81.25	227	Oklahoma State	Flower Mound, TX	1994-03-06	\N	\N	2	20.28	31	32.7	5.3	12.5	0.422	1.6	5.3	0.299	5.9	8.1	0.728	5.9	4.8	2.9	0.6	2.6	2.9	18	5.8	13.7	1.7	5.8	6.5	8.9	6.5	5.3	3.2	0.6	2.9	3.2	19.8	0.552	0.486	0.425	0.648	0.351	29.2	1.03	1.8	26.9	0.122	0.099	0.221	114.3	92.3	6.5	5.5	12	203935
+894	2014-06-22 19:00:00	Joel Embiid	joel-embiid	C	\N	84	\N	240	Kansas	\N	1994-03-16	\N	\N	1	20.25	28	23.1	3.8	6.1	0.626	0	0.2	0.2	3.5	5.1	0.685	8.1	1.4	0.9	2.6	2.4	3.4	11.2	6	9.5	0.1	0.3	5.5	8	12.6	2.1	1.4	4	3.7	5.2	17.4	0.655	0.629	0.029	0.836	0.316	23.4	0.49	0.58	28.2	0.111	0.105	0.21	116.6	90.9	5	6.9	11.9	203954
+895	2014-06-22 19:00:00	Damien Inglis	damien-inglis	PF	SF	80	\N	240	Chorale Roanne (France)	Cayenne, French Guiana	1995-05-20	\N	\N	\N	19.08	27	15.3	1.7	3.4	0.495	0.4	1.1	0.387	0.8	1.1	0.724	3.6	1	0.6	0.1	1.2	1.2	4.6	3.9	8	1	2.7	1.8	2.5	8.4	2.4	1.4	0.3	2.8	2.8	10.7	0.587	0.56	0.341	0.319	0.341	\N	\N	0.84	\N	\N	\N	\N	\N	\N	\N	\N	\N	203996
+896	2014-06-22 19:00:00	James Young	james-young	SG	\N	78.75	84	213	Kentucky	Flint, MI	1995-08-16	\N	\N	1	18.84	40	32.4	4.6	11.3	0.407	2.1	5.9	0.349	3.1	4.4	0.706	4.3	1.7	0.8	0.2	1.9	2.1	14.3	5.1	12.5	2.3	6.5	3.5	4.9	4.8	1.9	0.8	0.2	2.1	2.3	15.9	0.536	0.498	0.522	0.393	0.358	23.4	0.46	0.89	16.6	0.093	0.052	0.145	114.8	104.3	4.2	1.9	6.1	203923
+897	2014-06-22 19:00:00	Jordan Clarkson	jordan-clarkson	PG	\N	77	80	186	Missouri	Tampa, FL	1992-07-07	\N	\N	3	21.95	35	35.1	6	13.3	0.448	0.9	3.3	0.281	4.6	5.6	0.831	3.8	3.4	1.1	0.2	2.7	2.2	17.5	6.1	13.7	0.9	3.3	4.7	5.7	3.9	3.5	1.1	0.2	2.7	2.2	17.9	0.547	0.482	0.244	0.418	0.35	27.9	0.84	1.27	20.2	0.104	0.039	0.143	112.7	108.2	3.8	0.5	4.3	203903
+898	2014-06-22 19:00:00	Jordan Adams	jordan-adams	SG	\N	76.75	82	209	UCLA	Atlanta, GA	1994-07-08	\N	\N	2	19.94	36	30.1	5.8	11.9	0.485	1.4	4.1	0.356	4.4	5.3	0.836	5.3	2.3	2.6	0.1	1.5	2.2	17.4	6.9	14.3	1.7	4.9	5.3	6.3	6.4	2.8	3.2	0.2	1.8	2.6	20.8	0.603	0.545	0.34	0.441	0.366	26.5	0.55	1.56	28.3	0.155	0.081	0.237	125.1	96.9	7.4	4.1	11.5	203919
+899	2014-06-22 19:00:00	Spencer Dinwiddie	spencer-dinwiddie	PG	\N	78	80.25	205	Colorado	Los Angeles, CA	1993-04-06	\N	\N	3	21.2	17	31.1	3.6	7.7	0.466	1.5	3.7	0.413	6	7	0.857	3.1	3.8	1.5	0.2	1.8	1.9	14.7	4.2	8.9	1.8	4.3	6.9	8.1	3.5	4.4	1.8	0.3	2	2.2	17	0.667	0.565	0.481	0.908	0.372	21	1.25	2.13	24.8	0.166	0.06	0.234	135.3	102	6.2	3.9	10.1	203915
+900	2014-06-22 19:00:00	Russ Smith	russ-smith	PG	\N	72.75	75.5	160	Louisville	New York, NY	1991-04-19	\N	\N	4	23.16	37	29.3	6.1	13	0.468	1.9	4.9	0.387	4.1	5.9	0.705	3.3	4.6	2	0.1	2.8	2.5	18.2	7.5	16	2.3	6	5.1	7.2	4.1	5.7	2.5	0.1	3.5	3.1	22.4	0.576	0.541	0.376	0.451	0.359	30.7	1.03	1.64	26.2	0.144	0.107	0.247	116.9	89.8	7.2	4.3	11.5	203893
+901	2014-06-22 19:00:00	Gary Harris	gary-harris	SG	\N	76.5	78.75	205	Michigan State	Fishers, IN	1994-09-14	\N	\N	2	19.76	35	32.3	5.6	13	0.429	2.3	6.6	0.352	3.3	4.1	0.81	4	2.7	1.8	0.4	1.7	2.1	16.7	6.2	14.5	2.6	7.3	3.7	4.5	4.5	3	2	0.5	1.9	2.3	18.7	0.561	0.518	0.505	0.312	0.377	26.8	0.63	1.57	22.5	0.117	0.071	0.187	116.9	99.3	6.6	3.7	10.3	203914
+902	2014-06-22 19:00:00	Rodney Hood	rodney-hood	SG	\N	80.5	80.5	208	Duke	Meridian, MS	1992-10-20	\N	\N	2	21.66	35	32.9	5.5	11.8	0.464	2	4.8	0.42	3.1	3.9	0.807	3.9	2.1	0.7	0.3	1.5	2.6	16.1	6	12.9	2.2	5.3	3.4	4.2	4.3	2.3	0.8	0.3	1.7	2.8	17.6	0.59	0.55	0.41	0.328	0.373	23.8	0.55	1.39	20.1	0.125	0.042	0.17	122.5	107	6.3	0.9	7.2	203918
+903	2014-06-22 19:00:00	Nik Stauskas	nik-stauskas	SG	\N	78.5	79.75	207	Michigan	Mississauga, Ontario	1993-10-07	\N	\N	2	20.69	36	35.6	5.1	10.9	0.47	2.6	5.8	0.442	4.7	5.7	0.824	2.9	3.3	0.6	0.3	1.9	1.3	17.5	5.2	11.1	2.6	5.8	4.7	5.7	3	3.3	0.6	0.3	1.9	1.3	17.7	0.642	0.586	0.528	0.518	0.381	24.4	0.77	1.76	22.7	0.156	0.034	0.194	127.9	109	8.4	0.9	9.3	203917
+904	2014-06-22 19:00:00	Bruno Caboclo	bruno-caboclo	SF	\N	81	\N	200	Pinheiros Basquete (Brazil)	\N	1995-09-21	\N	\N	\N	18.74	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203998
+905	2014-06-22 19:00:00	Tyler Ennis	tyler-ennis	PG	\N	74.5	79.25	182	Syracuse	Brampton, Ontario	1994-08-24	\N	\N	1	19.81	34	35.7	4.4	10.6	0.411	0.9	2.5	0.353	3.4	4.4	0.765	3.4	5.5	2.1	0.2	1.7	2	12.9	4.4	10.7	0.9	2.5	3.4	4.4	3.4	5.5	2.1	0.2	1.7	2	13	0.511	0.453	0.236	0.414	0.343	21.9	1.47	3.22	21.3	0.105	0.072	0.181	117.4	98.7	4.8	3.9	8.7	203898
+906	2014-06-22 19:00:00	Thanasis Antetokounmpo	thanasis-antetokounmpo	SF	\N	78.25	84	205	Delaware 87ers	Athens, Greece	1992-07-18	\N	\N	\N	21.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203648
+907	2014-06-22 19:00:00	Jarnell Stokes	jarnell-stokes	PF	\N	80.5	85.25	263	Tennessee	Memphis, TN	1994-01-07	\N	\N	3	20.44	37	32.4	5.4	10.1	0.531	0	0	\N	4.3	6.2	0.696	10.6	2	0.7	0.9	2.1	2	15.1	6	11.3	0	0	4.8	6.9	11.8	2.3	0.8	1	2.3	2.2	16.8	0.576	0.531	0	0.613	0.317	24.6	0.56	0.97	27.6	0.14	0.087	0.227	121.9	95.4	7.1	2.4	9.5	203950
+908	2014-06-22 19:00:00	Josh Huestis	josh-huestis	SF	PF	79	\N	230	Stanford	Webster, TX	1991-12-19	\N	\N	4	22.49	36	35.2	4.3	9.6	0.451	0.7	2.1	0.338	1.8	2.8	0.627	8.2	1.2	0.6	1.9	1.2	2.1	11.2	4.4	9.8	0.7	2.2	1.8	2.9	8.4	1.2	0.6	2	1.2	2.2	11.4	0.51	0.488	0.223	0.295	0.321	18	0.38	1	17.3	0.06	0.066	0.126	110.2	100.7	2.8	2.5	5.3	203962
+909	2014-06-22 19:00:00	Dwight Powell	dwight-powell	PF	\N	83	84.5	234	Stanford	Toronto, ON	1991-07-20	\N	\N	4	22.91	36	32.4	4.9	10.5	0.462	0.3	1.1	0.256	4	5.9	0.687	6.9	3.1	1.3	0.8	2.9	3.1	14	5.4	11.7	0.3	1.2	4.5	6.5	7.6	3.5	1.4	0.9	3.2	3.5	15.6	0.527	0.475	0.103	0.557	0.318	26	0.78	1.08	19.7	0.062	0.069	0.13	104.3	99.6	2.7	3	5.7	203939
+910	2014-06-22 19:00:00	Devyn Marble	devyn-marble	SG	SF	78.5	81	192	Iowa	Southfield, MI	1992-09-21	\N	\N	4	21.74	33	30.2	5.5	13.2	0.42	1.6	4.5	0.349	4.3	6	0.714	3.2	3.6	1.8	0.2	1.7	1.9	17	6.6	15.8	1.9	5.4	5.1	7.2	3.8	4.3	2.2	0.3	2.1	2.3	20.3	0.528	0.479	0.342	0.456	0.352	28.4	0.83	2.07	22.6	0.121	0.064	0.185	116.2	100.8	6	3	9	203906
+911	2014-06-22 19:00:00	Cory Jefferson	cory-jefferson	PF	\N	81	84.5	218	Baylor	Killeen, TX	1990-12-26	\N	\N	4	23.47	38	29	4.8	9.7	0.5	0.4	1	0.368	3.6	5.6	0.64	8.2	1	0.4	1.3	1.3	2.2	13.7	6	12	0.5	1.2	4.5	7	10.2	1.2	0.5	1.6	1.7	2.7	16.9	0.553	0.519	0.103	0.582	0.319	24.2	0.31	0.73	23.8	0.12	0.058	0.178	119.9	102.7	4.9	1.4	6.3	203928
+912	2014-06-22 19:00:00	Aaron Gordon	aaron-gordon	PF	SF	80.75	83.75	220	Arizona	\N	1995-09-16	\N	\N	1	18.75	38	31.2	5	10.1	0.495	0.4	1.2	0.356	2	4.7	0.422	8	2	0.9	1	1.4	2.4	12.4	5.7	11.6	0.5	1.4	2.3	5.5	9.2	2.3	1	1.2	1.7	2.7	14.3	0.503	0.516	0.118	0.471	0.29	23.2	0.56	1.36	20.4	0.071	0.111	0.182	108.9	88.6	3.7	4.7	8.4	203932
+913	2014-06-22 19:00:00	Kyle Anderson	kyle-anderson	SF	\N	80.5	86.75	230	UCLA	New York, NY	1993-09-20	\N	\N	2	20.74	36	33.2	5	10.5	0.48	0.8	1.6	0.483	3.8	5.2	0.737	8.8	6.5	1.8	0.8	3.1	1.7	14.6	5.4	11.3	0.8	1.7	4.1	5.6	9.5	7	1.9	0.8	3.3	1.8	15.9	0.566	0.517	0.154	0.493	0.344	24.1	1.42	2.12	24.7	0.104	0.087	0.187	113.4	95.4	6.3	4.5	10.9	203937
+914	2014-06-22 19:00:00	Andrew Wiggins	andrew-wiggins	SF	\N	80	\N	197	Kansas	\N	1995-02-23	\N	\N	1	19.31	35	32.8	5.4	12.1	0.448	1.2	3.6	0.341	5	6.5	0.775	5.9	1.5	1.2	1	2.3	2.7	17.1	5.9	13.2	1.3	4	5.5	7.1	6.4	1.7	1.3	1.1	2.5	2.9	18.7	0.563	0.499	0.299	0.538	0.351	26.3	0.35	0.68	21.4	0.111	0.059	0.171	116.1	102.8	5.7	2.6	8.3	203952
+915	2014-06-22 19:00:00	Markel Brown	markel-brown	SG	\N	75.5	80.75	184	Oklahoma State	Alexandria, LA	1992-01-29	\N	\N	4	22.38	34	35.3	5.6	11.8	0.473	1.6	4.3	0.379	4.4	5.7	0.768	5.3	2.9	1	1	1.6	2.5	17.2	5.7	12	1.6	4.3	4.5	5.8	5.4	3	1	1	1.6	2.6	17.5	0.591	0.541	0.361	0.483	0.357	23.1	0.73	1.8	22	0.123	0.067	0.19	121.7	100.4	6.3	2.7	8.9	203900
+916	2014-06-22 19:00:00	Elfrid Payton	elfrid-payton	PG	\N	75.75	80	185	Louisiana	\N	1994-02-22	\N	\N	3	20.32	35	35.9	6.8	13.3	0.509	0.4	1.5	0.259	5.3	8.6	0.609	6	5.9	2.3	0.6	3.6	2.4	19.2	6.8	13.3	0.4	1.5	5.3	8.6	6	6	2.3	0.6	3.6	2.4	19.2	0.551	0.524	0.116	0.648	0.309	27.6	1.19	1.64	25.2	0.118	0.06	0.178	113.7	102.5	5.1	1.7	6.8	203901
+917	2014-06-22 19:00:00	Nick Johnson	nick-johnson	PG	SG	75	79.25	198	Arizona	Tempe, AZ	1992-12-22	\N	\N	3	21.48	38	33.1	5.4	12.5	0.432	1.6	4.4	0.367	3.8	4.9	0.781	4.1	2.8	1.1	0.7	1.7	2	16.3	5.9	13.6	1.8	4.8	4.2	5.4	4.4	3.1	1.2	0.7	1.8	2.2	17.7	0.549	0.498	0.357	0.395	0.36	26.3	0.67	1.67	21.5	0.115	0.099	0.213	117	92.4	5.8	4.9	10.7	203910
+918	2014-06-22 19:00:00	Semaj Christon	semaj-christon	PG	\N	75.25	78.5	186	Xavier	Cincinnati, OH	1992-11-01	\N	\N	2	21.62	34	35.3	5.9	12.4	0.479	0.6	1.4	0.388	4.6	6.9	0.668	2.7	4.2	1.3	0.2	2.6	2.1	17	6	12.6	0.6	1.5	4.7	7.1	2.7	4.3	1.3	0.2	2.7	2.2	17.3	0.544	0.501	0.117	0.56	0.326	26.9	0.94	1.6	19.1	0.087	0.043	0.133	109.9	106.4	3.7	1.5	5.2	203902
+919	2014-06-22 19:00:00	Noah Vonleh	noah-vonleh	PF	\N	81.5	88.25	247	Indiana	Haverhill, MA	1995-08-24	\N	\N	1	18.81	30	26.5	3.8	7.2	0.523	0.5	1.1	0.485	3.2	4.5	0.716	9	0.6	0.9	1.4	2.1	2.7	11.3	5.1	9.8	0.7	1.5	4.4	6.1	12.2	0.8	1.2	1.9	2.9	3.7	15.3	0.604	0.56	0.153	0.62	0.339	21.4	0.23	0.28	22.2	0.081	0.101	0.181	113	91.7	2.9	3.7	6.6	203943
+920	2014-06-22 19:00:00	Jerami Grant	jerami-grant	SF	PF	79.75	86.75	214	Syracuse	Portland, OR	1994-03-12	\N	\N	2	20.27	32	31.4	4.2	8.4	0.496	0	0.2	0	3.8	5.6	0.674	6.8	1.4	0.8	0.6	1.2	2.3	12.1	4.8	9.6	0	0.2	4.3	6.4	7.8	1.6	0.9	0.6	1.3	2.7	13.8	0.547	0.496	0.019	0.664	0.314	21.1	0.45	1.19	21.6	0.111	0.076	0.183	120.4	98.7	4	2.4	6.4	203924
+921	2014-06-22 19:00:00	Clint Capela	clint-capela	C	\N	82	\N	240	Élan Chalon (France)	Geneva, Switzerland	1994-05-18	\N	\N	\N	20.08	40	21.2	4.5	6.6	0.679	0	0	0	1.3	2.4	0.553	7.1	1	0.6	1.5	1.5	2.2	10.2	7.5	11.1	0	0	2.2	4	12.1	1.7	1	2.6	2.6	3.8	17.3	0.665	0.679	0.004	0.359	0.297	\N	\N	0.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	203991
+922	2014-06-22 19:00:00	Adreian Payne	adreian-payne	PF	\N	81.75	88	239	Michigan State	Dayton, OH	1991-02-19	\N	\N	4	23.32	31	28.1	5.7	11.4	0.503	1.4	3.4	0.423	3.5	4.5	0.79	7.3	1.3	0.5	0.9	2	2.6	16.4	7.4	14.6	1.8	4.3	4.5	5.7	9.3	1.7	0.6	1.2	2.6	3.3	21.1	0.607	0.565	0.294	0.39	0.364	28.9	0.35	0.65	25.1	0.124	0.078	0.198	116.5	97.6	5.5	2	7.5	203940
+923	2014-06-22 19:00:00	Lamar Patterson	lamar-patterson	SG	\N	77.25	83	226	Pittsburgh	Lancaster, PA	1991-08-12	\N	\N	4	22.85	36	32.6	5.6	12.7	0.441	2.2	5.7	0.388	3.7	4.9	0.754	4.9	4.3	1.4	0.3	2.6	2	17.1	6.2	14	2.5	6.3	4	5.4	5.4	4.7	1.6	0.4	2.9	2.2	18.9	0.569	0.528	0.45	0.382	0.368	29.1	1.03	1.66	24.2	0.123	0.078	0.201	115.4	97.7	8.1	3.2	11.4	203934
+924	2014-06-22 19:00:00	Cleanthony Early	cleanthony-early	SF	\N	79.25	82.75	209	Wichita State	Bronx, NY	1991-04-17	\N	\N	4	23.17	36	27.4	5.2	10.7	0.484	1.8	4.9	0.373	4.2	5	0.844	5.9	0.8	0.8	0.8	1.9	2.3	16.4	6.8	14.1	2.4	6.5	5.5	6.5	7.8	1	1.1	1	2.6	3	21.6	0.627	0.57	0.459	0.464	0.379	28.8	0.22	0.39	26.5	0.146	0.101	0.247	121.3	91.4	6.4	2.6	9	203921
+925	2014-06-22 19:00:00	Cameron Bairstow	cameron-bairstow	PF	C	81.75	84.75	252	New Mexico	Brisbane, Australia	1990-12-07	\N	\N	4	23.53	34	32.9	7	12.5	0.556	0	0.1	0.333	6.4	8.8	0.735	7.4	1.6	0.6	1.5	2	2.1	20.4	7.6	13.7	0	0.1	7	9.6	8.1	1.7	0.6	1.6	2.2	2.3	22.3	0.611	0.558	0.007	0.7	0.323	29.9	0.39	0.78	29	0.161	0.071	0.232	122.9	99.6	7.2	2.5	9.7	203946
+926	2014-06-22 19:00:00	Joe Harris	joe-harris	SG	\N	78.25	78	215	Virginia	Chelan, WA	1991-09-06	\N	\N	4	22.78	37	28.8	4	9.1	0.441	1.9	4.9	0.4	2	3.1	0.64	2.9	2.3	0.9	0.2	1.3	2.4	12	5	11.4	2.4	6.1	2.5	3.8	3.7	2.8	1.2	0.3	1.6	3	15	0.565	0.547	0.533	0.337	0.353	23.3	0.78	1.75	18.7	0.098	0.09	0.188	116	94.7	4.5	4.1	8.6	203925
+927	2014-06-22 19:00:00	Vasilije Micić	vasilije-micic	PG	\N	78	\N	200	KK Mega Basket (Serbia)	Kraljevo, Serbia	1994-01-13	\N	\N	\N	20.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	203995
+928	2014-06-22 19:00:00	Julius Randle	julius-randle	PF	\N	81	84	250	Kentucky	\N	1994-11-29	\N	\N	1	19.55	40	30.8	4.9	9.8	0.501	0.1	0.5	0.167	5.1	7.2	0.706	10.4	1.4	0.5	0.8	2.5	2.3	15	5.7	11.4	0.1	0.5	6	8.4	12.1	1.7	0.6	0.9	2.9	2.7	17.5	0.567	0.505	0.046	0.739	0.311	25.4	0.39	0.56	24.5	0.114	0.078	0.191	115.9	97.8	5.4	2.1	7.5	203944
+929	2014-06-22 19:00:00	Jabari Parker	jabari-parker	SF	PF	80	\N	241	Duke	Chicago, IL	1995-03-15	\N	\N	1	19.26	35	30.7	6.7	14.3	0.473	1.1	3	0.358	4.6	6.1	0.748	8.7	1.2	1.1	1.2	2.3	2.4	19.1	7.9	16.7	1.3	3.6	5.4	7.2	10.3	1.4	1.2	1.4	2.7	2.8	22.5	0.558	0.511	0.212	0.429	0.347	32.7	0.26	0.51	28.4	0.134	0.071	0.205	115	99.3	6.6	1	7.6	203953
+930	2015-06-22 19:00:00	Sam Dekker	sam-dekker	SF	\N	81	83.5	219	Wisconsin	\N	1994-05-06	\N	\N	3	21.12	40	31	5.3	10.2	0.525	1.3	3.8	0.331	2	2.8	0.708	5.5	1.2	0.5	0.5	0.9	1.1	13.9	6.2	11.8	1.5	4.4	2.3	3.3	6.4	1.4	0.6	0.5	1	1.2	16.2	0.605	0.586	0.372	0.278	0.344	23.2	0.37	1.36	25.5	0.165	0.061	0.226	128.6	99.8	8.5	1.8	10.4	1626155
+931	2015-06-22 19:00:00	Cedi Osman	cedi-osman	SG	SF	80	\N	215	Anadolu Efes (Turkey)	Ohrid, Macedonia	1995-04-08	\N	\N	\N	20.19	27	19.3	2.2	5.6	0.397	0.7	2.4	0.303	1.5	2.2	0.667	3.7	1.1	0.7	0.3	0.9	2.3	6.7	4.1	10.4	1.4	4.6	2.8	4.1	6.8	2	1.3	0.6	1.6	4.4	12.4	0.501	0.464	0.437	0.397	0.336	\N	\N	1.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	1626224
+932	2015-06-22 19:00:00	Darrun Hilliard	darrun-hilliard	SG	\N	78	\N	220	Villanova	\N	1993-04-13	\N	\N	4	22.18	35	28.8	4.9	11	0.44	2.3	5.8	0.387	2.3	2.9	0.796	3.1	2.1	1.8	0.3	1.2	2.2	14.3	6.1	13.8	2.8	7.3	2.9	3.7	3.9	2.6	2.3	0.4	1.5	2.8	17.9	0.576	0.543	0.528	0.267	0.38	25.2	0.63	1.76	23.1	0.131	0.087	0.218	119.5	92.8	5.6	4.4	10	1626199
+933	2015-06-22 19:00:00	Rakeem Christmas	rakeem-christmas	PF	C	81.75	89.25	243	Syracuse	\N	1991-12-01	\N	\N	4	23.54	31	34.3	6.5	11.9	0.552	0	0	0	4.4	6.2	0.712	9.1	1.5	0.9	2.5	2.5	3.4	17.5	6.9	12.5	0	0	4.6	6.5	9.5	1.6	1	2.6	2.6	3.6	18.3	0.591	0.552	0.003	0.519	0.319	25.8	0.41	0.6	26.5	0.113	0.086	0.203	113.6	92.5	4.3	3.8	8.1	1626176
+934	2015-06-22 19:00:00	Terry Rozier	terry-rozier	PG	\N	74.25	80.25	190	Louisville	\N	1994-03-17	\N	\N	2	21.25	36	35	5.9	14.5	0.411	1.3	4.4	0.306	3.9	4.9	0.79	5.6	3	2	0.2	2.2	1.7	17.1	6.1	14.9	1.4	4.5	4	5	5.7	3.1	2.1	0.2	2.3	1.8	17.6	0.509	0.457	0.301	0.338	0.353	27.8	0.71	1.37	22.1	0.095	0.095	0.19	108.3	90.4	4.8	4.6	9.4	1626179
+935	2015-06-22 19:00:00	Pat Connaughton	pat-connaughton	SG	\N	77.25	80	215	Notre Dame	\N	1993-01-06	\N	\N	4	22.44	38	35.6	4.4	9.4	0.466	2.4	5.8	0.423	1.3	1.7	0.781	7.4	1.5	0.7	0.9	1.2	2	12.5	4.4	9.5	2.5	5.9	1.3	1.7	7.5	1.5	0.7	1	1.2	2	12.7	0.615	0.597	0.618	0.18	0.373	17.7	0.43	1.3	19.4	0.104	0.056	0.16	122.1	101	6.1	1.5	7.6	1626192
+936	2015-06-22 19:00:00	Trey Lyles	trey-lyles	PF	\N	82.25	85.5	241	Kentucky	\N	1995-11-05	\N	\N	1	19.61	36	23	3.3	6.7	0.488	0.1	0.8	0.138	2.1	2.8	0.735	5.2	1.1	0.5	0.4	1.1	1.6	8.7	5.1	10.4	0.2	1.3	3.3	4.4	8.2	1.7	0.8	0.7	1.8	2.5	13.6	0.543	0.496	0.121	0.425	0.316	20.8	0.44	0.93	19.8	0.101	0.111	0.213	115.9	86.3	3.9	4.1	8	1626168
+937	2015-06-22 19:00:00	Jarell Martin	jarell-martin	PF	\N	81.25	81	239	LSU	\N	1994-05-24	\N	\N	2	21.07	33	35.1	6.1	12	0.509	0.4	1.6	0.269	4.2	6.2	0.69	9.2	1.8	1.2	0.7	2.8	2.8	16.9	6.3	12.3	0.4	1.6	4.3	6.3	9.5	1.8	1.2	0.7	2.9	2.9	17.3	0.565	0.526	0.131	0.511	0.321	24.8	0.42	0.64	21.6	0.093	0.083	0.176	109.8	94.2	3	1.6	4.7	1626185
+938	2015-06-22 19:00:00	Willy Hernangómez	willy-hernangomez	C	\N	83	\N	240	Sevilla (Spain)	Madrid, Spain	1994-05-27	\N	\N	\N	21.06	50	19.7	4	7.5	0.532	0	0.2	0.2	2.1	2.9	0.72	5.7	0.6	0.9	0.4	1.9	2.2	10.1	7.3	13.7	0.1	0.4	3.8	5.2	10.4	1.1	1.7	0.7	3.5	4	18.4	0.569	0.535	0.027	0.382	0.321	\N	\N	0.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	1626195
+939	2015-06-22 19:00:00	Justise Winslow	justise-winslow	SF	\N	78.5	82.25	222	Duke	\N	1996-03-26	\N	\N	1	19.23	39	29.1	4.4	9.1	0.486	1.2	2.8	0.418	2.6	4	0.641	6.5	2.1	1.3	0.9	1.8	2.8	12.6	5.5	11.3	1.5	3.5	3.2	4.9	8	2.6	1.6	1.1	2.3	3.4	15.6	0.572	0.551	0.309	0.438	0.338	22.9	0.58	1.15	22.3	0.109	0.088	0.194	115.2	92.8	5.3	4.6	10	1626159
+940	2015-06-22 19:00:00	Myles Turner	myles-turner	PF	C	83.5	88	239	Texas	\N	1996-03-24	\N	\N	1	19.23	34	22.2	3.4	7.6	0.455	0.5	1.8	0.274	2.8	3.3	0.839	6.5	0.6	0.3	2.6	1.4	2.4	10.1	5.6	12.3	0.8	3	4.5	5.3	10.6	1	0.5	4.2	2.2	3.9	16.5	0.556	0.488	0.241	0.436	0.348	25.1	0.25	0.43	25.5	0.101	0.111	0.212	112.6	86.3	3.4	6	9.3	1626167
+941	2015-06-22 19:00:00	Devin Booker	devin-booker	SG	\N	77.75	80.25	206	Kentucky	\N	1996-10-30	\N	\N	1	18.63	38	21.5	3.6	7.6	0.47	1.5	3.7	0.411	1.4	1.7	0.828	2	1.1	0.4	0.1	1	1.5	10	6	12.7	2.6	6.2	2.3	2.8	3.4	1.9	0.8	0.1	1.6	2.6	16.8	0.6	0.571	0.491	0.223	0.38	22.8	0.48	1.14	19.4	0.132	0.088	0.221	123.1	92.2	6.1	3.3	9.4	1626164
+942	2015-06-22 19:00:00	Cameron Payne	cameron-payne	PG	\N	73.5	79.25	183	Murray State	\N	1994-08-08	\N	\N	2	20.86	35	32.2	7	15.3	0.456	2.4	6.4	0.377	3.8	4.8	0.787	3.7	6	1.9	0.5	2.5	2.1	20.2	7.8	17.2	2.7	7.1	4.2	5.4	4.1	6.7	2.2	0.5	2.8	2.3	22.6	0.573	0.534	0.415	0.315	0.376	31.5	1.27	2.4	30.1	0.195	0.064	0.259	122.5	99	8.6	1.3	9.9	1626166
+943	2015-06-22 19:00:00	Dakari Johnson	dakari-johnson	C	\N	83.75	86	265	Kentucky	\N	1995-09-22	\N	\N	2	19.73	39	16.3	2	4	0.506	0	0	\N	2.3	3.7	0.625	4.6	0.7	0.4	0.9	1.1	1.8	6.4	4.5	8.8	0	0	5.1	8.2	10.1	1.6	0.8	2	2.4	3.9	14.1	0.553	0.506	0	0.923	0.307	22	0.4	0.69	22.3	0.101	0.126	0.227	113.9	82.6	3	5.1	8.2	1626177
+944	2015-06-22 19:00:00	Stanley Johnson	stanley-johnson	SF	\N	78.5	83.5	242	Arizona	\N	1996-05-29	\N	\N	1	19.05	38	28.4	4.6	10.3	0.446	1.1	3.1	0.371	3.5	4.7	0.742	6.5	1.7	1.5	0.4	2.2	2.6	13.8	5.8	13	1.4	3.9	4.4	5.9	8.2	2.1	1.9	0.5	2.7	3.3	17.4	0.551	0.501	0.297	0.456	0.349	26.6	0.44	0.77	22.5	0.104	0.107	0.211	111.1	87.6	5	4.4	9.4	1626169
+945	2015-06-22 19:00:00	Rashad Vaughn	rashad-vaughn	SG	\N	77	79	199	UNLV	\N	1996-08-16	\N	\N	1	18.84	23	32.3	6.3	14.3	0.439	2.3	6.1	0.383	3	4.3	0.694	4.8	1.6	0.8	0.3	2.2	2.3	17.8	7	15.9	2.6	6.8	3.3	4.8	5.4	1.7	0.9	0.4	2.4	2.6	19.9	0.547	0.521	0.43	0.299	0.363	30.8	0.38	0.72	20.2	0.075	0.059	0.135	103.6	100.4	4.5	0.1	4.5	1626173
+946	2015-06-22 19:00:00	Jahlil Okafor	jahlil-okafor	C	\N	83	\N	272	Duke	\N	1995-12-15	\N	\N	1	19.5	38	30.1	7.3	11.1	0.664	0	0	\N	2.6	5.1	0.51	8.5	1.3	0.8	1.4	2.5	2.1	17.3	8.8	13.2	0	0	3.1	6.1	10.1	1.5	0.9	1.7	3	2.6	20.7	0.641	0.664	0	0.462	0.291	27.6	0.34	0.52	30.7	0.157	0.077	0.234	119.9	95.4	7.7	2.7	10.4	1626143
+947	2015-06-22 19:00:00	Branden Dawson	branden-dawson	PF	\N	78.75	83	230	Michigan State	\N	1993-02-01	\N	\N	4	22.37	35	30.1	5.2	9.7	0.535	0	0	\N	1.5	3	0.49	9.1	1.7	1.2	1.7	1.9	2.1	11.9	6.2	11.6	0	0	1.7	3.5	10.9	2	1.4	2	2.3	2.5	14.2	0.533	0.535	0	0.306	0.288	23.4	0.52	0.88	23.8	0.076	0.095	0.167	106.6	91.1	4.4	4.2	8.6	1626183
+948	2015-06-22 19:00:00	Tyus Jones	tyus-jones	PG	\N	74	77	185	Duke	\N	1996-05-10	\N	\N	1	19.1	39	33.9	3.5	8.3	0.417	1.2	3.2	0.379	3.7	4.2	0.889	3.5	5.6	1.5	0.1	1.9	1.2	11.8	3.7	8.8	1.3	3.4	3.9	4.4	3.7	5.9	1.6	0.1	2.1	1.3	12.6	0.575	0.489	0.383	0.5	0.367	18.7	1.47	2.86	20.4	0.133	0.064	0.197	125	99.2	6	3.3	9.3	1626145
+949	2015-06-22 19:00:00	Richaun Holmes	richaun-holmes	PF	\N	81.5	85.5	243	Bowling Green	\N	1993-10-15	\N	\N	4	21.67	31	28.8	5.3	9.5	0.563	0.6	1.4	0.419	3.5	4.9	0.712	8	0.8	0.7	2.7	1.9	2.5	14.7	6.7	11.8	0.7	1.7	4.4	6.2	10	1	0.9	3.3	2.4	3.1	18.4	0.625	0.594	0.147	0.522	0.336	25.6	0.28	0.43	30.4	0.143	0.09	0.229	119.6	92.7	5.5	3.2	8.7	1626158
+950	2015-06-22 19:00:00	Emmanuel Mudiay	emmanuel-mudiay	PG	\N	77	\N	200	Guangdong (China)	Arlington, TX	1996-03-05	\N	\N	\N	19.28	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1626144
+951	2015-06-22 19:00:00	Justin Anderson	justin-anderson	SF	\N	78.25	83.75	231	Virginia	\N	1993-11-19	\N	\N	3	21.58	26	27.8	4	8.5	0.466	1.8	4	0.452	2.5	3.2	0.78	4	1.7	0.7	0.5	1.2	1.2	12.2	5.1	11	2.3	5.2	3.2	4.1	5.2	2.2	0.8	0.7	1.5	1.5	15.8	0.61	0.572	0.471	0.371	0.372	23.3	0.6	1.45	23.8	0.138	0.099	0.243	123.5	89.4	7.9	4.8	12.7	1626147
+952	2015-06-22 19:00:00	Josh Richardson	josh-richardson	SG	\N	78	\N	200	Tennessee	\N	1993-09-15	\N	\N	4	21.75	32	36.3	5.8	12.5	0.461	1.4	4	0.359	3.1	3.9	0.798	4.5	3.6	2.1	0.5	2.7	2.5	16	5.7	12.4	1.4	4	3.1	3.8	4.4	3.6	2.1	0.5	2.6	2.4	15.9	0.56	0.519	0.321	0.311	0.356	25.5	0.96	1.35	22.9	0.11	0.048	0.158	112.9	103.1	5.5	2.7	8.3	1626196
+953	2015-06-22 19:00:00	Mario Hezonja	mario-hezonja	SG	SF	80	\N	225	Barcelona (Spain)	Dubrovnik, Croatia	1995-02-25	\N	\N	\N	20.31	54	15.4	2.2	4.7	0.457	1.1	2.8	0.379	0.4	0.6	0.767	2	1.2	0.6	0.1	1.1	1.8	5.8	5.1	11.1	2.5	6.6	1	1.3	4.6	2.8	1.4	0.3	2.7	4.1	13.6	0.583	0.57	0.598	0.117	0.37	\N	\N	1.05	\N	\N	\N	\N	\N	\N	\N	\N	\N	1626209
+954	2015-06-22 19:00:00	Kevon Looney	kevon-looney	PF	\N	81.25	87.5	222	UCLA	\N	1996-02-06	\N	\N	1	19.36	36	30.9	4.2	8.9	0.47	0.6	1.5	0.415	2.6	4.1	0.626	9.2	1.4	1.3	0.9	1.3	2.9	11.6	4.9	10.4	0.7	1.7	3	4.8	10.7	1.6	1.5	1	1.5	3.4	13.5	0.532	0.505	0.165	0.458	0.324	19.7	0.46	1.13	21.9	0.101	0.072	0.173	116.5	97	4.7	2.3	7	1626172
+955	2015-06-22 19:00:00	Norman Powell	norman-powell	SG	\N	76.25	82.75	215	UCLA	\N	1993-05-25	\N	\N	4	22.06	36	34.6	5.9	13	0.456	1.1	3.3	0.319	3.5	4.7	0.751	4.7	2.1	1.8	0.4	2.2	2.5	16.4	6.2	13.5	1.1	3.4	3.7	4.9	4.9	2.2	1.9	0.5	2.3	2.6	17.1	0.54	0.497	0.255	0.362	0.343	25.3	0.51	0.94	19.6	0.08	0.061	0.141	107.4	99.8	3.1	3.2	6.2	1626181
+956	2015-06-22 19:00:00	Anthony Brown	anthony-brown	SF	\N	79.25	83	211	Stanford	\N	1992-10-10	\N	\N	4	22.68	37	35.7	4.8	11	0.431	2.1	4.8	0.441	3.1	3.9	0.795	6.9	2.5	0.8	0.2	1.9	2.1	14.8	4.8	11.1	2.2	4.9	3.2	4	7	2.6	0.8	0.2	2	2.1	14.9	0.573	0.528	0.439	0.358	0.37	21.7	0.7	1.31	19.5	0.109	0.052	0.158	116.8	102.3	5.5	1.6	7.1	1626148
+957	2015-06-22 19:00:00	Joe Young	joe-young	PG	\N	74	77	182	Oregon	\N	1992-06-27	\N	\N	4	22.97	36	36.7	7.4	16.4	0.448	2.5	7.1	0.357	3.4	3.7	0.925	4.4	3.8	1.1	0	2.4	1.4	20.7	7.2	16.1	2.5	6.9	3.4	3.6	4.4	3.7	1.1	0	2.4	1.4	20.3	0.568	0.524	0.431	0.226	0.391	28.7	0.74	1.55	23.2	0.133	0.036	0.169	115.4	106.2	6.5	0.3	6.7	1626202
+958	2015-06-22 19:00:00	Jerian Grant	jerian-grant	PG	\N	76.25	79.5	198	Notre Dame	\N	1992-10-09	\N	\N	4	22.69	38	37.1	5.4	11.2	0.478	1.3	4.2	0.316	4.5	5.7	0.78	3	6.7	1.7	0.5	2.2	2	16.5	5.2	10.9	1.3	4	4.3	5.6	2.9	6.5	1.6	0.5	2.1	1.9	16.1	0.592	0.536	0.37	0.511	0.35	24.2	1.39	3.09	25.5	0.173	0.045	0.219	125.6	104	7.3	1.7	9	1626170
+959	2015-06-22 19:00:00	Delon Wright	delon-wright	PG	\N	77.5	79.5	181	Utah	\N	1992-04-26	\N	\N	4	23.14	35	33.3	4.7	9.3	0.509	0.7	2.1	0.356	4.4	5.2	0.836	4.9	5.1	2.1	1	1.9	1.4	14.5	5.1	10	0.8	2.3	4.7	5.7	5.3	5.5	2.3	1.1	2.1	1.5	15.7	0.619	0.549	0.225	0.565	0.351	22.8	1.45	2.62	29.2	0.182	0.106	0.288	129.8	87.7	8.7	6.9	15.5	1626153
+960	2015-06-22 19:00:00	Jordan Mickey	jordan-mickey	PF	\N	80.25	87.25	238	LSU	\N	1994-07-09	\N	\N	2	20.94	31	34.9	6.2	12.2	0.504	0	0.3	0.111	3.1	4.7	0.646	9.9	1.3	0.9	3.6	3.3	2.6	15.4	6.4	12.6	0	0.3	3.2	4.9	10.3	1.3	1	3.7	3.4	2.7	15.9	0.533	0.505	0.024	0.388	0.31	25	0.3	0.4	21.7	0.044	0.096	0.144	99.7	90.2	1.2	3.6	4.8	1626175
+961	2015-06-22 19:00:00	Montrezl Harrell	montrezl-harrell	PF	\N	79.5	88.25	253	Louisville	\N	1994-01-26	\N	\N	3	21.39	35	35.1	6.1	10.7	0.566	0.3	1.1	0.243	3.3	5.5	0.597	9.2	1.4	0.9	1.2	2	2.1	15.7	6.2	11	0.3	1.1	3.3	5.6	9.4	1.4	1	1.2	2	2.2	16.1	0.588	0.578	0.098	0.508	0.304	22.3	0.41	0.71	24.8	0.117	0.098	0.215	117.4	90.3	5.9	3.6	9.5	1626149
+962	2015-06-22 19:00:00	Andrew Harrison	andrew-harrison	PG	\N	77.5	81	213	Kentucky	\N	1994-10-28	\N	\N	2	20.64	39	25.5	2.6	6.8	0.378	0.9	2.4	0.383	3.2	4.1	0.792	2.2	3.6	1	0.2	1.6	1.8	9.3	3.7	9.7	1.3	3.4	4.6	5.8	3.2	5	1.4	0.3	2.3	2.5	13.2	0.531	0.446	0.352	0.596	0.354	21.4	1.21	2.17	18	0.105	0.101	0.205	115.2	89.2	3.7	4.7	8.4	1626150
+963	2015-06-22 19:00:00	Frank Kaminsky	frank-kaminsky	C	\N	84.75	83	231	Wisconsin	Lisle, IL	1993-04-04	\N	\N	4	22.2	39	33.6	6.8	12.5	0.547	1.1	2.6	0.416	4	5.1	0.78	8.2	2.6	0.8	1.5	1.6	1.7	18.8	7.3	13.4	1.2	2.8	4.3	5.5	8.8	2.8	0.9	1.6	1.7	1.8	20.1	0.628	0.59	0.207	0.41	0.352	28.6	0.64	1.63	34.4	0.211	0.088	0.299	129.6	92.6	11.2	5	16.2	1626163
+964	2015-06-22 19:00:00	Bobby Portis	bobby-portis	PF	\N	82.5	86	246	Arkansas	\N	1995-02-10	\N	\N	2	20.35	36	29.9	6.9	12.9	0.536	0.4	0.8	0.467	3.2	4.3	0.737	8.9	1.2	1.1	1.4	1.6	2.2	17.5	8.4	15.6	0.5	1	3.8	5.2	10.7	1.4	1.3	1.7	1.9	2.6	21	0.582	0.552	0.064	0.335	0.337	26.7	0.33	0.75	29.5	0.156	0.071	0.227	122	96.9	7.6	1.4	8.9	1626171
+965	2016-06-22 19:00:00	Diamond Stone	diamond-stone	C	\N	82.25	86.75	254	Maryland	Milwaukee, WI	1997-02-10	\N	\N	1	19.35	35	23.1	4.8	8.4	0.568	0	0	\N	2.9	3.8	0.761	5.4	0.4	0.5	1.6	1.5	2.3	12.5	7.4	13.1	0	0	4.6	6	8.4	0.7	0.8	2.5	2.4	3.6	19.4	0.61	0.568	0	0.456	0.326	26.7	0.16	0.28	26.7	0.129	0.074	0.203	118.4	98.1	3.8	2	5.8	1627754
+966	2016-06-22 19:00:00	Michael Gbinije	michael-gbinije	SG	SF	78.75	79.5	205	Syracuse	\N	1992-06-05	\N	\N	4	24.04	37	37.9	6.1	13.2	0.461	2.5	6.3	0.391	2.9	4.3	0.662	4.1	4.3	1.9	0.4	2.8	2.6	17.5	5.8	12.5	2.3	6	2.7	4.1	3.9	4.1	1.8	0.3	2.7	2.5	16.6	0.574	0.554	0.477	0.328	0.354	24.8	1.06	1.51	20.9	0.103	0.06	0.163	113.4	101.8	5.3	3.1	8.4	1627771
+967	2016-06-22 19:00:00	Pascal Siakam	pascal-siakam	PF	\N	81.5	87.25	227	New Mexico State	\N	1994-02-04	\N	\N	2	22.37	34	34.6	8.1	15	0.539	0.1	0.4	0.2	4	5.9	0.678	11.6	1.7	1	2.2	2	2.7	20.3	8.4	15.6	0.1	0.5	4.2	6.2	12.1	1.8	1	2.3	2.1	2.8	21.1	0.569	0.542	0.029	0.396	0.316	29.1	0.42	0.87	31.6	0.15	0.116	0.265	119.7	86.7	5.5	2.7	8.2	1627783
+968	2016-06-22 19:00:00	Jarrod Uthoff	jarrod-uthoff	PF	SF	81.75	83.5	214	Iowa	\N	1993-05-19	\N	\N	4	23.08	33	30.8	6.6	14.8	0.448	2	5.2	0.382	3.7	4.5	0.813	6.3	1.1	1	2.6	1.2	1.5	18.9	7.7	17.3	2.3	6.1	4.3	5.3	7.4	1.3	1.1	3	1.3	1.8	22.1	0.559	0.515	0.355	0.308	0.374	29.1	0.26	0.95	28	0.134	0.079	0.213	118	96.3	7.9	3.9	11.8	1627784
+969	2016-06-22 19:00:00	Jaylen Brown	jaylen-brown	SF	\N	78.75	83.75	223	California	\N	1996-10-24	\N	\N	1	19.65	34	27.6	4.8	11.1	0.431	0.9	3	0.294	4.2	6.4	0.654	5.4	2	0.8	0.6	3.1	3.2	14.6	6.2	14.5	1.2	3.9	5.4	8.3	7	2.6	1	0.8	4	4.1	19.1	0.518	0.471	0.27	0.574	0.33	31.4	0.49	0.65	17.6	0.043	0.077	0.115	98.5	97.2	1.1	2.5	3.6	1627759
+970	2016-06-22 19:00:00	Taurean Prince	taurean-prince	SF	\N	79.75	83.5	220	Baylor	\N	1994-08-22	\N	\N	4	21.82	34	30.6	5.5	12.7	0.432	1.6	4.3	0.361	3.3	4.3	0.774	6.1	2.3	1.3	0.7	2.7	2.5	15.9	6.5	15	1.8	5.1	3.9	5.1	7.1	2.7	1.5	0.9	3.2	3	18.7	0.537	0.493	0.339	0.337	0.36	28.1	0.53	0.85	20.8	0.092	0.054	0.146	109.7	102.7	5.3	1.3	6.6	1627752
+971	2016-06-22 19:00:00	Thon Maker	thon-maker	PF	\N	84.75	87	216	None	Perth, Australia	1997-02-25	\N	\N	\N	19.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627748
+972	2016-06-22 19:00:00	Chinanu Onuaku	chinanu-onuaku	C	\N	82	86.75	245	Louisville	\N	1996-11-01	\N	\N	2	19.63	31	24.6	4.4	7.1	0.62	0	0	0	1.1	1.8	0.589	8.5	1.6	0.8	2	2.1	3	9.9	6.5	10.4	0	0	1.6	2.6	12.4	2.4	1.1	2.9	3.1	4.3	14.5	0.62	0.62	0.005	0.253	0.302	20.5	0.63	0.78	26.4	0.094	0.121	0.22	114.7	84.9	4.1	6.3	10.5	1627778
+973	2016-06-22 19:00:00	Domantas Sabonis	domantas-sabonis	PF	\N	82	\N	235	Gonzaga	\N	1996-05-03	\N	\N	2	20.13	36	31.9	6.6	10.9	0.611	0.1	0.4	0.357	4.2	5.4	0.769	11.8	1.8	0.6	0.9	2.6	3.2	17.6	7.5	12.3	0.2	0.4	4.7	6.1	13.3	2	0.7	1	2.9	3.6	19.8	0.654	0.618	0.036	0.499	0.33	25.5	0.44	0.7	29.3	0.16	0.097	0.261	124.7	91.2	5.7	2.5	8.2	1627734
+974	2016-06-22 19:00:00	Alex Poythress	alex-poythress	PF	\N	80	\N	239	Kentucky	\N	1993-09-06	\N	\N	4	22.78	31	23.6	3.8	6.4	0.601	0.2	0.7	0.304	2.3	3.3	0.706	6	0.3	0.6	0.7	1.2	3.6	10.2	5.9	9.7	0.3	1.1	3.5	5	9.2	0.5	0.9	1	1.8	5.5	15.6	0.643	0.619	0.116	0.515	0.323	19.3	0.13	0.27	21.3	0.12	0.077	0.191	125.1	97.5	3.2	2.5	5.7	1627816
+975	2016-06-22 19:00:00	Denzel Valentine	denzel-valentine	SF	SG	77.75	82.75	210	Michigan State	\N	1993-11-16	\N	\N	4	22.59	31	33	6.6	14.3	0.462	3.4	7.5	0.444	2.6	3.1	0.853	7.5	7.8	1	0.2	2.7	1.7	19.2	7.2	15.6	3.7	8.2	2.9	3.3	8.2	8.5	1.1	0.2	3	1.8	21	0.608	0.579	0.527	0.214	0.402	28.5	1.61	2.84	29.7	0.196	0.086	0.282	127.1	94.1	11.3	4.3	15.6	1627756
+976	2016-06-22 19:00:00	Guerschon Yabusele	guerschon-yabusele	PF	\N	80	\N	260	Rouen Métropole (France)	Dreux, France	1995-12-17	\N	\N	\N	20.5	34	28.7	4.3	7.9	0.539	0.8	1.8	0.426	2.2	2.9	0.765	6.8	1.1	1.1	0.4	1.6	2.5	11.5	5.4	9.9	1	2.3	2.8	3.6	8.6	1.3	1.4	0.6	2	3.1	14.4	0.62	0.587	0.227	0.364	0.347	\N	\N	0.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627824
+977	2016-06-22 19:00:00	Cheick Diallo	cheick-diallo	PF	C	81	88.5	219	Kansas	\N	1996-09-13	\N	\N	1	19.76	27	7.5	1.2	2.1	0.569	0	0	\N	0.6	1	0.556	2.5	0	0.3	0.9	0.6	1.4	3	5.9	10.3	0	0	2.7	4.8	12.1	0.2	1.2	4.1	3	6.8	14.4	0.572	0.569	0	0.466	0.297	21.7	0.04	0.06	20.5	0.04	0.119	0.158	101.3	85.5	-1.6	5.4	3.7	1627767
+978	2016-06-22 19:00:00	Abdel Nader	abdel-nader	SF	\N	78	\N	220	Iowa State	Skokie, IL	1993-09-25	\N	\N	4	22.73	35	31.1	4.6	9.6	0.478	1.5	4	0.371	2.2	3	0.736	5	1.5	1.1	0.7	2.3	2.8	12.9	5.3	11.2	1.7	4.6	2.6	3.5	5.8	1.8	1.2	0.8	2.6	3.2	15	0.583	0.555	0.415	0.315	0.353	21.5	0.37	0.68	15.8	0.055	0.051	0.103	105.4	104.3	1.9	1.6	3.5	1627846
+979	2016-06-22 19:00:00	Deyonta Davis	deyonta-davis	PF	\N	82.5	86.5	237	Michigan State	\N	1996-12-02	\N	\N	1	19.54	35	18.6	3.4	5.7	0.598	0	0	\N	0.7	1.1	0.605	5.5	0.7	0.3	1.8	0.9	2.3	7.5	6.6	11	0	0	1.3	2.1	10.6	1.4	0.5	3.5	1.7	4.4	14.5	0.601	0.598	0	0.191	0.304	19.3	0.39	0.87	23.9	0.105	0.098	0.203	121.4	91.1	3.4	4.5	7.8	1627738
+980	2016-06-22 19:00:00	Malachi Richardson	malachi-richardson	SG	\N	78.25	84	200	Syracuse	\N	1996-01-05	\N	\N	1	20.45	37	34.4	4.1	11.1	0.369	2.1	6.1	0.353	3.1	4.2	0.72	4.3	2.1	1.1	0.3	2.1	2.5	13.4	4.3	11.7	2.2	6.3	3.2	4.4	4.5	2.2	1.2	0.3	2.2	2.6	14	0.51	0.465	0.544	0.381	0.359	23.2	0.55	0.97	13.8	0.047	0.057	0.104	102.6	102.3	1.4	2.1	3.5	1627781
+981	2016-06-22 19:00:00	Marcus Paige	marcus-paige	PG	\N	73.75	78.25	164	North Carolina	\N	1993-09-11	\N	\N	4	22.77	34	31.6	4.1	10.4	0.398	2.2	6.1	0.356	2.1	2.7	0.774	2.5	3.8	1.1	0.4	1.2	1.5	12.6	4.7	11.9	2.5	7	2.4	3.1	2.9	4.3	1.3	0.5	1.4	1.7	14.3	0.537	0.503	0.588	0.263	0.371	19.4	0.96	3.05	17.4	0.108	0.048	0.156	122.3	104.8	5.1	2.8	8	1627779
+982	2016-06-22 19:00:00	Stephen Zimmerman	stephen-zimmerman	C	\N	83.75	87.25	234	UNLV	\N	1996-09-09	\N	\N	1	19.77	26	26.2	3.9	8.2	0.477	0.2	0.7	0.294	2.4	3.9	0.624	8.7	0.8	0.5	2	2.1	3	10.5	5.4	11.3	0.3	0.9	3.3	5.3	12	1.2	0.7	2.7	2.9	4.2	14.4	0.519	0.488	0.079	0.472	0.31	21.9	0.29	0.41	17.6	0.029	0.094	0.124	98.7	92.7	-0.9	2.3	1.4	1627757
+983	2016-06-22 19:00:00	Zhou Qi	zhou-qi	C	\N	86.25	91.75	218	Xinjiang (China)	Xinxiang, China	1996-01-16	\N	\N	\N	20.42	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627753
+984	2016-06-22 19:00:00	Ben Simmons	ben-simmons	SF	PF	82	\N	240	LSU	\N	1996-07-20	\N	\N	1	19.91	33	34.9	6.5	11.7	0.56	0	0.1	0.333	6	9	0.67	11.8	4.8	2	0.8	3.4	2.8	19.2	6.8	12.1	0	0.1	6.2	9.3	12.1	4.9	2	0.8	3.5	2.9	19.8	0.6	0.561	0.008	0.769	0.314	26.4	1.04	1.42	29	0.136	0.073	0.209	117.2	98.4	7	3.3	10.3	1627732
+985	2016-06-22 19:00:00	Wayne Selden	wayne-selden	SG	\N	77.75	82.5	232	Kansas	\N	1994-09-30	\N	\N	3	21.72	38	29.8	5	10.5	0.474	1.9	5	0.392	1.9	3.1	0.612	3.4	2.6	0.7	0.3	1.9	2	13.8	6	12.7	2.3	6	2.3	3.7	4.2	3.2	0.9	0.3	2.3	2.4	16.6	0.576	0.566	0.474	0.291	0.347	23.1	0.71	1.41	17.9	0.095	0.06	0.155	114	101	5	2.4	7.3	1627782
+986	2016-06-22 19:00:00	Tyler Ulis	tyler-ulis	PG	\N	70	74	149	Kentucky	\N	1996-01-05	\N	\N	2	20.45	35	36.8	5.5	12.6	0.434	1.6	4.6	0.344	4.8	5.6	0.856	3	7	1.5	0.1	2	1.8	17.3	5.4	12.4	1.5	4.5	4.7	5.5	2.9	6.9	1.4	0.1	1.9	1.8	16.9	0.567	0.497	0.362	0.441	0.366	23.3	1.47	3.57	24	0.168	0.053	0.22	128.8	103.6	7.9	2.4	10.3	1627755
+987	2016-06-22 19:00:00	Dejounte Murray	dejounte-murray	PG	SG	77	\N	170	Washington	\N	1996-09-19	\N	\N	1	19.75	34	33.5	5.9	14.3	0.416	1	3.5	0.288	3.2	4.9	0.663	6	4.4	1.8	0.3	3.2	2.6	16.1	6.4	15.4	1.1	3.7	3.5	5.2	6.4	4.8	2	0.3	3.5	2.8	17.3	0.485	0.451	0.243	0.342	0.33	25.8	0.99	1.37	16.8	0.042	0.056	0.098	99.7	102	1.9	1.8	3.6	1627749
+988	2016-06-22 19:00:00	Buddy Hield	buddy-hield	SG	\N	77	81.25	212	Oklahoma	\N	1992-12-17	\N	\N	4	23.5	37	35.4	8.1	16.2	0.501	4	8.7	0.457	4.8	5.4	0.88	5.7	2	1.1	0.5	3.1	2.1	25	8.3	16.5	4	8.9	4.8	5.5	5.8	2.1	1.2	0.5	3.1	2.1	25.4	0.665	0.623	0.536	0.333	0.412	30.2	0.42	0.66	28.2	0.174	0.058	0.232	124	101.6	10.6	2.2	12.8	1627741
+989	2016-06-22 19:00:00	Jamal Murray	jamal-murray	SG	PG	77	\N	200	Kentucky	\N	1997-02-23	\N	\N	1	19.32	36	35.2	6.8	14.9	0.454	3.1	7.7	0.408	3.3	4.2	0.783	5.2	2.2	1	0.3	2.3	2.1	20	6.9	15.3	3.2	7.9	3.4	4.3	5.3	2.2	1	0.3	2.4	2.1	20.5	0.59	0.559	0.515	0.283	0.385	27.3	0.44	0.94	22.7	0.139	0.054	0.193	120.3	102.8	8.1	1.4	9.5	1627750
+990	2016-06-22 19:00:00	Tyrone Wallace	tyrone-wallace	PG	\N	77	\N	198	California	Bakersfield, CA	1994-06-10	\N	\N	4	22.02	28	32.2	5.4	12.3	0.44	0.9	3	0.298	3.6	5.5	0.649	5.3	4.4	1	0.4	2.6	2.3	15.3	6	13.7	1	3.4	4	6.2	5.9	4.9	1.1	0.5	3	2.5	17.1	0.513	0.477	0.245	0.449	0.327	27.4	1.04	1.66	19.7	0.08	0.071	0.151	106.6	98.8	3.6	3	6.6	1627820
+991	2016-06-22 19:00:00	Furkan Korkmaz	furkan-korkmaz	SG	SF	79	\N	190	Anadolu Efes (Turkey)	Istanbul, Turkey	1997-07-24	\N	\N	\N	18.9	19	8.8	0.9	2.4	0.391	0.6	1.4	0.423	0.2	0.4	0.571	0.9	0.5	0.1	0.2	0.4	1.4	2.7	3.9	9.9	2.4	5.6	0.9	1.5	3.6	1.9	0.4	0.6	1.7	5.8	10.9	0.517	0.511	0.565	0.152	\N	\N	\N	1.12	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627788
+992	2016-06-22 19:00:00	Henry Ellenson	henry-ellenson	PF	C	83.5	86.25	242	Marquette	\N	1997-01-13	\N	\N	1	19.43	33	33.5	5.9	13.2	0.446	0.9	3.2	0.288	4.3	5.8	0.749	9.7	1.8	0.8	1.5	2.4	2.5	17	6.3	14.1	1	3.4	4.7	6.2	10.4	1.9	0.9	1.6	2.5	2.7	18.2	0.534	0.48	0.239	0.439	0.339	26.7	0.41	0.76	20.9	0.072	0.072	0.145	106.3	98.5	2.8	1.1	3.9	1627740
+993	2016-06-22 19:00:00	Demetrius Jackson	demetrius-jackson	PG	\N	73.25	77.5	194	Notre Dame	\N	1994-09-07	\N	\N	3	21.78	35	36	5.5	12.2	0.451	1.5	4.7	0.331	3.2	4	0.813	3.5	4.7	1.2	0.3	2.2	1.9	15.8	5.5	12.2	1.5	4.7	3.2	4	3.5	4.7	1.2	0.3	2.2	1.9	15.8	0.56	0.514	0.381	0.325	0.359	24.1	1.04	2.16	21	0.121	0.019	0.14	117.9	112.2	5.2	0.8	6.1	1627743
+994	2016-06-22 19:00:00	Daniel Hamilton	daniel-hamilton	SG	SF	80	81	197	UConn	Los Angeles, CA	1995-08-08	\N	\N	2	20.86	36	31.9	4.4	11.4	0.387	1.3	3.9	0.331	2.4	2.8	0.86	8.9	4.7	1.1	0.4	2.4	1.8	12.5	5	12.9	1.5	4.5	2.7	3.1	10.1	5.3	1.2	0.5	2.7	2.1	14.2	0.492	0.444	0.345	0.243	0.365	25.1	1.16	2	20	0.063	0.105	0.164	104	89.9	4	4	8	1627772
+995	2016-06-22 19:00:00	Brice Johnson	brice-johnson	PF	\N	82.5	84.5	209	North Carolina	\N	1994-06-27	\N	\N	4	21.98	40	28	6.7	10.9	0.614	0	0	\N	3.6	4.6	0.783	10.4	1.5	1.1	1.5	1.8	2.7	17	8.6	14	0	0	4.6	5.9	13.4	1.9	1.4	1.9	2.3	3.4	21.8	0.649	0.614	0	0.423	0.329	25	0.39	0.82	33	0.178	0.093	0.271	130.1	92.4	8.5	4.2	12.7	1627744
+996	2016-06-22 19:00:00	Isaiah Whitehead	isaiah-whitehead	SG	\N	76.5	80.75	210	Seton Hall	\N	1995-03-08	\N	\N	2	21.28	34	32.3	5.7	15.1	0.379	2.4	6.5	0.365	4.4	5.8	0.76	3.6	5.1	1.2	1.4	3.5	2.3	18.2	6.4	16.8	2.7	7.3	4.9	6.4	4	5.7	1.3	1.6	3.9	2.6	20.3	0.511	0.458	0.434	0.383	0.372	31.6	1.04	1.45	20.5	0.077	0.077	0.153	104.5	97.4	6	2.9	8.9	1627785
+997	2016-06-22 19:00:00	Kay Felder	kay-felder	PG	\N	69.5	74.5	177	Oakland	\N	1995-03-29	\N	\N	3	21.22	35	36.7	7.7	17.5	0.44	2.2	6.1	0.355	6.8	8.1	0.848	4.3	9.3	2	0.2	3.4	3	24.4	7.5	17.1	2.1	6	6.7	7.9	4.2	9.1	1.9	0.2	3.4	2.9	23.9	0.572	0.502	0.35	0.461	0.375	31.3	1.6	2.7	28.7	0.193	0.044	0.236	122.9	105.9	7.5	0.8	8.3	1627770
+998	2016-06-22 19:00:00	Ivica Zubac	ivica-zubac	C	\N	85	\N	240	KK Mega Basket (Serbia)	Mostar, Bosnia and Herzegovina	1997-03-18	\N	\N	\N	19.25	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627826
+999	2016-06-22 19:00:00	Petr Cornelie	petr-cornelie	PF	\N	83	\N	220	Le Mans Sarthe (France)	Calais, France	1995-07-26	\N	\N	\N	20.9	43	19.8	3.2	6.4	0.502	0.9	2.1	0.429	1.3	1.9	0.699	5.4	0.3	0.3	0.5	1.3	2.8	8.7	5.8	11.6	1.7	3.9	2.5	3.5	9.8	0.6	0.6	1	2.3	5.1	15.8	0.593	0.573	0.331	0.302	0.349	\N	\N	0.26	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627822
+1000	2016-06-22 19:00:00	Jakob Poeltl	jakob-poeltl	C	\N	85	86.75	239	Utah	\N	1995-10-15	\N	\N	2	20.67	36	30.4	6.3	9.8	0.646	0	0	\N	4.6	6.6	0.689	9.1	1.9	0.6	1.6	2.1	2.3	17.2	7.5	11.6	0	0	5.4	7.8	10.8	2.3	0.7	1.8	2.4	2.7	20.4	0.665	0.646	0	0.674	0.316	25.6	0.54	0.95	31.1	0.179	0.07	0.249	128.7	98.5	7.6	2.8	10.4	1627751
+1001	2016-06-22 19:00:00	Georgios Papagiannis	georgios-papagiannis	C	\N	86.75	\N	275	Panathinaikos (Greece)	Marousi, Greece	1997-07-03	\N	\N	\N	18.96	30	9	2.1	3.3	0.63	0	0	\N	0.6	0.9	0.654	2.2	0.4	0.2	0.6	0.5	1.1	4.8	8.4	13.3	0	0	2.3	3.5	8.7	1.5	0.7	2.4	2.1	4.4	19.1	0.636	0.63	0	0.26	0.311	\N	\N	0.69	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627834
+1002	2016-06-22 19:00:00	Ante Zizic	ante-zizic	C	\N	83	\N	250	Cibona (Croatia)	Split, Croatia	1997-01-04	\N	\N	\N	19.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627790
+1003	2016-06-22 19:00:00	Damian Jones	damian-jones	C	\N	83.5	87.75	244	Vanderbilt	\N	1995-06-30	\N	\N	3	20.97	33	26.2	5.6	9.5	0.59	0	0.1	0	2.7	5.1	0.536	6.9	1.2	0.2	1.6	2	3.3	13.9	7.6	13	0	0.1	3.7	7	9.4	1.6	0.3	2.2	2.7	4.5	19	0.584	0.59	0.01	0.538	0.294	26.8	0.38	0.58	23.3	0.092	0.083	0.176	110.4	95.8	3.1	3	6.2	1627745
+1004	2016-06-22 19:00:00	Kris Dunn	kris-dunn	PG	\N	76.25	81.5	205	Providence	\N	1994-03-18	\N	\N	3	22.25	33	33	5.6	12.5	0.448	1.3	3.4	0.372	4	5.8	0.695	5.3	6.2	2.5	0.6	3.5	2.8	16.4	6.1	13.6	1.4	3.7	4.4	6.3	5.8	6.8	2.7	0.7	3.8	3.1	17.9	0.541	0.499	0.275	0.462	0.342	28.1	1.49	1.78	23.3	0.081	0.085	0.165	106.1	95	4.7	5.4	10.1	1627739
+1005	2016-06-22 19:00:00	Skal Labissiere	skal-labissiere	PF	C	83.75	86.5	216	Kentucky	\N	1996-03-18	\N	\N	1	20.25	36	15.8	2.7	5.3	0.516	0	0.1	0	1.1	1.7	0.661	3.1	0.3	0.3	1.6	0.9	3	6.6	6.2	12.1	0	0.1	2.6	3.9	7.2	0.7	0.6	3.7	2.1	6.9	15	0.54	0.516	0.011	0.326	0.312	22.2	0.16	0.33	18.6	0.063	0.078	0.141	107.9	97.1	-1.3	4	2.6	1627746
+1006	2016-06-22 19:00:00	Paul Zipser	paul-zipser	SF	\N	80	\N	226	Bayern Munich (Germany)	Heidelberg, Germany	1994-02-18	\N	\N	\N	22.33	20	17.9	2.4	4.9	0.495	0.7	1.9	0.378	1.2	1.2	0.958	3.6	1.3	0.4	0.7	1.1	2.2	6.7	4.8	9.8	1.4	3.7	2.3	2.4	7.3	2.5	0.7	1.3	2.1	4.3	13.4	0.613	0.567	0.381	0.247	0.378	\N	\N	1.19	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627835
+1007	2016-06-22 19:00:00	Ben Bentil	ben-bentil	PF	\N	80.25	85.5	229	Providence	\N	1995-03-29	\N	\N	2	21.22	35	34.2	7	15.2	0.462	1.5	4.5	0.329	5.5	7.1	0.782	7.7	1.1	0.9	1	1.9	2.8	21.1	7.4	16	1.6	4.7	5.8	7.5	8.1	1.2	0.9	1.1	2	2.9	22.2	0.567	0.51	0.296	0.465	0.355	29.6	0.27	0.6	24.8	0.127	0.067	0.194	115.7	100	6.3	1.9	8.2	1627791
+1008	2016-06-22 19:00:00	Jake Layman	jake-layman	SF	\N	81.25	81.25	209	Maryland	\N	1994-03-07	\N	\N	4	22.28	36	30.9	3.9	7.8	0.5	1.6	4	0.396	2.2	2.6	0.832	5.3	1.1	1.1	1	1.7	1.9	11.6	4.5	9.1	1.8	4.7	2.6	3.1	6.1	1.3	1.3	1.2	2	2.2	13.5	0.64	0.602	0.514	0.339	0.369	18.2	0.38	0.67	18.8	0.086	0.072	0.158	118	98.6	4.8	3.3	8.2	1627774
+1009	2016-06-22 19:00:00	Joel Bolomboy	joel-bolomboy	PF	\N	81	85.75	224	Weber State	\N	1994-01-28	\N	\N	4	22.39	33	31.5	5.8	10.2	0.573	0.6	1.7	0.364	4.8	6.9	0.697	12.6	1.1	0.7	1.2	2.4	2.2	17.1	6.7	11.7	0.7	1.9	5.5	7.9	14.4	1.2	0.8	1.4	2.7	2.5	19.5	0.634	0.602	0.163	0.677	0.331	26.1	0.28	0.45	29.1	0.146	0.104	0.25	121.1	90.1	3.7	0.6	4.3	1627762
+1010	2016-06-22 19:00:00	Brandon Ingram	brandon-ingram	SF	\N	81	\N	195	Duke	\N	1997-09-02	\N	\N	1	18.79	36	34.6	5.9	13.4	0.442	2.2	5.4	0.41	3.2	4.7	0.682	6.8	2	1.1	1.4	2	2.1	17.3	6.2	14	2.3	5.6	3.4	4.9	7	2.1	1.2	1.4	2.1	2.1	18	0.552	0.525	0.403	0.351	0.357	25.5	0.45	1	22.5	0.109	0.048	0.157	114.8	104.4	6	2	8	1627742
+1011	2016-06-22 19:00:00	Marquese Chriss	marquese-chriss	PF	\N	82	84.25	233	Washington	\N	1997-07-02	\N	\N	1	18.96	34	24.9	5.3	9.9	0.53	0.6	1.8	0.35	2.6	3.8	0.682	5.4	0.8	0.9	1.6	2	4.1	13.7	7.6	14.3	0.9	2.5	3.7	5.5	7.8	1.1	1.4	2.3	2.9	5.9	19.8	0.585	0.561	0.178	0.382	0.331	24.1	0.26	0.38	21.6	0.09	0.057	0.146	111.9	102.2	2.8	2.2	4.9	1627737
+1012	2016-06-22 19:00:00	Malcolm Brogdon	malcolm-brogdon	SG	\N	77.5	82.5	223	Virginia	\N	1992-12-11	\N	\N	4	23.52	37	34.1	6.2	13.6	0.457	2	5.2	0.391	3.8	4.2	0.897	4.1	3.1	0.9	0.2	1.4	2.1	18.2	6.6	14.3	2.1	5.5	4	4.4	4.3	3.3	1	0.3	1.5	2.2	19.2	0.585	0.532	0.382	0.31	0.382	28.4	0.69	2.21	25.1	0.155	0.067	0.222	122.5	99.9	8.1	3.2	11.3	1627763
+1013	2016-06-22 19:00:00	Georges Niang	georges-niang	PF	\N	80.5	82	231	Iowa State	Lawrence, MA	1993-06-17	\N	\N	4	23	35	33.2	8.1	14.8	0.546	1.6	4.1	0.392	2.7	3.4	0.807	6.2	3.3	0.9	0.6	2.6	3.2	20.5	8.8	16	1.7	4.4	3	3.7	6.8	3.6	1	0.7	2.9	3.4	22.2	0.625	0.6	0.276	0.23	0.364	28.7	0.67	1.27	25.9	0.145	0.048	0.193	118.6	104.7	7.1	1.6	8.7	1627777
+1014	2016-06-22 19:00:00	Dragan Bender	dragan-bender	PF	\N	85	\N	225	Maccabi Tel Aviv	Split, Croatia	1997-11-17	\N	\N	\N	18.58	10	8.6	0.6	2.6	0.231	0.2	1.2	0.167	0.1	0.2	0.5	1.2	0.4	0.2	0.5	0.4	1.1	1.5	2.5	10.9	0.8	5	0.4	0.8	5	1.7	0.8	2.1	1.7	4.6	6.3	0.278	0.269	0.462	0.077	\N	\N	\N	1	\N	\N	\N	\N	\N	\N	\N	\N	\N	1627733
+1015	2016-06-22 19:00:00	Malik Beasley	malik-beasley	SG	\N	76.5	79	190	Florida State	\N	1996-11-26	\N	\N	1	19.56	34	29.8	5.4	11.6	0.471	1.6	4.2	0.387	3.1	3.8	0.812	5.3	1.5	0.9	0.2	1.7	2.2	15.6	6.6	14	2	5	3.7	4.5	6.4	1.8	1.1	0.2	2.1	2.7	18.8	0.583	0.541	0.361	0.326	0.368	24.2	0.4	0.86	20.8	0.114	0.043	0.158	117.5	105.4	5.2	1	6.2	1627736
+1016	2018-06-22 19:00:00	Chimezie Metu	chimezie-metu	PF	\N	81.5	84.5	220	USC	Lawndale, CA	1997-03-22	\N	\N	3	21.24	34	31	6	11.5	0.523	0.4	1.2	0.3	3.3	4.5	0.73	7.4	1.6	0.8	1.7	2	2.6	15.7	7	13.4	0.4	1.4	3.8	5.2	8.6	1.8	0.9	2	2.3	3	18.2	0.574	0.538	0.102	0.388	0.327	25.8	0.39	0.78	23.5	0.099	0.068	0.167	113	99.8	3.1	2.5	5.6	1629002
+1017	2018-06-22 19:00:00	Grayson Allen	grayson-allen	SG	PG	76.5	79.25	198	Duke	Jacksonville, FL	1995-10-08	\N	\N	4	22.69	37	35.6	4.9	11.7	0.418	2.8	7.5	0.37	2.9	3.4	0.85	3.3	4.6	1.7	0.1	2.1	2.1	15.5	4.9	11.8	2.8	7.5	2.9	3.5	3.4	4.7	1.7	0.1	2.2	2.2	15.6	0.58	0.536	0.637	0.293	0.386	20.7	1.02	2.18	18.8	0.121	0.061	0.179	123.3	102.1	5	3.4	8.4	1628960
+1018	2018-06-22 19:00:00	Josh Okogie	josh-okogie	SG	\N	76.5	84	211	Georgia Tech	Snellville, GA	1998-09-01	\N	\N	2	19.79	24	36.4	5.5	13.3	0.416	1.6	4.2	0.38	5.5	6.8	0.821	6.3	2.5	1.8	1	2.5	2.9	18.2	5.5	13.2	1.6	4.1	5.5	6.7	6.2	2.4	1.7	0.9	2.5	2.9	18	0.55	0.475	0.312	0.506	0.362	27.3	0.57	0.97	22.3	0.096	0.06	0.156	111.3	102	5.8	2.2	8.1	1629006
+1019	2018-06-22 19:00:00	Miles Bridges	miles-bridges	SF	PF	78.75	81.5	220	Michigan State	Flint, MI	1998-03-21	\N	\N	2	20.24	34	31.4	6.1	13.4	0.457	2.1	5.7	0.364	2.7	3.2	0.853	7	2.7	0.6	0.8	2	1.6	17.1	7.1	15.4	2.4	6.6	3.1	3.7	8	3.1	0.7	0.9	2.3	1.8	19.6	0.572	0.535	0.427	0.239	0.38	27.1	0.62	1.37	22.6	0.124	0.082	0.206	118.2	95.5	6.2	2.5	8.7	1628970
+1020	2018-06-22 19:00:00	Khyri Thomas	khyri-thomas	SG	\N	75.75	82.5	199	Creighton	Omaha, NE	1996-05-08	\N	\N	3	22.11	33	31.7	5.6	10.4	0.538	1.9	4.6	0.411	2	2.6	0.788	4.4	2.8	1.7	0.2	1.8	1.9	15.1	6.3	11.8	2.1	5.2	2.3	2.9	5	3.2	1.9	0.3	2	2.1	17.1	0.65	0.629	0.442	0.249	0.368	21	0.72	1.56	21.8	0.119	0.065	0.184	122.4	100.9	5.3	3.3	8.6	1629017
+1021	2018-06-22 19:00:00	Chandler Hutchison	chandler-hutchison	SG	SF	79	85	197	Boise State	Mission Viejo, CA	1996-04-26	\N	\N	4	22.15	31	31	6.6	13.9	0.475	1.5	4.1	0.359	5.3	7.2	0.728	7.7	3.5	1.5	0.3	3.4	2.4	20	7.7	16.2	1.7	4.8	6.1	8.4	8.9	4	1.7	0.3	3.9	2.8	23.2	0.575	0.528	0.296	0.519	0.352	33.2	0.73	1.03	25.9	0.117	0.092	0.208	110.8	93.3	5.1	3.8	8.9	1628990
+1022	2018-06-22 19:00:00	Bruce Brown	bruce-brown	SG	\N	77	81	195	Miami	Boston, MA	1996-08-15	\N	\N	2	21.84	19	33.7	4.1	9.9	0.415	0.8	3.2	0.267	2.3	3.7	0.629	7.1	4	1.3	0.8	2.3	2.3	11.4	4.4	10.6	0.9	3.4	2.5	3.9	7.6	4.3	1.4	0.8	2.4	2.4	12.2	0.488	0.457	0.319	0.372	0.321	21.2	1	1.77	16.9	0.044	0.075	0.119	102.7	97.5	1.5	3.6	5.1	1628971
+1023	2018-06-22 19:00:00	Moritz Wagner	moritz-wagner	PF	\N	83.5	84	241	Michigan	Berlin, Germany	1997-04-26	\N	\N	3	21.15	39	27.6	5.5	10.5	0.528	1.6	4.1	0.394	1.9	2.8	0.694	7.1	0.8	1	0.5	1.4	3.1	14.6	7.2	13.7	2.1	5.3	2.5	3.6	9.3	1.1	1.3	0.7	1.9	4	19	0.619	0.605	0.391	0.264	0.355	25.9	0.26	0.59	24.7	0.115	0.096	0.212	117.3	92.3	5.4	3.8	9.2	1629021
+1024	2018-06-22 19:00:00	Kevin Hervey	kevin-hervey	PF	\N	79.75	87.5	212	UT Arlington	Arlington, TX	1996-07-09	\N	\N	4	21.94	33	32.2	7.4	16.5	0.446	2.3	6.9	0.339	3.4	4.2	0.807	8.5	2.2	1.2	0.6	2.7	1.8	20.5	8.2	18.4	2.6	7.7	3.8	4.7	9.5	2.5	1.4	0.7	3	2	22.9	0.553	0.517	0.417	0.257	0.377	31	0.49	0.81	23.7	0.098	0.075	0.173	109.3	97.5	5.1	0.4	5.5	1628987
+1025	2018-06-22 19:00:00	Jevon Carter	jevon-carter	PG	\N	73.5	76.25	196	West Virginia	Maywood, IL	1995-09-14	\N	\N	4	22.76	37	35.5	5.8	13.8	0.422	2.1	5.3	0.393	3.6	4.2	0.858	4.6	6.6	3	0.4	2.6	3	17.3	5.9	14	2.1	5.4	3.6	4.2	4.7	6.7	3.1	0.4	2.7	3	17.5	0.549	0.498	0.385	0.305	0.377	25	1.45	2.51	24.9	0.131	0.085	0.213	119.3	94.9	6.7	5.3	12	1628975
+1026	2018-06-22 19:00:00	Hamidou Diallo	hamidou-diallo	SG	\N	78	83.5	197	Kentucky	Queens, NY	1998-07-31	\N	\N	1	19.88	37	24.8	3.6	8.5	0.428	0.7	2.1	0.338	2.1	3.4	0.616	3.6	1.2	0.8	0.4	1.4	2.6	10	5.3	12.3	1	3	3	4.9	5.3	1.8	1.1	0.5	2	3.8	14.5	0.498	0.47	0.246	0.399	0.324	22.6	0.42	0.9	13.8	0.048	0.057	0.105	103.8	103.1	0.6	2.3	2.9	1628977
+1027	2018-06-22 19:00:00	Kevin Huerter	kevin-huerter	SG	\N	79.25	79.5	194	Maryland	Clifton Park, NY	1998-08-27	\N	\N	2	19.81	32	34.4	5.1	10.1	0.503	2.3	5.5	0.417	2.3	3.1	0.758	5	3.4	0.6	0.7	2.5	2.4	14.8	5.3	10.5	2.4	5.7	2.5	3.2	5.3	3.5	0.7	0.7	2.6	2.5	15.4	0.64	0.616	0.543	0.307	0.368	21.5	0.94	1.35	19.4	0.109	0.058	0.163	119	102.9	5.7	2.1	7.8	1628989
+1028	2018-06-22 19:00:00	DeAndre Ayton	deandre-ayton	C	\N	85	89	250	Arizona	San Diego, CA	1998-07-23	\N	\N	1	19.9	35	33.5	7.9	12.9	0.612	0.3	1	0.343	4	5.5	0.733	11.6	1.6	0.6	1.9	2	2.3	20.1	8.5	13.9	0.4	1.1	4.3	5.9	12.4	1.8	0.6	2	2.1	2.5	21.6	0.65	0.625	0.078	0.424	0.329	26.6	0.38	0.83	32.6	0.188	0.072	0.259	130.3	98.8	8.6	2.4	11	1629028
+1029	2018-06-22 19:00:00	Jalen Brunson	jalen-brunson	PG	\N	74.25	76	198	Villanova	Lincolnshire, IL	1996-08-31	\N	\N	3	21.8	40	31.8	6.8	13	0.521	2.2	5.3	0.408	3.3	4.1	0.802	3.1	4.6	0.9	0	1.8	2	18.9	7.6	14.7	2.4	6	3.7	4.6	3.5	5.2	1	0	2	2.2	21.4	0.635	0.604	0.407	0.313	0.375	26.4	1.01	2.59	26.1	0.189	0.053	0.242	130.7	104.1	8	2.2	10.2	1628973
+1030	2018-06-22 19:00:00	Aaron Holiday	aaron-holiday	PG	\N	72.75	79.5	187	UCLA	Chatsworth, CA	1996-09-30	\N	\N	3	21.72	33	37.7	6.4	13.9	0.461	2.7	6.2	0.429	4.8	5.8	0.828	3.7	5.8	1.3	0.2	3.8	2.6	20.3	6.1	13.3	2.5	5.9	4.6	5.6	3.5	5.6	1.2	0.2	3.6	2.5	19.4	0.609	0.557	0.446	0.417	0.381	26.7	1.12	1.54	21.1	0.119	0.039	0.158	115.4	108.1	5.3	0.6	5.9	1628988
+1031	2018-06-22 19:00:00	Zhaire Smith	zhaire-smith	SG	\N	76	81.75	199	Texas Tech	Garland, TX	1999-06-04	\N	\N	1	19.04	37	28.4	4.2	7.5	0.556	0.5	1.1	0.45	2.5	3.4	0.717	5	1.8	1.1	1.1	1.1	1.8	11.3	5.3	9.5	0.6	1.4	3.1	4.4	6.3	2.3	1.4	1.4	1.4	2.3	14.3	0.618	0.588	0.144	0.458	0.336	18.3	0.69	1.61	23	0.126	0.084	0.213	128.7	95.1	6.1	4.7	10.8	1629015
+1032	2018-06-22 19:00:00	Jarred Vanderbilt	jarred-vanderbilt	PF	\N	81	85	218	Kentucky	Houston, TX	1999-04-03	\N	\N	1	19.21	14	17	2.1	4.9	0.426	0	0.1	0	1.7	2.7	0.632	7.9	1	0.4	0.8	1.1	2.6	5.9	4.4	10.3	0	0.2	3.6	5.7	16.6	2.1	0.9	1.7	2.3	5.6	12.4	0.476	0.426	0.015	0.559	0.308	20.8	0.51	0.93	21.6	0.084	0.084	0.168	111	93.7	3.5	2.9	6.4	1629020
+1033	2018-06-22 19:00:00	Anfernee Simons	anfernee-simons	SG	PG	75.25	81.25	183	G League	Altamonte, FL	1999-06-08	\N	\N	\N	19.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629014
+1034	2018-06-22 19:00:00	Shake Milton	shake-milton	SG	PG	77.5	84.75	207	SMU	Owasso, OK	1996-09-26	\N	\N	3	21.73	22	36.4	5.6	12.5	0.449	2.5	5.9	0.434	4.3	5	0.847	4.7	4.4	1.4	0.6	2.3	1.7	18	5.5	12.3	2.5	5.8	4.2	5	4.6	4.3	1.4	0.6	2.3	1.7	17.8	0.606	0.551	0.471	0.405	0.383	25	1.04	1.92	24.2	0.14	0.065	0.21	122.8	100.4	6.8	2	8.7	1629003
+1035	2018-06-22 19:00:00	Isaac Bonga	isaac-bonga	SF	\N	81	\N	200	Frankfurt	Neuwied, Germany	1999-11-08	\N	\N	\N	18.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629067
+1036	2018-06-22 19:00:00	George King	george-king	SF	\N	78	83.5	219	Colorado	Fayetteville, NC	1994-01-15	\N	\N	4	24.42	32	28.5	4.4	10	0.445	1.9	4.9	0.395	2.1	2.7	0.782	7.8	1.1	0.5	0.7	2	2.4	12.9	5.6	12.6	2.4	6.2	2.7	3.4	9.9	1.4	0.7	0.8	2.5	3.1	16.3	0.574	0.542	0.492	0.273	0.372	23.3	0.35	0.55	18.8	0.074	0.057	0.131	109.3	102.3	3.2	1.6	4.7	77268
+1037	2018-06-22 19:00:00	Mikal Bridges	mikal-bridges	SG	SF	79	85	210	Villanova	Malvern, PA	1996-08-30	\N	\N	3	21.8	40	32.1	6.1	11.9	0.514	2.6	6	0.435	2.9	3.4	0.851	5.3	1.9	1.5	1.1	1.4	2.2	17.7	6.8	13.3	2.9	6.7	3.2	3.8	5.9	2.2	1.7	1.2	1.5	2.4	19.8	0.655	0.623	0.503	0.282	0.39	23.2	0.46	1.43	26.8	0.168	0.075	0.24	132.5	98.2	8.7	4.1	12.9	1628969
+1038	2018-06-22 19:00:00	Landry Shamet	landry-shamet	PG	\N	77.25	78.75	189	Wichita State	Kansas City, MO	1997-03-13	\N	\N	3	21.27	32	31.7	4.8	9.8	0.489	2.6	5.9	0.442	2.7	3.2	0.825	3.2	5.2	0.7	0.2	2.1	1.9	14.9	5.5	11.2	3	6.7	3	3.7	3.7	5.9	0.8	0.2	2.4	2.2	16.9	0.655	0.622	0.603	0.327	0.388	20.7	1.39	2.48	21.4	0.15	0.043	0.193	130.1	106.2	7.3	1.3	8.6	1629013
+1039	2018-06-22 19:00:00	Jacob Evans	jacob-evans	SF	\N	77.5	81.25	200	Cincinnati	Baton Rouge, LA	1997-06-18	\N	\N	3	21	36	30.8	4.5	10.5	0.427	1.7	4.5	0.37	2.4	3.2	0.754	4.7	3.1	1.3	1	1.8	2	13	5.2	12.3	2	5.3	2.8	3.7	5.5	3.7	1.5	1.1	2	2.3	15.2	0.543	0.507	0.43	0.302	0.359	22.5	0.89	1.79	20.5	0.101	0.112	0.213	116.5	88.3	4.7	5.2	9.9	1628980
+1040	2018-06-22 19:00:00	Omari Spellman	omari-spellman	PF	\N	81.25	86	254	Villanova	Cleveland, OH	1997-07-21	\N	\N	1	20.91	40	28.1	4	8.4	0.476	1.6	3.8	0.433	1.2	1.8	0.7	8	0.8	0.7	1.5	1	2.3	10.9	5.1	10.8	2.1	4.8	1.6	2.2	10.3	1	0.8	1.9	1.3	2.9	13.9	0.588	0.573	0.446	0.208	0.356	18.3	0.23	0.75	20.6	0.103	0.078	0.185	122.8	96.7	4.7	2.8	7.5	1629016
+1041	2018-06-22 19:00:00	Ray Spalding	ray-spalding	PF	\N	82.25	88.75	215	Louisville	Louisville, KY	1997-03-11	\N	\N	3	21.27	36	27.6	5.1	9.4	0.543	0.1	0.5	0.263	2	3.2	0.64	8.7	1.3	1.5	1.7	1.7	3	12.3	6.6	12.2	0.2	0.7	2.6	4.1	11.3	1.7	2	2.2	2.2	3.9	16.1	0.568	0.55	0.056	0.338	0.309	22.9	0.42	0.75	25.6	0.096	0.096	0.193	114.4	92.8	4.1	4.1	8.2	1629034
+1042	2018-06-22 19:00:00	Thomas Welsh	thomas-welsh	C	\N	84	\N	255	UCLA	Torrance, CA	1996-02-03	\N	\N	4	22.37	33	33.2	4.9	10.1	0.485	1.4	3.4	0.402	1.5	1.8	0.828	10.8	1.4	0.7	0.9	1	2.4	12.6	5.3	11	1.5	3.7	1.6	1.9	11.8	1.5	0.7	1	1.1	2.6	13.7	0.577	0.552	0.335	0.174	0.363	17.7	0.44	1.35	20.3	0.102	0.062	0.164	122.6	101.6	4.5	1.3	5.8	1629118
+1043	2018-06-22 19:00:00	Rodions Kurucs	rodions-kurucs	SF	\N	81	\N	200	Barcelona (Spain)	Cēsis, Latvia	1998-02-05	\N	\N	\N	20.36	10	5.9	0.6	1.5	0.4	0.2	0.7	0.286	0	0	\N	0.6	0.2	0.7	0.2	0.4	1.6	1.4	3.7	9.2	1.2	4.3	0	0	3.7	1.2	4.3	1.2	2.4	9.8	8.5	0.467	0.467	0.467	0	\N	\N	\N	0.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629066
+1044	2018-06-22 19:00:00	Alize Johnson	alize-johnson	PF	SF	80	80.75	217	Missouri State	Williamsport, PA	1996-04-22	\N	\N	4	22.16	33	31.2	5.2	12.1	0.43	1.2	4.4	0.281	3.3	4.4	0.759	11.6	2.8	0.5	0.4	2.2	2.1	15	6	14	1.4	5.1	3.9	5.1	13.4	3.3	0.5	0.5	2.6	2.4	17.3	0.528	0.481	0.365	0.362	0.349	27.1	0.71	1.27	24.1	0.105	0.078	0.183	112.3	97.2	5.6	0.3	5.9	1628993
+1045	2018-06-22 19:00:00	Mitchell Robinson	mitchell-robinson	C	\N	85	88	240	None	Pensacola, FL	1998-04-01	\N	\N	1	20.21	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629011
+1046	2018-06-22 19:00:00	Kostas Antetokounmpo	kostas-antetokounmpo	PF	\N	82.5	86.25	195	Dayton	Athens, Greece	1997-11-20	\N	\N	1	20.58	29	15.1	2	3.5	0.574	0.1	0.5	0.133	1.1	2.2	0.516	2.9	0.4	0.2	1.1	1.3	2.3	5.2	4.8	8.3	0.2	1.2	2.7	5.3	6.8	1.1	0.6	2.5	3.2	5.4	12.4	0.575	0.584	0.149	0.634	0.294	20.9	0.28	0.33	13.7	0.018	0.046	0.064	95.9	105.6	-3.3	1.2	-2.1	1628961
+1047	2018-06-22 19:00:00	Trae Young	trae-young	PG	\N	73.75	75	178	Oklahoma	Norman, OK	1998-09-19	\N	\N	1	19.75	32	35.4	8.2	19.3	0.422	3.7	10.3	0.36	7.4	8.6	0.861	3.9	8.7	1.7	0.3	5.2	1.8	27.4	8.3	19.6	3.7	10.4	7.5	8.7	4	8.9	1.7	0.3	5.3	1.8	27.8	0.585	0.518	0.531	0.443	0.404	37.1	1.31	1.67	28.3	0.162	0.039	0.201	114.7	108.1	9.7	1.3	11.1	1629027
+1048	2018-06-22 19:00:00	Elie Okobo	elie-okobo	PG	\N	75	80	180	Élan Béarnais (France)	Bordeaux, France	1997-10-23	\N	\N	\N	20.65	34	26.3	4.5	9.5	0.475	1.9	4.7	0.394	2	2.4	0.819	2.8	4.8	0.9	0.2	2.7	2	12.9	6.2	13.1	2.5	6.5	2.7	3.3	3.8	6.6	1.2	0.3	3.7	2.7	17.7	0.604	0.573	0.494	0.256	0.378	\N	\N	1.79	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629059
+1049	2018-06-22 19:00:00	Jerome Robinson	jerome-robinson	SG	\N	77	79.25	188	Boston College	Raleigh, NC	1997-02-22	\N	\N	3	21.32	35	36	7.1	14.7	0.485	2.3	5.7	0.409	4.2	5	0.83	3.6	3.3	0.9	0.1	2.7	2.5	20.7	7.1	14.7	2.3	5.7	4.2	5	3.6	3.3	0.9	0.1	2.7	2.5	20.7	0.608	0.564	0.386	0.343	0.377	27.3	0.71	1.21	21.3	0.124	0.032	0.156	117	109.3	5.5	0.1	5.5	1629010
+1050	2018-06-22 19:00:00	Collin Sexton	collin-sexton	PG	\N	73.5	79.25	183	Alabama	Atlanta, GA	1999-01-04	\N	\N	1	19.45	33	29.9	5.9	13.3	0.447	1.3	4	0.336	5.9	7.6	0.778	3.8	3.6	0.8	0.1	2.8	2.5	19.2	7.1	16	1.6	4.8	7.1	9.2	4.5	4.3	1	0.1	3.4	3	23.1	0.567	0.498	0.299	0.575	0.356	32.9	0.84	1.29	23.5	0.13	0.049	0.178	113.2	105.2	5.8	1.1	6.9	1629012
+1051	2018-06-22 19:00:00	Arnoldas Kulboka	arnoldas-kulboka	SF	\N	81	\N	200	Brose Bamberg (Germany)	Kaunas, Lithuania	1998-01-04	\N	\N	\N	20.45	29	26.1	2.6	7.1	0.366	1.6	4.4	0.367	1.5	1.9	0.815	3.5	0.7	0.9	0.2	1.4	1.1	8.3	3.6	9.8	2.2	6.1	2.1	2.6	4.8	1	1.2	0.2	1.9	1.5	11.5	0.522	0.48	0.624	0.263	0.372	\N	\N	0.5	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629083
+1052	2018-06-22 19:00:00	Devon Hall	devon-hall	SG	\N	78	79.75	206	Virginia	Virginia Beach, VA	1995-07-07	\N	\N	4	22.95	34	32.1	3.9	8.6	0.454	1.7	3.9	0.432	2.2	2.5	0.894	4.2	3.1	0.9	0.1	1	1.4	11.7	4.4	9.6	1.9	4.4	2.5	2.8	4.7	3.5	1	0.2	1.2	1.6	13.1	0.599	0.552	0.454	0.292	0.379	19.5	1.01	3.06	20.3	0.121	0.095	0.216	124.8	92.4	5.5	4.6	10.1	1628985
+1053	2018-06-22 19:00:00	Džanan Musa	dzanan-musa	SF	\N	81	81	195	KK Cedevita (Croatia)	Bihać, Bosnia and Herzegovina	1999-05-08	\N	\N	\N	19.11	16	20.2	3.6	7.5	0.475	1.3	3.4	0.364	2.1	2.8	0.756	3.2	0.9	0.7	0.3	1.4	1.4	10.5	6.4	13.4	2.2	6.1	3.8	5	5.7	1.6	1.2	0.4	2.5	2.5	18.7	0.594	0.558	0.458	0.375	0.364	\N	\N	0.64	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629058
+1054	2019-06-22 19:00:00	Jarrett Culver	jarrett-culver	SG	\N	78.75	81.5	194	Texas Tech	Lubbock, TX	1999-02-20	\N	\N	2	20.32	38	32.5	6.7	14.5	0.461	1.3	4.2	0.304	3.9	5.5	0.707	6.4	3.7	1.5	0.6	2.7	1.9	18.5	7.4	16.1	1.4	4.7	4.3	6.1	7.1	4.1	1.7	0.6	3	2.1	20.5	0.542	0.505	0.292	0.377	0.342	32.2	0.81	1.38	25.1	0.107	0.113	0.22	108.7	86.7	6.9	4.8	11.6	1629633
+1055	2019-06-22 19:00:00	Jaxson Hayes	jaxson-hayes	C	\N	83.5	87.5	219	Texas	Loveland, OH	2000-05-23	\N	\N	1	19.07	32	23.3	3.8	5.3	0.728	0	0	\N	2.3	3.1	0.74	5	0.3	0.6	2.2	0.9	3.3	10	5.9	8.1	0	0	3.6	4.8	7.7	0.4	0.9	3.4	1.4	5.2	15.4	0.739	0.728	0	0.592	0.323	17.2	0.15	0.31	27	0.15	0.08	0.23	138.7	95.6	4.6	5.5	10.1	1629637
+1056	2019-06-22 19:00:00	Ja Morant	ja-morant	PG	\N	75	\N	170	Murray State	Dalzell, SC	1999-08-10	\N	\N	2	19.85	33	36.6	8	16.1	0.499	1.7	4.8	0.363	6.7	8.2	0.812	5.7	10	1.8	0.8	5.2	1.5	24.5	7.9	15.8	1.7	4.7	6.6	8.1	5.6	9.9	1.7	0.8	5.1	1.4	24.1	0.612	0.553	0.296	0.512	0.363	33.3	1.56	1.95	31.6	0.192	0.08	0.272	119.3	95.8	8.3	1.7	10	1629630
+1057	2019-06-22 19:00:00	Kyle Guy	kyle-guy	SG	PG	74.25	76.5	168	Virginia	Indianapolis, IN	1997-08-11	\N	\N	3	21.85	38	35.4	5.2	11.6	0.449	3.2	7.4	0.426	1.8	2.2	0.833	4.5	2.1	0.7	0.1	1.4	1	15.4	5.3	11.8	3.2	7.5	1.9	2.2	4.6	2.1	0.7	0.1	1.4	1	15.7	0.609	0.585	0.639	0.19	0.392	22.7	0.52	1.47	20.4	0.125	0.077	0.202	121.6	96.4	7.6	2.6	10.2	1629657
+1058	2019-06-22 19:00:00	Luka Šamanić	luka-samanic	PF	\N	83	82.5	227	Petrol Olimpija (Slovenia)	Zagreb, Croatia	2000-01-09	\N	\N	\N	19.44	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629677
+1059	2019-06-22 19:00:00	Quinndary Weatherspoon	quinndary-weatherspoon	SG	\N	76.25	81	207	Mississippi State	Canton, MS	1996-09-10	\N	\N	4	22.77	34	34	6.3	12.3	0.508	1.6	4.1	0.396	4.4	5.4	0.809	4.7	2.8	1.7	0.3	2.9	2.1	18.5	6.6	13	1.7	4.3	4.6	5.7	4.9	3	1.8	0.3	3.1	2.2	19.6	0.622	0.574	0.332	0.437	0.364	26.1	0.64	0.97	24	0.138	0.048	0.187	119.3	104.3	6	2.1	8.1	1629683
+1060	2019-06-22 19:00:00	Brandon Clarke	brandon-clarke	PF	\N	80.25	80.25	207	Gonzaga	Vancouver, BC	1996-09-01	\N	\N	3	22.79	37	28.1	6.9	10.1	0.687	0.1	0.4	0.267	2.9	4.2	0.694	8.6	1.9	1.2	3.2	1.5	2.1	16.9	8.9	12.9	0.1	0.5	3.8	5.4	11	2.4	1.5	4.1	2	2.7	21.7	0.699	0.693	0.04	0.42	0.319	23.9	0.51	1.23	37.2	0.212	0.123	0.338	137.9	84	9.8	6.5	16.3	1629634
+1061	2019-06-22 19:00:00	Darius Garland	darius-garland	PG	\N	75	77	173	Vanderbilt	Brentwood, TN	2000-01-26	\N	\N	1	19.39	5	27.8	5.8	10.8	0.537	2.2	4.6	0.478	2.4	3.2	0.75	3.8	2.6	0.8	0.4	3	1.4	16.2	7.5	14	2.8	6	3.1	4.1	4.9	3.4	1	0.5	3.9	1.8	21	0.657	0.639	0.426	0.296	0.376	27.9	0.92	0.87	23.6	0.115	0.029	0.144	112	106.3	3.8	1.1	4.9	1629636
+1062	2019-06-22 19:00:00	Nassir Little	nassir-little	SF	\N	78	85.25	224	North Carolina	Pensacola, FL	2000-02-11	\N	\N	1	19.35	36	18.2	3.6	7.6	0.478	0.4	1.4	0.269	2.1	2.8	0.77	4.6	0.7	0.5	0.5	1.3	1.6	9.8	7.2	15	0.8	2.9	4.2	5.5	9.1	1.3	1	1	2.6	3.2	19.4	0.549	0.504	0.19	0.365	0.338	25.2	0.25	0.5	20	0.085	0.073	0.165	110.1	96.8	2.9	2.2	5.1	1629642
+1063	2019-06-22 19:00:00	Deividas Sirvydis	deividas-sirvydis	SF	\N	80	\N	190	BC Rytas (Lithuania)	Vilnius, Lithuania	2000-06-10	\N	\N	\N	19.02	17	14.2	1.8	3.6	0.484	1.1	2.4	0.463	0.8	1	0.765	1.9	0.6	0.1	0	0.5	1.5	5.4	4.5	9.3	2.8	6.1	1.9	2.5	4.8	1.6	0.1	0	1.2	3.9	13.7	0.656	0.637	0.661	0.274	0.378	\N	\N	1.38	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629686
+1064	2019-06-22 19:00:00	Daniel Gafford	daniel-gafford	C	\N	82.5	86.25	238	Arkansas	El Dorado, AR	1998-10-01	\N	\N	2	20.71	32	28.7	6.7	10.1	0.66	0	0	\N	3.6	6	0.591	8.7	0.7	0.9	2	2.4	2.8	16.9	8.4	12.7	0	0	4.5	7.6	10.9	0.9	1.2	2.5	3	3.4	21.2	0.652	0.66	0	0.596	0.302	26	0.23	0.3	28.7	0.122	0.078	0.2	116.3	95.7	5.7	2.6	8.3	1629655
+1065	2019-06-22 19:00:00	Justin James	justin-james	SG	\N	79	\N	190	Wyoming	Oldsmar, FL	1997-01-24	\N	\N	4	22.4	32	38.2	7.1	17.4	0.409	1.6	5.3	0.296	6.3	8.4	0.741	8.5	4.4	1.5	0.6	4.2	2.1	22.1	6.7	16.4	1.5	5	5.9	8	8	4.2	1.4	0.5	3.9	2	20.8	0.515	0.454	0.303	0.485	0.347	35.6	0.93	1.06	21.5	0.049	0.049	0.095	97.9	104	2.9	-0.2	2.7	1629713
+1066	2019-06-22 19:00:00	Romeo Langford	romeo-langford	SG	\N	78	83	202	Indiana	New Albany, IN	1999-10-25	\N	\N	1	19.65	32	34.1	5.5	12.3	0.448	1.1	3.9	0.272	4.4	6.1	0.722	5.4	2.3	0.8	0.8	2.1	1.9	16.5	5.8	13	1.1	4.1	4.6	6.4	5.7	2.5	0.8	0.9	2.2	2	17.4	0.542	0.491	0.316	0.491	0.338	26.1	0.54	1.1	19.9	0.088	0.059	0.147	109.2	100.9	4.6	1.9	6.5	1629641
+1067	2019-06-22 19:00:00	Matisse Thybulle	matisse-thybulle	SF	\N	77	84	190	Washington	Sammammish, WA	1997-03-04	\N	\N	4	22.29	36	31.1	3.1	7.5	0.415	1.3	4.2	0.305	1.6	1.9	0.851	3.1	2.1	3.5	2.3	1.8	2.8	9.1	3.6	8.7	1.5	4.9	1.8	2.2	3.6	2.5	4.1	2.6	2.1	3.2	10.5	0.542	0.5	0.559	0.248	0.363	17.2	0.78	1.17	19.9	0.047	0.111	0.154	104.7	88	2.7	8.9	11.6	1629680
+1068	2019-06-22 19:00:00	Darius Bazley	darius-bazley	PF	SF	81	84	208	None	Cincinnati, OH	2000-06-12	\N	\N	1	19.02	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629647
+1069	2019-06-22 19:00:00	Jordan Poole	jordan-poole	SG	\N	77.5	78.75	191	Michigan	Milwaukee, WI	1999-06-19	\N	\N	2	20	37	33.1	4.4	10	0.436	2	5.5	0.369	2	2.4	0.833	3	2.2	1.1	0.2	1.5	2	12.8	4.7	10.9	2.2	6	2.2	2.6	3.2	2.4	1.2	0.2	1.7	2.2	13.9	0.573	0.538	0.55	0.244	0.374	20.9	0.62	1.4	16	0.072	0.088	0.16	109.5	93.2	3	4.2	7.2	1629673
+1070	2019-06-22 19:00:00	Miye Oni	miye-oni	SG	SF	77.75	82.75	206	Yale	Northridge, CA	1997-08-04	\N	\N	3	21.87	29	31	5.8	13.1	0.441	1.9	5.2	0.371	3.7	4.7	0.793	6.3	3.6	0.9	1.3	2.6	2.7	17.1	6.7	15.2	2.2	6.1	4.3	5.4	7.3	4.1	1	1.5	3	3.1	19.9	0.561	0.515	0.398	0.356	0.369	28.4	0.74	1.37	22	0.094	0.071	0.165	109	98.4	3.3	0.9	4.2	1629671
+1071	2019-06-22 19:00:00	Bruno Fernando	bruno-fernando	C	\N	82.25	87.25	237	Maryland	Luanda, Angola	1998-08-15	\N	\N	2	20.84	34	30	5.1	8.4	0.607	0.1	0.3	0.3	3.3	4.3	0.779	10.6	2	0.6	1.9	2.8	2.7	13.6	6.1	10	0.1	0.4	4	5.1	12.8	2.4	0.8	2.3	3.3	3.2	16.3	0.653	0.612	0.035	0.509	0.33	22.6	0.64	0.72	27.2	0.121	0.094	0.212	117.9	92.1	5.1	4.9	10	1628981
+1072	2019-06-22 19:00:00	Grant Williams	grant-williams	PF	\N	79.5	81.75	240	Tennessee	Charlotte, NC	1998-11-30	\N	\N	3	20.55	37	31.9	6.3	11.2	0.564	0.4	1.2	0.326	5.8	7	0.819	7.5	3.2	1.1	1.5	2.2	3	18.8	7.1	12.7	0.5	1.4	6.5	7.9	8.5	3.6	1.3	1.7	2.5	3.4	21.2	0.646	0.582	0.111	0.627	0.341	26.4	0.7	1.41	30.6	0.19	0.078	0.268	128.7	96.3	8.6	4.2	12.7	1629684
+1073	2019-06-22 19:00:00	Keldon Johnson	keldon-johnson	SF	\N	78	81.25	216	Kentucky	South Hill, VA	1999-09-01	\N	\N	1	19.79	37	30.7	4.6	10.1	0.461	1.2	3.2	0.381	2.9	4.2	0.703	5.9	1.6	0.8	0.2	1.6	2.2	13.5	5.4	11.8	1.4	3.7	3.5	4.9	6.9	1.9	0.9	0.2	1.9	2.6	15.8	0.558	0.521	0.316	0.416	0.344	22.7	0.46	1	18.5	0.102	0.07	0.172	115.7	98.3	4.1	2.6	6.7	1629640
+1074	2019-06-22 19:00:00	Dylan Windler	dylan-windler	SF	\N	79.5	82	196	Belmont	Indianapolis, IN	1996-09-22	\N	\N	4	22.74	33	33.2	7.4	13.6	0.54	3	7.1	0.429	3.5	4.2	0.847	10.8	2.5	1.4	0.6	2.1	2.1	21.3	8	14.8	3.3	7.6	3.8	4.5	11.7	2.8	1.5	0.6	2.3	2.3	23	0.681	0.651	0.518	0.304	0.395	25.7	0.53	1.22	30.4	0.179	0.084	0.263	129.1	94.7	8.8	1.5	10.3	1629685
+1075	2019-06-22 19:00:00	Jordan Bone	jordan-bone	PG	\N	74.75	75.25	179	Tennessee	Nashville, TN	1997-11-05	\N	\N	3	21.62	37	32.9	5	10.8	0.465	1.4	3.8	0.355	2.1	2.5	0.835	3.2	5.8	0.7	0.1	2	1.3	13.5	5.5	11.8	1.5	4.2	2.2	2.7	3.5	6.3	0.8	0.1	2.2	1.4	14.7	0.562	0.528	0.352	0.228	0.362	21.3	1.42	2.91	18.9	0.115	0.043	0.158	118.1	105.2	5.3	0.8	6	1629648
+1076	2019-06-22 19:00:00	Jaylen Nowell	jaylen-nowell	SG	SF	76.25	79.25	202	Washington	Seattle, WA	1999-07-09	\N	\N	2	19.94	36	34.4	6.1	12.1	0.502	1.4	3.2	0.44	2.6	3.4	0.779	5.3	3.1	1.3	0.3	2.9	2.3	16.2	6.3	12.6	1.5	3.4	2.8	3.5	5.5	3.3	1.3	0.3	3.1	2.4	16.9	0.592	0.561	0.267	0.281	0.358	25.3	0.82	1.06	20.3	0.094	0.068	0.161	110.3	98.5	3.3	1.6	4.9	1629669
+1077	2019-06-22 19:00:00	Cam Reddish	cam-reddish	SF	\N	80	84.5	208	Duke	Westtown Township, PA	1999-09-01	\N	\N	1	19.79	36	29.7	4.3	12	0.356	2.5	7.4	0.333	2.4	3.2	0.772	3.7	1.9	1.6	0.6	2.7	2.4	13.5	5.2	14.5	3	9	3	3.8	4.5	2.4	1.9	0.7	3.2	2.9	16.3	0.499	0.459	0.618	0.264	0.379	25.3	0.42	0.73	13.6	0.03	0.082	0.112	97.9	95.1	1.3	3.2	4.5	1629629
+1078	2019-06-22 19:00:00	Mfiondu Kabengele	mfiondu-kabengele	C	\N	82.25	87	256	Florida State	Burlington, ON	1997-08-14	\N	\N	2	21.84	37	21.6	4.4	8.8	0.502	0.6	1.8	0.369	3.7	4.9	0.761	5.9	0.3	0.6	1.5	1.3	2.6	13.2	7.4	14.8	1.1	2.9	6.2	8.1	9.9	0.5	0.9	2.5	2.2	4.3	22.1	0.593	0.538	0.199	0.55	0.346	28.5	0.11	0.23	28.9	0.15	0.09	0.241	120.5	92.9	6.1	3.4	9.6	1629662
+1079	2019-06-22 19:00:00	Chuma Okeke	chuma-okeke	PF	\N	80	84	235	Auburn	Fairburn, GA	1998-08-18	\N	\N	2	20.83	38	29.1	4.4	8.9	0.496	1.4	3.7	0.387	1.7	2.4	0.722	6.8	1.9	1.8	1.2	1.7	1.9	12	5.5	11	1.8	4.6	2.1	2.9	8.5	2.4	2.2	1.5	2.2	2.3	14.9	0.597	0.577	0.419	0.265	0.353	20	0.62	1.11	24.5	0.119	0.083	0.199	121.2	95.2	7	4.1	11.1	1629643
+1080	2019-06-22 19:00:00	Alen Smailagić	alen-smailagic	PF	\N	82	86	215	Santa Cruz (G League)	Belgrade, Serbia	2000-08-18	\N	\N	\N	18.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629346
+1081	2019-06-22 19:00:00	Sekou Doumbouya	sekou-doumbouya	PF	SF	81	83	230	Limoges CSP (France)	Conakry, Guinea	2000-12-23	\N	\N	\N	18.48	35	18	3	6.1	0.495	0.8	2.4	0.325	0.8	1.1	0.757	3.2	0.7	0.8	0.5	1.2	2.2	7.6	6	12.1	1.5	4.7	1.6	2.1	6.4	1.4	1.5	1	2.3	4.5	15.1	0.577	0.559	0.392	0.175	0.352	\N	\N	0.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629635
+1082	2019-06-22 19:00:00	Ty Jerome	ty-jerome	PG	SG	77.5	76	194	Virginia	New Rochelle, NY	1997-07-07	\N	\N	3	21.95	37	33.9	4.8	11.1	0.435	2.1	5.4	0.399	1.8	2.5	0.736	4.2	5.5	1.5	0	1.6	1.7	13.6	5.1	11.7	2.3	5.7	1.9	2.6	4.5	5.8	1.6	0	1.7	1.8	14.4	0.555	0.532	0.484	0.222	0.363	23.4	1.39	3.31	22.9	0.137	0.092	0.229	120.4	92.2	6.8	4.6	11.5	1629660
+1083	2019-06-22 19:00:00	Carsen Edwards	carsen-edwards	PG	\N	72.25	78	199	Purdue	Houston, TX	1998-03-12	\N	\N	3	21.27	36	35.4	7.7	19.5	0.394	3.8	10.6	0.355	5.1	6.1	0.837	3.6	2.9	1.3	0.3	3.1	2	24.3	7.8	19.8	3.8	10.7	5.2	6.2	3.7	2.9	1.4	0.3	3.2	2.1	24.7	0.541	0.49	0.541	0.314	0.401	37.3	0.49	0.92	23.2	0.125	0.05	0.176	109.9	103.4	7.5	1	8.5	1629035
+1084	2019-06-22 19:00:00	Terance Mann	terance-mann	SF	\N	78.5	79.75	205	Florida State	Lowell, MA	1996-10-18	\N	\N	4	22.67	37	31.7	4	7.9	0.505	0.8	2.1	0.39	2.6	3.4	0.79	6.5	2.5	0.7	0.3	1.8	2.2	11.4	4.5	8.9	0.9	2.4	3	3.8	7.4	2.9	0.8	0.4	2	2.5	12.9	0.603	0.557	0.265	0.426	0.348	17.5	0.89	1.45	18.9	0.109	0.065	0.174	122.5	99.7	4.9	2.8	7.7	1629611
+1094	2020-06-22 19:00:00	Justinian Jessup	justinian-jessup	SG	\N	79	\N	202	Boise State	Longmont, CO	1998-05-23	\N	\N	4	22.07	32	36	5.4	12.6	0.426	3.1	7.7	0.397	2.2	2.3	0.959	4.4	2.1	1.4	0.5	1.3	2.2	16	5.4	12.6	3.1	7.7	2.2	2.3	4.4	2.1	1.4	0.5	1.3	2.2	16	0.584	0.547	0.611	0.181	0.406	21.1	0.57	1.68	20.1	0.118	0.063	0.181	119.5	98.3	5.4	1.8	7.2	\N
+1095	2026-01-25 19:32:00	Jayden Quaintance	jayden-quaintance	PF	\N	82.5	\N	255	Kentucky	Cleveland, OH	2007-07-11	16	17	2	18.94	4	16.8	2	3.5	0.571	0	0	\N	1	3.3	0.308	5	0.5	0.5	0.8	1.5	1.3	5	4.3	7.5	0	0	2.1	7	10.7	1.1	1.1	1.6	3.2	2.7	10.7	0.496	0.571	0	0.929	\N	19.1	0.26	0.33	13	0	0.06	0.06	92.5	100.7	0	1.8	1.7	\N
+1096	2026-01-25 19:32:00	Michael Ruzic	michael-ruzic	PF	\N	84.25	84.75	221	Joventut (Spain)	Zadar, Croatia	2006-10-04	69	\N	\N	19.71	12	14	1.4	2.8	0.515	0.3	0.9	0.364	0.8	1.2	0.643	2.2	0.4	0.1	0.3	0.3	1.4	3.9	3.6	7.1	0.9	2.4	1.9	3	5.6	1.1	0.2	0.6	0.6	3.6	10.1	0.593	0.576	0.333	0.424	\N	\N	\N	1.67	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+1098	2026-01-25 19:32:00	Thomas Haugh	thomas-haugh	PF	\N	81	\N	215	Florida	New Oxford, PA	2003-07-07	15	\N	3	22.95	20	34.3	5.8	12.3	0.467	1.9	5.5	0.336	4.1	5.5	0.743	6.7	2	1.1	0.9	1.8	2.3	17.4	6	12.9	1.9	5.8	4.3	5.7	7	2.1	1.1	0.9	1.8	2.4	18.3	0.584	0.543	0.447	0.443	0.357	21.8	0.47	1.14	20	0.117	0.076	0.199	127.7	102.2	6.3	3.9	10.2	\N
+1086	2020-06-22 19:00:00	Killian Tillie	killian-tillie	PF	C	82	80	222	Gonzaga	Paris, France	1998-03-05	\N	\N	4	22.29	24	24.6	5.1	9.6	0.535	1.5	3.8	0.4	1.9	2.6	0.726	5	1.9	1	0.8	1	2.5	13.6	7.5	14	2.2	5.5	2.7	3.8	7.3	2.7	1.5	1.2	1.5	3.6	19.9	0.63	0.613	0.391	0.27	0.36	22.9	0.57	1.88	27.5	0.176	0.088	0.264	130.8	92.5	8.3	3.7	12	1629681
+1087	2020-06-22 19:00:00	Udoka Azubuike	udoka-azubuike	C	\N	83.5	91.25	260	Kansas	Lagos, Nigeria	1999-09-17	\N	\N	4	20.75	31	27.7	5.8	7.8	0.748	0	0	\N	2.1	4.7	0.441	10.5	0.9	0.5	2.6	2.5	2.4	13.7	7.6	10.1	0	0	2.7	6.1	13.6	1.2	0.6	3.4	3.2	3.1	17.9	0.685	0.748	0	0.599	0.281	22.9	0.31	0.38	31.3	0.135	0.121	0.256	118.2	82.9	7.2	5.2	12.4	1628962
+1088	2020-06-22 19:00:00	Aleksej Pokuševski	aleksej-pokusevski	PF	\N	84	87	201	Olympiacos B (Greece)	Novi Sad, Serbia	2001-12-26	\N	\N	\N	18.48	12	21.3	3.5	8.8	0.4	1.4	4.4	0.321	1.5	1.9	0.783	7.3	2.8	1.2	1.7	1.8	1.4	9.9	5.9	14.8	2.4	7.5	2.5	3.2	12.2	4.8	2	2.8	3	2.4	16.7	0.513	0.481	0.505	0.219	0.37	26.13	0.97	1.62	21.76	\N	\N	\N	104	84.5	\N	\N	\N	1630197
+1089	2020-06-22 19:00:00	Isaiah Joe	isaiah-joe	SG	\N	76.5	79.5	170	Arkansas	Fort Smith, AR	1999-07-02	\N	\N	2	20.96	26	36.1	5.1	13.8	0.367	3.6	10.6	0.342	3.1	3.5	0.89	4.1	1.7	1.4	0.3	1.7	1.8	16.9	5.1	13.8	3.6	10.5	3.1	3.5	4.1	1.7	1.4	0.3	1.7	1.8	16.8	0.544	0.497	0.764	0.253	0.405	24.2	0.41	1	17.5	0.077	0.06	0.136	106.4	99.2	4	1.2	5.3	1630198
+1090	2020-06-22 19:00:00	Jaden McDaniels	jaden-mcdaniels	SF	\N	82	83.5	184	Washington	Federal Way, WA	2000-09-29	\N	\N	1	19.72	31	31.1	4.4	10.8	0.405	1.4	4.1	0.339	2.8	3.7	0.763	5.8	2.1	0.8	1.4	3.2	3.3	13	5.1	12.6	1.6	4.7	3.3	4.3	6.7	2.4	0.9	1.6	3.7	3.9	15	0.515	0.469	0.378	0.339	0.354	25.6	0.57	0.65	14.6	0.025	0.071	0.096	93.8	95.4	0.3	2.2	2.6	1630183
+1091	2020-06-22 19:00:00	Markus Howard	markus-howard	PG	\N	71	72.25	171	Marquette	Chandler, AZ	1999-03-03	\N	\N	4	21.3	29	33.2	8.2	19.3	0.422	4.2	10.1	0.412	7.3	8.6	0.847	3.5	3.3	0.9	0	3.4	2.4	27.8	8.9	21	4.5	11	7.9	9.3	3.8	3.6	1	0	3.7	2.6	30.1	0.593	0.53	0.524	0.444	0.415	39.3	0.67	0.97	29.2	0.199	0.042	0.241	116.7	103.6	10.5	0.6	11	1630210
+1092	2020-06-22 19:00:00	LaMelo Ball	lamelo-ball	PG	\N	79	\N	190	Illawarra (NBL)	Chino Hills, CA	2001-08-22	\N	\N	\N	18.82	13	31.3	6.3	16.2	0.389	1.8	6.6	0.279	2.7	3.8	0.7	7.8	6.8	1.5	0.2	2.5	2.6	17.2	7.3	18.7	2.1	7.6	3.1	4.4	9	7.8	1.8	0.2	2.9	3	19.7	0.475	0.445	0.408	0.237	0.353	27.24	1.33	2.67	18.48	\N	\N	\N	108	113.8	\N	\N	\N	1630163
+1093	2020-06-22 19:00:00	Sam Merrill	sam-merrill	SG	\N	77	\N	205	Utah State	Bountiful, UT	1996-05-16	\N	\N	4	24.09	32	35	6.1	13.2	0.461	2.8	6.8	0.41	4.7	5.3	0.893	4.1	3.9	0.9	0.1	1.6	2.3	19.7	6.3	13.6	2.9	7	4.8	5.4	4.2	4	0.9	0.1	1.6	2.3	20.2	0.625	0.566	0.513	0.397	0.394	24.9	0.93	2.5	25	0.186	0.071	0.254	129.7	96.3	7.6	2.4	9.9	1630241
+1097	2020-06-22 19:00:00	Jordan Nwora	jordan-nwora	SF	\N	79	82.25	223	Louisville	Buffalo, NY	1998-09-09	\N	\N	3	21.78	31	33.1	6.1	13.9	0.44	2.5	6.1	0.402	3.4	4.1	0.812	7.7	1.3	0.7	0.3	2.1	2.2	18	6.6	15.1	2.7	6.6	3.6	4.5	8.4	1.4	0.8	0.3	2.3	2.4	19.6	0.568	0.528	0.44	0.298	0.38	27.8	0.3	0.62	22.6	0.125	0.078	0.203	113.5	94.2	6.3	1.9	8.2	1629670
+1099	2020-06-22 19:00:00	Cassius Winston	cassius-winston	PG	\N	73.5	78	196	Michigan State	Detroit, MI	1998-02-28	\N	\N	4	22.3	30	32.7	6.2	13.8	0.448	2.4	5.6	0.432	3.8	4.5	0.852	2.5	5.9	1.2	0	3.2	2	18.6	6.8	15.2	2.7	6.2	4.2	5	2.8	6.5	1.3	0	3.5	2.2	20.5	0.585	0.536	0.409	0.327	0.386	29.1	1.25	1.83	23	0.143	0.061	0.204	114.5	98.5	7	1.9	8.9	1630216
+1100	2026-01-25 19:32:00	Otega Oweh	otega-oweh	SG	\N	77.5	80.5	213	Kentucky	Newark, NJ	2003-06-21	64	77	4	22.99	20	29.7	5.4	11.7	0.464	1.2	3.5	0.333	4.2	5.6	0.748	4.3	2.5	1.9	0.4	1.8	2.3	16.1	6.5	14.1	1.4	4.2	5	6.7	5.2	3	2.3	0.4	2.2	2.8	19.5	0.563	0.513	0.296	0.476	0.348	26.5	0.59	1.39	20.9	0.094	0.081	0.175	117.1	101.4	3.8	3.8	7.6	\N
+1101	2026-01-25 19:32:00	Alex Karaban	alex-karaban	SF	PF	79.75	83	219	UConn	Southborough, MA	2002-11-11	44	\N	4	23.61	20	33.8	4.9	10.3	0.478	1.9	4.6	0.418	2.1	2.4	0.854	5.4	1.9	0.8	0.9	0.8	2.3	13.8	5.2	10.9	2	4.8	2.2	2.6	5.8	2	0.9	1	0.8	2.4	14.6	0.604	0.571	0.444	0.234	0.376	18.4	0.54	2.53	18.4	0.112	0.095	0.207	132.1	98	5.1	3.6	8.7	\N
+1103	2026-01-25 19:32:00	AJ Dybantsa	aj-dybantsa	SF	\N	81	\N	210	BYU	Brockton, MA	2007-01-29	3	1	1	19.39	20	32.1	8	15.1	0.53	1.1	3.3	0.318	6.6	8.6	0.762	6.7	3.6	1.3	0.5	2.8	1.2	23.6	9	16.9	1.2	3.7	7.3	9.6	7.5	4	1.5	0.5	3.1	1.3	26.5	0.615	0.565	0.219	0.57	0.346	32.6	0.67	1.29	29	0.168	0.081	0.249	125.1	100.5	8.9	3.3	12.2	\N
+1105	2026-01-25 19:32:00	Tahaad Pettiford	tahaad-pettiford	PG	\N	73.5	77.5	169	Auburn	Jersey City, NJ	2005-08-04	61	35	2	20.88	20	30.9	4.6	12.3	0.37	1.7	6.3	0.27	3	3.6	0.819	2.9	3.1	1	0.7	2.4	2.4	13.8	5.3	14.4	2	7.4	3.4	4.2	3.4	3.6	1.2	0.8	2.7	2.7	16	0.491	0.439	0.512	0.293	0.367	25.4	0.72	1.32	13	0.039	0.032	0.078	105.7	114.2	1.1	0.7	1.8	\N
+1106	2026-01-25 19:32:00	Nate Ament	nate-ament	SF	\N	82	\N	207	Tennessee	Manassas, VA	2006-12-10	6	4	1	19.53	19	28.7	4.8	11.5	0.42	1.2	3.9	0.293	5.3	6.9	0.765	6.4	2.5	1.3	0.4	2.5	2.3	16.2	6.1	14.4	1.5	4.9	6.7	8.7	8	3.1	1.6	0.5	3.2	2.8	20.2	0.545	0.47	0.342	0.603	0.35	28.7	0.55	0.98	20.1	0.095	0.095	0.19	115.7	98	3.6	3.6	7.1	\N
+1108	2026-01-25 19:32:00	Miles Byrd	miles-byrd	SG	\N	78	82	182	San Diego State	Stockton, CA	2004-09-08	54	\N	3	21.78	19	27.6	3.8	8.7	0.434	1.5	4.3	0.346	2	2.5	0.809	4.2	2.9	2.1	1	2	1.9	11.1	4.9	11.4	1.9	5.6	2.6	3.2	5.5	3.8	2.7	1.3	2.6	2.5	14.4	0.558	0.518	0.488	0.283	0.366	21.4	0.87	1.45	17.9	0.046	0.107	0.152	108.7	95	3.1	5.7	8.8	\N
+1110	2026-01-25 19:32:00	Braylon Mullins	braylon-mullins	SG	\N	78	\N	196	UConn	Greenfield, IN	2006-04-18	12	17	1	20.17	14	25.4	4.2	8.9	0.472	2.1	5.6	0.367	0.9	1.1	0.8	3.5	1.4	1.3	0.5	1.4	2.7	11.4	6	12.6	2.9	8	1.2	1.5	5	2	1.8	0.7	2	3.8	16.1	0.602	0.588	0.632	0.12	0.382	21.9	0.47	1	17.2	0.067	0.101	0.169	115.4	95.1	3.8	5	8.8	\N
+1111	2026-01-25 19:32:00	Joshua Jefferson	joshua-jefferson	PF	SF	81	\N	240	Iowa State	Las Vegas, NV	2003-11-21	27	\N	4	22.58	20	31	5.8	11.6	0.5	1.2	2.9	0.404	4.7	6.5	0.715	7.8	5.2	1.6	1	2.5	2.4	17.4	6.7	13.5	1.3	3.3	5.4	7.6	9	6	1.8	1.1	2.9	2.7	20.2	0.592	0.55	0.246	0.56	0.345	27.1	1.06	2.06	26.8	0.155	0.116	0.271	126.1	90.7	7.9	5.8	13.7	\N
+1114	2026-01-25 19:32:00	Tounde Yessoufou	tounde-yessoufou	SG	SF	77	\N	215	Baylor	Santa Maria, CA	2006-05-15	18	9	1	20.1	19	30.2	6.6	13.6	0.488	1.5	4.9	0.298	2.9	3.8	0.767	5.9	1.7	2.1	0.6	2.2	2.3	17.7	7.9	16.2	1.8	5.9	3.5	4.6	7	2.1	2.4	0.8	2.6	2.8	21.1	0.574	0.543	0.364	0.283	0.356	27.3	0.39	0.79	22.9	0.111	0.063	0.174	119.2	106.1	4.3	1.1	5.4	\N
+1115	2026-01-25 19:32:00	Johann Grünloh	johann-grunloh	C	\N	84	\N	238	Virginia	Löningen, Germany	2005-08-14	55	\N	1	20.85	19	23.4	3.2	6.4	0.504	0.7	2.2	0.317	1.3	2.6	0.5	6.7	0.9	0.5	2.4	0.7	2.5	8.4	4.9	9.8	1.1	3.3	2	4	10.3	1.4	0.8	3.7	1.1	3.8	12.9	0.553	0.558	0.339	0.413	0.308	17.5	0.38	1.31	21.6	0.099	0.099	0.198	127.2	96.4	3.4	4	7.4	\N
+1118	2026-01-25 19:32:00	Mikel Brown Jr.	mikel-brown-jr	PG	\N	77	\N	190	Louisville	Orlando, FL	2006-04-03	7	8	1	20.21	12	27.8	4.4	11.8	0.373	1.9	7	0.274	5.3	6.5	0.821	2.9	5.1	0.8	0.1	2.6	1.3	16.1	5.7	15.3	2.5	9.1	6.9	8.4	3.8	6.6	1	0.1	3.3	1.7	20.8	0.539	0.454	0.592	0.549	0.376	29.9	1.09	1.97	18.3	0.108	0.072	0.18	115.1	103.7	4.1	0.7	4.7	\N
+1120	2026-01-25 19:32:00	Tamin Lipsey	tamin-lipsey	PG	\N	73	\N	200	Iowa State	Ames, IA	2003-06-25	65	\N	4	22.99	17	30.5	5	10.9	0.459	1.1	3.6	0.295	2.1	3	0.706	3.9	5.4	2.4	0.1	1.1	1.8	13.2	5.9	12.8	1.2	4.2	2.5	3.5	4.6	6.3	2.8	0.1	1.3	2.1	15.5	0.535	0.508	0.33	0.276	0.339	21.5	1.34	4.79	22.1	0.131	0.108	0.239	129.2	93.4	5.4	6	11.3	\N
+1122	2026-01-25 19:32:00	Henri Veesaar	henri-veesaar	C	\N	84	\N	225	North Carolina	Tallinn, Estonia	2004-03-28	34	\N	3	22.23	20	30.8	6.3	10	0.63	1.3	2.8	0.473	2.7	4.4	0.614	8.8	2	0.5	1.2	1.8	2.7	16.6	7.4	11.7	1.5	3.2	3.2	5.1	10.3	2.3	0.6	1.3	2	3.1	19.4	0.687	0.695	0.275	0.44	0.337	22.2	0.57	1.14	25	0.136	0.084	0.227	131.5	99.6	6.7	3.5	10.1	\N
+1124	2026-01-25 19:32:00	Milan Momcilovic	milan-momcilovic	SF	PF	80	\N	225	Iowa State	Pewaukee, WI	2004-09-22	53	51	3	21.74	20	29.2	6.3	11.4	0.551	4	7.4	0.541	2.3	2.5	0.9	3.3	0.9	1	0.3	0.8	1.6	18.8	7.7	14	4.9	9.1	2.8	3.1	4.1	1.1	1.2	0.3	1	1.9	23.1	0.748	0.727	0.652	0.22	0.43	22.3	0.25	1.12	25.6	0.185	0.096	0.274	150.2	97.9	10.8	3	13.8	\N
+1126	2026-01-25 19:32:00	Karim López	karim-lopez	SF	\N	80	\N	220	New Zealand (NBL)	Hermosillo, Mexico	2007-04-12	20	\N	\N	19.19	9	21.9	3.7	7.7	0.478	1.3	3	0.444	1.3	1.7	0.8	5.8	1.3	0.9	0.9	1.6	2.7	10	6	12.6	2.2	4.9	2.2	2.7	9.5	2.2	1.5	1.5	2.6	4.4	16.4	0.591	0.565	0.391	0.217	0.372	18.7	0.49	0.86	15.8	\N	\N	\N	111.4	108.1	\N	\N	\N	\N
+1104	2020-06-22 19:00:00	Paul Eboua	paul-eboua	PF	\N	79.5	87.5	222	VL Pesaro (Italy)	Douala, Cameroon	2000-02-15	\N	\N	\N	20.34	18	21.6	2.5	5.4	0.459	0.4	1.7	0.258	1.9	3.1	0.625	5.3	0.8	0.7	0.7	1.2	2.9	7.4	4.2	9.1	0.7	2.9	3.2	5.2	8.8	1.4	1.1	1.2	2	4.9	12.3	0.534	0.5	0.316	0.571	0.317	16.71	0.4	0.68	14.79	\N	\N	\N	109.9	117.6	\N	\N	\N	\N
+1102	2020-06-22 19:00:00	Anthony Edwards	anthony-edwards	SG	\N	77	81	225	Georgia	Atlanta, GA	2001-08-05	\N	\N	1	18.87	32	33	6.3	15.8	0.402	2.3	7.7	0.294	4.1	5.3	0.772	5.2	2.8	1.3	0.6	2.7	2.2	19.1	6.9	17.2	2.5	8.3	4.5	5.8	5.7	3.1	1.5	0.6	3	2.4	20.8	0.52	0.473	0.485	0.339	0.369	30.4	0.59	1.05	20.8	0.095	0.042	0.136	105.8	103.6	4.8	0.7	5.5	1630162
+1107	2020-06-22 19:00:00	Elijah Hughes	elijah-hughes	SG	SF	78.5	79.5	229	Syracuse	Beacon, NY	1998-03-10	\N	\N	3	22.28	32	36.7	6.2	14.5	0.427	2.4	7.1	0.342	4.2	5.2	0.813	4.9	3.4	1.2	0.8	2.3	1.8	19	6.1	14.2	2.4	7	4.1	5.1	4.8	3.3	1.1	0.8	2.2	1.8	18.7	0.561	0.511	0.491	0.358	0.374	26.6	0.76	1.49	22.1	0.119	0.044	0.163	113.1	103	6.1	1.2	7.3	1630190
+1109	2020-06-22 19:00:00	Vít Krejčí	vit-krejci	PG	\N	80	\N	195	Zaragoza (Spain)	Strakonice, Czechia	2000-06-19	\N	\N	\N	20	37	9.2	1.2	2.2	0.554	0.3	0.9	0.343	0.4	0.6	0.542	1.2	0.7	0.3	0.1	0.6	1.5	3.2	4.9	8.8	1.3	3.7	1.4	2.5	4.9	2.7	1.1	0.4	2.2	6.1	12.4	0.62	0.627	0.422	0.289	0.318	15.61	0.77	1.19	11.56	\N	\N	\N	112.2	109.2	\N	\N	\N	1630249
+1112	2020-06-22 19:00:00	Skylar Mays	skylar-mays	SG	\N	76	78	204	LSU	Baton Rouge, LA	1997-11-05	\N	\N	4	22.62	31	34.4	5.5	11.1	0.491	1.6	4.1	0.394	4.2	4.9	0.854	5	3.2	1.8	0.2	2.3	1.7	16.7	5.7	11.6	1.7	4.3	4.4	5.1	5.3	3.4	1.9	0.2	2.4	1.8	17.4	0.622	0.564	0.369	0.439	0.369	22	0.77	1.43	23.7	0.146	0.045	0.191	123.7	102.6	5.8	2.5	8.3	1630219
+1113	2020-06-22 19:00:00	Josh Hall	josh-hall	SF	\N	79.5	83	197	Moravian Prep	Durham, NC	2000-10-08	\N	\N	\N	19.7	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1630221
+1116	2020-06-22 19:00:00	Nico Mannion	nico-mannion	PG	\N	75	74.5	179	Arizona	Phoenix, AZ	2001-03-17	\N	\N	1	19.26	32	32.3	4.5	11.5	0.392	1.7	5.1	0.327	3.3	4.2	0.797	2.5	5.3	1.2	0	2.6	1.7	14	5	12.8	1.8	5.7	3.7	4.6	2.8	5.9	1.3	0	2.9	1.9	15.6	0.52	0.465	0.441	0.362	0.362	24.5	1.29	2.06	17.2	0.085	0.066	0.151	107.1	97.6	3.6	1.8	5.4	1630185
+1117	2020-06-22 19:00:00	Malachi Flynn	malachi-flynn	PG	\N	73	75	185	San Diego State	Tacoma, WA	1998-05-10	\N	\N	3	22.11	32	33.4	5.8	13	0.441	2.4	6.4	0.373	3.8	4.4	0.857	4.5	5.1	1.8	0.1	1.8	1.8	17.6	6.2	14	2.6	6.9	4	4.7	4.8	5.5	1.9	0.1	1.9	1.9	19	0.583	0.532	0.489	0.336	0.383	26.8	1.15	2.84	27.7	0.183	0.093	0.277	124.5	90.3	7.6	4.1	11.7	1630201
+1119	2020-06-22 19:00:00	Kira Lewis Jr.	kira-lewis-jr	PG	\N	75	77	180	Alabama	Hazel Green, AL	2001-04-06	\N	\N	2	19.2	31	37.6	6.6	14.5	0.459	1.8	4.9	0.366	3.4	4.2	0.802	4.8	5.2	1.8	0.6	3.5	2.6	18.5	6.4	13.9	1.7	4.7	3.2	4	4.6	5	1.7	0.6	3.4	2.5	17.7	0.56	0.521	0.341	0.292	0.362	24.3	1.14	1.47	19.8	0.099	0.041	0.141	109.8	103.5	3.7	1.7	5.5	1630184
+1121	2020-06-22 19:00:00	Trevelin Queen	trevelin-queen	SG	\N	78	\N	190	New Mexico State	Glen Burnie, MD	1997-02-25	\N	\N	4	23.31	26	27.5	4.9	10.5	0.471	2	5.3	0.387	1.3	1.7	0.814	5.2	2.4	1.7	0.3	1.8	2.3	13.2	6.4	13.7	2.7	6.9	1.8	2.2	6.8	3.2	2.3	0.4	2.4	3.1	17.3	0.588	0.568	0.504	0.158	0.38	25.1	0.79	1.31	25.5	0.14	0.095	0.24	118.8	89.1	5.1	2.1	7.2	1630243
+1123	2020-06-22 19:00:00	Aaron Nesmith	aaron-nesmith	SF	\N	78	\N	213	Vanderbilt	Charleston, SC	1999-10-16	\N	\N	2	20.67	14	35.7	7.5	14.6	0.512	4.3	8.2	0.522	3.7	4.5	0.825	4.9	0.9	1.4	0.9	1.7	2.8	23	7.6	14.8	4.3	8.3	3.7	4.5	4.9	0.9	1.4	0.9	1.7	2.8	23.2	0.685	0.659	0.561	0.307	0.41	26.3	0.26	0.54	29	0.176	0.032	0.208	127.8	106.8	9.3	0.4	9.7	1630174
+1125	2020-06-22 19:00:00	Marko Simonović	marko-simonovic	PF	C	83	\N	220	KK Mega Basket (Serbia)	Kolašin, Montenegro	1999-10-15	\N	\N	\N	20.68	24	29.6	5.9	11.5	0.509	0.8	2.5	0.311	4.3	5.3	0.803	8	1.2	1.1	1.2	2.3	3.8	16.8	7.1	14	1	3.1	5.2	6.4	9.8	1.5	1.3	1.5	2.7	4.7	20.4	0.597	0.543	0.22	0.458	0.347	24.18	0.35	0.54	20.96	\N	\N	\N	117.4	109.2	\N	\N	\N	1630250
+1127	2020-06-22 19:00:00	Grant Riller	grant-riller	PG	SG	73	77.25	178	Charleston	Orlando, FL	1997-02-08	\N	\N	4	23.36	31	33.5	7.3	14.7	0.499	1.5	4.2	0.362	5.7	6.9	0.827	5.1	3.9	1.6	0.3	3.1	2.3	21.9	7.9	15.8	1.6	4.5	6.1	7.4	5.5	4.2	1.7	0.3	3.4	2.4	23.5	0.609	0.551	0.286	0.47	0.364	33.6	0.9	1.26	30.6	0.173	0.054	0.223	115.6	100.9	6	1.1	7.1	1630203
+1130	2020-06-22 19:00:00	Zeke Nnaji	zeke-nnaji	C	\N	82.5	86	247	Arizona	Hopkins, MN	2001-01-09	\N	\N	1	19.44	32	30.7	5.6	9.8	0.57	0.2	0.5	0.294	4.8	6.3	0.76	8.6	0.8	0.7	0.9	2.2	2.4	16.1	6.6	11.5	0.2	0.6	5.6	7.3	10.1	1	0.8	1	2.6	2.8	18.9	0.63	0.578	0.054	0.637	0.327	24.1	0.24	0.39	25.7	0.143	0.086	0.228	120.5	92.5	5.6	2.3	8	1630192
+1128	2026-01-25 19:32:00	Labaron Philon	labaron-philon	PG	\N	76	78.25	175	Alabama	Mobile, AL	2005-11-24	8	32	2	20.57	18	29.4	7.8	15.1	0.52	2.1	5.6	0.366	4.5	6	0.75	3.5	5	1.3	0.2	2.8	1.9	22.2	9.6	18.4	2.5	6.9	5.5	7.3	4.3	6.1	1.6	0.3	3.4	2.4	27.2	0.621	0.589	0.373	0.399	0.368	31.8	1.07	1.8	26.6	0.159	0.038	0.204	124.2	112.3	8.8	2.3	11.1	\N
+1129	2026-01-25 19:32:00	Solo Ball	solo-ball	SG	\N	76	\N	200	UConn	Leesburg, VA	2003-12-07	66	33	3	22.53	19	29.6	4.8	11.3	0.425	1.8	6.4	0.289	3.2	3.8	0.836	3.7	1.5	0.6	0.3	1.3	1.9	14.6	5.8	13.7	2.2	7.8	3.9	4.7	4.5	1.8	0.8	0.4	1.5	2.3	17.8	0.559	0.507	0.565	0.341	0.374	24.8	0.37	1.17	16.6	0.085	0.085	0.171	117.9	100	3.5	2.1	5.7	\N
+1131	2026-01-25 19:32:00	Tyler Tanner	tyler-tanner	PG	\N	72	\N	175	Vanderbilt	Brentwood, TN	2006-02-01	28	\N	2	20.38	20	30.8	5.9	11.8	0.498	1.8	4.4	0.402	4	4.5	0.878	3.6	5.3	2.4	0.5	1.9	2.2	17.4	6.8	13.8	2	5.1	4.6	5.3	4.2	6.1	2.8	0.6	2.2	2.6	20.4	0.626	0.572	0.37	0.383	0.379	24.6	1.2	2.84	25.2	0.15	0.085	0.234	129.7	100.5	6.9	4.9	11.9	\N
+1132	2026-01-25 19:32:00	Motiejus Krivas	motiejus-krivas	C	\N	86	\N	260	Arizona	Siauliai, Lithuania	2004-12-01	56	\N	3	21.55	21	24	3.6	6	0.608	0.1	0.3	0.429	3.5	4.3	0.811	8.5	1.1	0.7	1.8	1.4	2.4	10.9	5.4	8.9	0.2	0.5	5.2	6.4	12.8	1.6	1.1	2.6	2.1	3.7	16.3	0.68	0.62	0.056	0.72	0.336	18.3	0.39	0.77	24.9	0.135	0.127	0.262	135.7	89.5	5.4	5.7	11.1	\N
+1133	2026-01-25 19:32:00	Keaton Wagler	keaton-wagler	SG	\N	78	\N	185	Illinois	Shawnee, KS	2007-02-03	9	\N	1	19.38	20	31.7	5.1	10.7	0.477	2.5	5.8	0.435	4.8	5.8	0.826	5	4	0.7	0.3	1.5	2.1	17.5	5.8	12.2	2.8	6.5	5.4	6.5	5.6	4.5	0.8	0.3	1.7	2.3	19.8	0.65	0.593	0.537	0.537	0.385	23.3	0.97	2.67	25.3	0.208	0.063	0.271	144.9	106.5	9.7	3	12.7	\N
+1134	2026-01-25 19:32:00	Hannes Steinbach	hannes-steinbach	PF	\N	83	\N	220	Washington	Würzburg, Germany	2006-05-01	13	\N	1	20.14	17	32.4	6.4	12.1	0.524	0.5	1.6	0.321	4.3	5.7	0.753	11.2	1.8	1	0.9	1.9	2.3	17.5	7.1	13.5	0.6	1.8	4.8	6.3	12.5	2	1.1	1	2.2	2.5	19.5	0.591	0.546	0.136	0.471	0.334	25.2	0.44	0.91	26.2	0.131	0.08	0.211	124.5	102.3	7	2.2	9.2	\N
+1135	2026-01-25 19:32:00	Sergio de Larrea	sergio-de-larrea	PG	SG	78	\N	198	Valencia (Spain)	Valladolid, Spain	2005-12-04	26	\N	\N	20.54	12	16.6	2.8	5.4	0.523	1.3	2.3	0.571	2.7	3.3	0.821	2.1	3.3	0.5	0.1	2.3	1.9	9.7	6.2	11.8	2.9	5.1	5.8	7.1	4.5	7.1	1.1	0.2	5.1	4.2	21	0.694	0.646	0.431	0.6	0.39	24.5	1.22	1.39	19.4	\N	\N	\N	122.8	119.7	\N	\N	\N	\N
+1136	2026-01-25 19:32:00	Tucker DeVries	tucker-devries	SG	SF	79	\N	220	Indiana	Omaha, NE	2002-12-07	62	\N	4	23.53	20	32	4.8	12.1	0.398	2.8	8.4	0.335	2.2	2.6	0.863	5	3	1.1	0.5	1.5	2.7	14.6	5.4	13.6	3.2	9.4	2.5	2.9	5.6	3.4	1.2	0.6	1.6	3	16.5	0.55	0.515	0.693	0.212	0.394	23.7	0.75	2.07	16.8	0.081	0.075	0.156	116	102.4	4.2	2.6	6.8	\N
+1137	2026-01-25 19:32:00	Juke Harris	juke-harris	SG	\N	79	\N	200	Wake Forest	Salisbury, NC	2005-07-22	47	80	2	20.91	20	32.8	6.2	13.3	0.464	2.7	7.2	0.368	5.7	7.4	0.764	6.2	1.6	1.7	0.4	2.1	2.3	20.6	6.8	14.5	2.9	7.9	6.2	8.1	6.8	1.7	1.8	0.4	2.3	2.5	22.6	0.614	0.564	0.543	0.558	0.376	27.8	0.34	0.76	23.1	0.122	0.061	0.183	122.6	106.4	6.4	2	8.4	\N
+1138	2026-01-25 19:32:00	Aday Mara	aday-mara	C	\N	87	\N	255	Michigan	Zaragoza, Spain	2005-04-07	30	\N	3	21.2	19	22.8	4.4	6.5	0.677	0	0.2	0	2.1	4.5	0.465	7.1	2.3	0.5	2.7	2.1	2.2	10.9	7	10.3	0	0.3	3.3	7.2	11.2	3.7	0.8	4.2	3.2	3.5	17.3	0.631	0.677	0.032	0.694	0.285	22	0.77	1.13	23.9	0.083	0.129	0.222	116.5	86.3	3.7	8.6	12.3	\N
+1139	2026-01-25 19:32:00	Dash Daniels	dash-daniels	SG	\N	78	\N	199	Melbourne (NBL)	Bendigo, Australia	2007-12-18	37	\N	\N	18.5	11	16.8	2.3	5	0.455	0.5	1.6	0.333	0.5	1.4	0.4	3.1	1.3	1.1	0.1	0.8	1.7	5.6	4.9	10.7	1.2	3.5	1.2	2.9	6.6	2.7	2.3	0.2	1.8	3.7	12.1	0.499	0.509	0.327	0.273	0.297	15.8	0.68	1.56	11.8	\N	\N	\N	104	95.2	\N	\N	\N	\N
+1140	2026-01-25 19:32:00	Cameron Carr	cameron-carr	SG	\N	77	\N	175	Baylor	Eden Prairie, MN	2004-11-21	21	91	2	21.58	19	32.2	6.8	12.7	0.539	2.2	5.3	0.416	4.5	5.8	0.766	5.3	2.5	0.8	1.4	1.9	1.5	20.4	7.7	14.2	2.5	6	5	6.5	6	2.8	0.9	1.6	2.2	1.6	22.8	0.659	0.627	0.419	0.461	0.371	25.4	0.57	1.3	25.4	0.157	0.052	0.209	132.9	108.6	8.9	1.7	10.6	\N
+1141	2026-01-25 19:32:00	Chris Cenac Jr.	chris-cenac-jr	PF	C	83	\N	240	Houston	New Orleans, LA	2007-02-01	23	6	1	19.38	19	24.1	3.8	7.6	0.497	0.8	2.1	0.385	0.8	1.4	0.615	7.6	0.8	0.6	0.5	1.2	2.5	9.2	5.7	11.4	1.2	3.1	1.3	2	11.3	1.3	0.9	0.7	1.8	3.8	13.8	0.556	0.548	0.269	0.179	0.328	19.9	0.32	0.7	17.9	0.061	0.123	0.184	114.7	90.5	1.5	3.3	4.8	\N
+1142	2026-01-25 19:32:00	JT Toppin	jt-toppin	PF	\N	81	\N	230	Texas Tech	Dallas, TX	2005-06-14	38	\N	3	21.02	19	34.5	9.6	17.1	0.562	0.5	2.1	0.25	2.4	4.6	0.529	10.9	2.1	1.1	1.7	2.6	3.1	22.1	10	17.8	0.5	2.2	2.5	4.8	11.4	2.2	1.2	1.8	2.7	3.2	23.1	0.575	0.577	0.123	0.269	0.3	30.7	0.43	0.82	27.5	0.122	0.073	0.195	118.3	102.7	5.9	2.7	8.6	\N
+1143	2026-01-25 19:32:00	Brayden Burries	brayden-burries	PG	SG	76	\N	205	Arizona	San Bernardino, CA	2005-09-18	31	12	1	20.75	21	28.4	5.4	10.9	0.5	1.7	4.5	0.372	2.7	3.4	0.792	4.4	2.8	1.6	0.3	1.4	2.2	15.2	6.9	13.7	2.1	5.7	3.4	4.3	5.6	3.6	2	0.4	1.7	2.8	19.3	0.61	0.577	0.412	0.316	0.367	22.8	0.72	2.03	21.3	0.121	0.107	0.228	128.6	94.2	4.9	5.3	10.2	\N
+1144	2026-01-25 19:32:00	Baba Miller	baba-miller	SF	\N	83	86	225	Cincinnati	Mallorca, Spain	2004-02-07	73	\N	4	22.36	18	30.4	5.3	9.6	0.549	0.2	1.7	0.1	3.1	5	0.611	10.4	3.1	0.9	1.4	2.2	2.1	13.8	6.3	11.4	0.2	2	3.6	5.9	12.3	3.6	1.1	1.6	2.6	2.4	16.3	0.575	0.558	0.173	0.52	0.299	22.5	0.94	1.41	22	0.073	0.117	0.19	113	90.4	3.7	5.8	9.6	\N
+1146	2026-01-25 19:32:00	Milos Uzan	milos-uzan	PG	\N	76.5	77.25	186	Houston	Las Vegas, NV	2002-12-26	63	58	4	23.48	19	32.8	3.9	10.7	0.363	1.8	5.8	0.315	1.6	2.1	0.795	2.7	3.9	1	0.1	1.5	1.5	11.3	4.3	11.8	2	6.4	1.8	2.3	2.9	4.3	1.1	0.1	1.6	1.6	12.3	0.481	0.449	0.544	0.191	0.365	20.3	1	2.68	12.5	0.058	0.083	0.141	111.5	100.7	1.4	3.2	4.6	\N
+1147	2026-01-25 19:32:00	Coen Carr	coen-carr	SF	PF	78	\N	230	Michigan State	Stockbridge, GA	2004-10-26	68	25	3	21.65	20	27.3	4.2	8.2	0.506	0.6	2.1	0.268	2.5	4.4	0.575	5.1	1.5	0.6	1	1.6	1.6	11.4	5.5	10.8	0.7	2.7	3.3	5.7	6.7	2	0.8	1.3	2	2.1	15	0.553	0.54	0.25	0.53	0.311	21.5	0.47	0.97	16.2	0.059	0.103	0.161	112.2	95.4	2.1	5.1	7.2	\N
+1150	2026-01-25 19:32:00	Koa Peat	koa-peat	PF	\N	80	\N	235	Arizona	Gilbert, AZ	2007-01-20	10	10	1	19.41	21	27.3	5.8	10.1	0.571	0.2	0.7	0.267	2.8	4.5	0.611	5.8	2.6	0.8	0.7	1.6	2.3	14.5	7.6	13.3	0.3	0.9	3.6	6	7.6	3.4	1	0.9	2.1	3.1	19.1	0.591	0.58	0.071	0.448	0.309	23.7	0.69	1.62	21.5	0.118	0.098	0.216	123.8	96.7	4.8	3.9	8.7	\N
+1151	2026-01-25 19:32:00	Trevon Brazile	trevon-brazile	PF	\N	82.5	87.75	215	Arkansas	Springfield, MO	2003-01-07	75	\N	4	23.45	19	28.1	4.4	8.1	0.545	1.2	3	0.404	2.6	3.5	0.742	6.8	1.2	1.7	1.2	1.2	1.6	12.6	5.7	10.4	1.6	3.8	3.3	4.5	8.8	1.6	2.2	1.5	1.6	2.1	16.2	0.647	0.62	0.37	0.429	0.352	18.5	0.37	1	22	0.105	0.083	0.188	129	101.4	5.6	4.2	9.8	\N
+1154	2026-01-25 19:32:00	Mackenzie Mgbako	mackenzie-mgbako	SF	\N	80.75	82.25	216	Texas A&M	Gladstone, NJ	2004-11-18	78	9	3	21.59	7	18.9	3.3	8.4	0.39	1.7	5	0.343	2.1	2.4	0.882	4.9	1.3	0.6	0.1	1.7	2	10.4	6.3	16.1	3.3	9.5	4.1	4.6	9.3	2.5	1.1	0.3	3.3	3.8	19.9	0.544	0.492	0.593	0.288	0.398	27.8	0.42	0.75	16.5	0.061	0.061	0.121	108.6	103.4	-0.4	-0.5	-1	\N
+1157	2026-01-25 19:32:00	Yaxel Lendeborg	yaxel-lendeborg	PF	\N	81.75	88	235	Michigan	Pennsauken, NJ	2002-09-30	14	\N	4	23.72	19	27.5	4.8	9.4	0.514	1.4	4.4	0.325	3.3	3.9	0.838	7.2	3.2	1.5	1.4	1.1	1.4	14.4	6.3	12.3	1.9	5.7	4.3	5.1	9.4	4.2	1.9	1.8	1.4	1.9	18.8	0.637	0.589	0.464	0.413	0.368	20.9	0.91	3.05	27.2	0.169	0.123	0.299	141	88.6	9.9	7.7	17.6	\N
+1158	2026-01-25 19:32:00	Magoon Gwath	magoon-gwath	C	\N	84	\N	212	San Diego State	Euless, TX	2005-07-24	67	\N	2	20.91	15	18.4	3.5	6.2	0.57	0.7	1.3	0.579	1.4	2.2	0.636	4.3	0.3	0.5	1.5	1.7	1.9	9.2	6.9	12.1	1.4	2.5	2.7	4.3	8.3	0.7	1	2.9	3.4	3.7	18	0.635	0.629	0.204	0.355	0.344	24.2	0.15	0.19	20.3	0.058	0.087	0.145	109.3	98.3	1.9	3.1	5	\N
+1161	2026-01-25 19:32:00	Morez Johnson Jr.	morez-johnson-jr	PF	\N	81	\N	250	Michigan	Riverdale, IL	2006-01-25	33	29	2	20.4	19	23.3	5.3	7.7	0.687	0.2	0.5	0.4	2.9	3.7	0.786	6.9	1.2	0.8	1.3	1.5	2.4	13.7	8.2	11.9	0.3	0.8	4.5	5.7	10.6	1.8	1.3	2	2.3	3.7	21.2	0.724	0.701	0.068	0.476	0.335	21.9	0.4	0.79	27.8	0.163	0.117	0.28	138	90	6.8	6.2	13	\N
+1162	2026-01-25 19:32:00	Tomislav Ivisic	tomislav-ivisic	C	\N	85	\N	255	Illinois	Vitez, Bosnia and Herzegovina	2003-09-19	52	\N	3	22.75	17	23.8	3.7	7.5	0.492	1.6	4.5	0.368	1.1	1.6	0.704	5.1	1.2	0.4	0.6	1.4	1.6	10.2	5.6	11.4	2.5	6.8	1.7	2.4	7.8	1.8	0.5	0.9	2.1	2.4	15.4	0.614	0.602	0.594	0.211	0.362	20.2	0.44	0.83	18.2	0.099	0.069	0.168	124.3	104.2	4.9	2.3	7.1	\N
+1164	2026-01-25 19:32:00	Patrick Ngongba II	patrick-ngongba-ii	C	\N	83	\N	250	Duke	Manassas, VA	2006-03-13	19	26	2	20.27	20	22.9	3.9	6.2	0.634	0.3	1.1	0.238	3.2	4.6	0.685	6.1	2	0.7	1.3	1.5	2.7	11.2	6.1	9.7	0.4	1.7	5	7.2	9.6	3.1	1	2	2.3	4.2	17.6	0.672	0.654	0.171	0.748	0.318	20.8	0.75	1.38	25.2	0.148	0.114	0.262	134.4	92.3	5.7	5.7	11.4	\N
+1166	2026-01-25 19:32:00	Nate Bittle	nate-bittle	C	\N	84	\N	250	Oregon	Central Point, OR	2003-06-03	57	11	4	23.05	15	28	5.5	11.7	0.469	1.6	4.3	0.369	3.8	4.9	0.77	6.7	2	0.6	2.3	2.2	1.5	16.3	7	15	2.1	5.6	4.9	6.3	8.7	2.6	0.8	2.9	2.8	1.9	21	0.583	0.537	0.371	0.423	0.363	28.9	0.59	0.91	25.4	0.105	0.057	0.162	116.9	107.2	6.8	3.1	9.9	\N
+1169	2026-01-25 19:32:00	Andrej Stojakovic	andrej-stojakovic	SG	\N	79	\N	215	Illinois	Carmichael, CA	2004-08-17	59	\N	3	21.84	19	27	5.4	10.7	0.5	0.8	3	0.263	2.4	2.9	0.818	4.7	1.1	0.4	0.6	1.6	1.3	13.9	7.2	14.3	1.1	4	3.2	3.9	6.3	1.4	0.5	0.8	2.1	1.7	18.5	0.574	0.537	0.279	0.27	0.349	25.1	0.3	0.67	19.2	0.101	0.062	0.164	119.7	105.7	3.5	1.7	5.3	\N
+1171	2026-01-25 19:32:00	Bruce Thornton	bruce-thornton	PG	\N	74	\N	215	Ohio State	Fairburn, GA	2003-09-14	51	52	4	22.76	20	36.5	6.9	12.5	0.554	1.9	4.7	0.404	3.9	4.6	0.846	5.5	3.7	1.4	0.3	1.3	1.7	19.6	6.8	12.3	1.9	4.6	3.8	4.5	5.4	3.6	1.3	0.2	1.2	1.6	19.3	0.669	0.631	0.378	0.365	0.372	22.4	0.88	2.96	25.3	0.175	0.06	0.236	141.2	106.2	8.5	3.2	11.7	\N
+1173	2026-01-25 19:32:00	JoJo Tugler	jojo-tugler	PF	\N	80	\N	230	Houston	Monroe, LA	2005-05-16	43	89	3	21.1	19	23.3	3.6	6.4	0.562	0.1	0.1	1	1.2	1.7	0.667	5.9	1.3	1.9	1.5	1.4	3.2	8.4	5.5	9.8	0.1	0.1	1.8	2.7	9.2	2	2.9	2.4	2.1	5	12.9	0.582	0.566	0.008	0.273	0.314	18.5	0.52	0.92	23.8	0.09	0.126	0.226	121.4	87.5	3.2	7.3	10.4	\N
+1145	2026-01-25 19:32:00	Darrion Williams	darrion-williams	SF	\N	77.75	78.5	236	NC State	Sacramento, CA	2003-04-23	49	\N	4	23.16	19	29.4	4.9	11.8	0.418	2	5.1	0.392	2.1	2.6	0.796	5.5	3.3	1	0.3	1.3	2.8	13.9	6.1	14.5	2.4	6.2	2.5	3.2	6.7	4.1	1.2	0.3	1.6	3.4	17.1	0.534	0.502	0.431	0.218	0.374	24.5	0.84	2.52	18.1	0.086	0.072	0.165	116.5	103.3	4.2	1.9	6.2	\N
+1148	2026-01-25 19:32:00	Isaiah Evans	isaiah-evans	SF	\N	78	\N	180	Duke	Fayetteville, NC	2005-12-06	24	14	2	20.54	20	27.5	4.4	10.7	0.413	2.5	7.3	0.345	3.2	3.6	0.887	3.4	1.2	0.9	1	1.2	1.1	14.5	5.8	13.9	3.3	9.5	4.1	4.6	4.4	1.6	1.2	1.2	1.6	1.4	18.9	0.586	0.531	0.681	0.333	0.399	24	0.32	1	18.9	0.109	0.102	0.204	123.9	96	5.8	3.7	9.5	\N
+1149	2026-01-25 19:32:00	Tarris Reed Jr.	tarris-reed-jr	C	\N	83	\N	265	UConn	St. Louis, MO	2003-08-05	50	34	4	22.87	15	26.2	5.7	9.5	0.606	0	0.2	0	2.7	4.5	0.612	8.1	2.1	1.2	1.9	2.1	2.7	14.2	7.9	13	0	0.3	3.8	6.1	11.1	2.8	1.6	2.7	2.8	3.8	19.5	0.613	0.606	0.021	0.472	0.305	26.7	0.61	1	27.6	0.102	0.132	0.234	118.4	87.2	4.8	6.2	11	\N
+1152	2026-01-25 19:32:00	Bennett Stirtz	bennett-stirtz	PG	\N	76	\N	190	Iowa	Liberty, MO	2003-10-03	17	\N	4	22.71	19	35.8	6.1	12.7	0.475	2.2	6	0.368	4	4.8	0.826	2.5	5	1.4	0.2	2	2.2	18.3	6.1	12.8	2.2	6	4	4.9	2.5	5	1.4	0.2	2	2.2	18.4	0.609	0.562	0.471	0.38	0.374	26	1.05	2.5	21.5	0.141	0.082	0.224	126.5	100.9	6.4	2.8	9.2	\N
+1153	2026-01-25 19:32:00	Darius Acuff	darius-acuff	PG	\N	75	\N	190	Arkansas	Detroit, MI	2006-11-16	11	7	1	19.59	20	33.2	7.3	14.5	0.5	2.4	5.6	0.42	3.4	4.3	0.779	2.9	6.2	0.9	0.5	2.2	1.7	20.2	7.9	15.7	2.5	6.1	3.6	4.7	3.1	6.7	1	0.5	2.3	1.8	21.9	0.611	0.581	0.386	0.297	0.374	26.7	1.24	2.88	23.3	0.157	0.042	0.199	128.6	112.6	8.7	1.2	9.9	\N
+1155	2026-01-25 19:32:00	Flory Bidunga	flory-bidunga	C	\N	82	\N	235	Kansas	Kinshasa, DR Congo	2005-05-20	39	18	2	21.08	20	31.1	6.2	9.3	0.667	0	0.1	0	2	3	0.678	9	1.7	0.8	2.7	1.6	2.2	14.4	7.2	10.8	0	0.1	2.3	3.4	10.4	1.9	0.9	3.1	1.8	2.6	16.7	0.673	0.667	0.005	0.317	0.314	20.4	0.54	1.06	26.7	0.129	0.11	0.232	130.3	93.8	6.2	5.9	12.1	\N
+1156	2026-01-25 19:32:00	Cameron Boozer	cameron-boozer	PF	\N	81	\N	250	Duke	Westchester, FL	2007-07-18	2	3	1	18.92	20	32.2	8.3	14.3	0.579	1.5	4.1	0.37	5.5	7.2	0.757	9.9	4.1	1.8	0.6	2.2	1.7	23.5	9.2	16	1.7	4.5	6.1	8.1	11.1	4.6	2	0.7	2.5	1.9	26.3	0.664	0.632	0.284	0.505	0.355	30.2	0.89	1.86	35.7	0.236	0.124	0.361	139	89.3	13.7	6.5	20.2	\N
+1159	2026-01-25 19:32:00	Neoklis Avdalas	neoklis-avdalas	SG	SF	80.75	81	198	Virginia Tech	Athens, Greece	2006-02-04	36	\N	1	20.37	20	32	4.5	11.3	0.398	1.5	5.1	0.297	2.6	3.8	0.684	3.1	5.1	0.7	0.6	2.4	1.3	13.1	5.1	12.7	1.7	5.7	2.9	4.3	3.5	5.7	0.8	0.7	2.7	1.4	14.7	0.5	0.465	0.447	0.336	0.344	24.2	1.22	2.1	14.1	0.044	0.05	0.094	105.4	109.2	2.1	1.2	3.3	\N
+1160	2026-01-25 19:32:00	Dillon Mitchell	dillon-mitchell	SF	\N	79.75	82	210	St. John's	Spring Hill, FL	2003-10-03	71	4	4	22.71	20	25.1	3.9	6.3	0.611	0	0.3	0	1.8	3	0.593	6.7	2.6	1.4	0.7	1	1.5	9.5	5.5	9	0	0.4	2.5	4.2	9.6	3.7	2	1	1.4	2.1	13.6	0.614	0.611	0.048	0.468	0.302	16	1.12	2.55	22.3	0.112	0.096	0.207	132	97.4	5.5	5	10.5	\N
+1163	2026-01-25 19:32:00	Braden Smith	braden-smith	PG	\N	72	\N	170	Purdue	Westfield, IN	2003-07-25	40	\N	4	22.9	20	33.3	5.6	11.3	0.498	1.7	3.9	0.436	2.3	2.9	0.776	3.7	9.3	1.9	0.2	3.1	1.4	15.2	6.1	12.2	1.8	4.2	2.4	3.1	4	10	2.1	0.2	3.3	1.5	16.4	0.6	0.573	0.347	0.258	0.363	24.1	1.88	3.03	23.6	0.144	0.072	0.217	125.5	103.3	8.2	4	12.3	\N
+1165	2026-01-25 19:32:00	Kylan Boswell	kylan-boswell	PG	\N	74	\N	215	Illinois	Champaign, IL	2005-04-18	70	25	4	21.17	18	31.8	4.7	9.9	0.475	1.3	4.3	0.308	3.5	4.3	0.818	4.2	3.4	0.7	0	1.3	2.3	14.3	5.3	11.3	1.5	4.9	4	4.8	4.7	3.8	0.8	0	1.5	2.6	16.2	0.596	0.542	0.436	0.43	0.359	20.7	0.9	2.54	19.2	0.147	0.056	0.203	134.9	107.4	4.8	2.8	7.6	\N
+1167	2026-01-25 19:32:00	Dailyn Swain	dailyn-swain	SG	SF	80	\N	225	Texas	Columbus, OH	2005-07-15	35	96	3	20.93	20	30.3	6.3	10.9	0.576	0.8	2.6	0.288	3.7	4.8	0.76	7.1	3.3	1.9	0.3	2.6	2.5	16.9	7.4	12.9	0.9	3.1	4.3	5.7	8.4	3.9	2.2	0.4	3	3	20.1	0.644	0.611	0.24	0.442	0.34	24.9	0.84	1.27	25.9	0.139	0.079	0.218	126.4	101.8	7	4.1	11.1	\N
+1168	2026-01-25 19:32:00	Kwame Evans	kwame-evans	PF	\N	82	\N	220	Oregon	Baltimore, MD	2004-08-02	77	14	3	21.88	18	29.6	3.9	8.3	0.473	0.9	3.1	0.304	3.9	5.1	0.769	7.3	2.2	1.1	1.3	1.9	1.9	12.7	4.8	10.1	1.1	3.8	4.7	6.1	8.9	2.6	1.3	1.6	2.3	2.4	15.5	0.593	0.53	0.373	0.607	0.346	21.3	0.71	1.15	21	0.09	0.06	0.158	119.8	106.3	4.7	2.9	7.6	\N
+1170	2026-01-25 19:32:00	Mouhamed Faye	mouhamed-faye	C	\N	82	\N	220	Reggio Emilia (Italy)	Dakar, Senegal	2005-02-05	74	\N	\N	21.37	12	16.2	2.5	4	0.625	0	0	\N	0.8	1.4	0.588	5.6	0.3	0.7	1.3	1.4	2.8	5.8	5.6	8.9	0	0	1.9	3.2	12.4	0.6	1.5	2.8	3.2	6.3	13	0.624	0.625	0	0.354	0.302	15.4	0.16	0.18	16.2	\N	\N	\N	109.6	105.8	\N	\N	\N	\N
+1172	2026-01-25 19:32:00	Boogie Fland	boogie-fland	PG	\N	75.25	78	172	Florida	Bronx, NY	2006-07-10	72	15	2	19.95	20	30.3	4.1	10.2	0.404	0.8	4.1	0.195	2.3	3.2	0.714	2.4	3.6	1.8	0.2	1.6	2.5	11.3	4.9	12.1	1	4.9	2.7	3.7	2.8	4.3	2.1	0.2	1.9	3	13.4	0.483	0.443	0.404	0.31	0.332	19.6	1	2.25	13.4	0.059	0.073	0.132	113.1	102.7	0.4	4.7	5.1	\N
+1174	2026-01-25 19:32:00	Zuby Ejiofor	zuby-ejiofor	PF	\N	81	\N	245	St. John's	Garland, TX	2004-04-20	42	80	4	22.17	20	29.1	4.9	9.4	0.524	0.5	1.5	0.3	5.5	7.9	0.69	7.5	3.2	1.3	2	2.5	2.7	15.7	6.1	11.6	0.6	1.9	6.7	9.8	9.2	4	1.6	2.4	3	3.3	19.4	0.599	0.548	0.16	0.845	0.324	24.7	0.81	1.31	25.9	0.131	0.089	0.22	124.1	99.1	6.8	4.9	11.6	\N
+1175	2026-01-25 19:32:00	Alex Condon	alex-condon	PF	C	84.5	84.75	222	Florida	Perth, Australia	2004-07-25	45	\N	3	21.9	19	30.8	4.6	9.2	0.497	0.3	2.2	0.143	3.9	6.1	0.652	8.1	3.4	0.7	1.4	2.3	2.7	13.4	5.3	10.8	0.4	2.6	4.6	7.1	9.5	3.9	0.9	1.7	2.7	3.2	15.7	0.555	0.514	0.24	0.657	0.31	20.9	0.89	1.45	19.4	0.082	0.089	0.171	117.4	99.4	3.9	5.1	9.1	\N
+1178	2026-01-25 19:32:00	Zvonimir Ivisic	zvonimir-ivisic	C	\N	86	\N	250	Illinois	Vitez, Bosnia and Herzegovina	2003-09-19	58	\N	3	22.75	20	16.8	2.6	4.8	0.547	1.1	3.1	0.361	1.2	1.8	0.639	4.9	0.4	0.4	2.4	0.7	1.3	7.5	5.6	10.2	2.4	6.6	2.5	3.9	10.5	0.8	0.8	5.1	1.4	2.8	16	0.665	0.663	0.642	0.379	0.35	18.5	0.2	0.54	26.4	0.119	0.119	0.239	135.3	92	6.7	7	13.7	\N
+1180	2026-01-25 19:32:00	Paul McNeil Jr.	paul-mcneil-jr	SG	\N	77	\N	190	NC State	Rockingham, NC	2006-04-19	29	48	2	20.17	20	27.6	4.1	9.6	0.424	3.2	7.5	0.42	2.6	3.2	0.797	4.1	1	0.9	0.4	0.3	1.4	13.8	5.3	12.5	4.1	9.8	3.3	4.2	5.4	1.2	1.1	0.5	0.3	1.8	18	0.623	0.589	0.785	0.335	0.401	20.6	0.3	3.8	20.1	0.131	0.065	0.196	135.2	104.9	7.2	1.3	8.5	\N
+1182	2026-01-25 19:32:00	Darryn Peterson	darryn-peterson	SG	PG	78	\N	205	Kansas	Canton, OH	2007-01-17	1	2	1	19.42	10	27.2	7.3	14.8	0.493	2.9	6.9	0.42	4.1	5	0.82	4.6	1.9	1	0.7	1.6	1.4	21.6	9.7	19.6	3.8	9.1	5.4	6.6	6.1	2.5	1.3	0.9	2.1	1.9	28.6	0.629	0.591	0.466	0.338	0.4	35.8	0.47	1.19	30.6	0.162	0.088	0.25	123.7	98.6	11.9	4	16	\N
+1184	2026-01-25 19:32:00	Caleb Wilson	caleb-wilson	SF	PF	82	\N	215	North Carolina	Atlanta, GA	2006-07-18	4	5	1	19.92	20	31.2	7.2	12.2	0.588	0.3	1	0.25	5.3	7.7	0.693	10.1	2.8	1.6	1.4	2	2.1	19.9	8.3	14	0.3	1.2	6.1	8.8	11.6	3.2	1.8	1.6	2.3	2.4	22.9	0.629	0.599	0.082	0.63	0.318	28.2	0.65	1.4	31.6	0.173	0.109	0.276	129.6	94.1	8.8	5.2	14	\N
+1186	2026-01-25 19:32:00	Malachi Moreno	malachi-moreno	C	\N	84	\N	250	Kentucky	Georgetown, KY	2006-10-24	22	26	1	19.65	20	22.2	3.2	5.3	0.594	0	0.1	0	2.4	3.6	0.667	6.4	1.9	0.8	1.6	1	1.9	8.7	5.1	8.6	0	0.2	3.9	5.9	10.4	3	1.3	2.6	1.5	3	14.1	0.621	0.594	0.019	0.679	0.313	17.6	0.82	1.95	24.5	0.126	0.09	0.217	133.4	98.4	5	4.6	9.6	\N
+1188	2026-01-25 19:32:00	Meleek Thomas	meleek-thomas	PG	\N	77	\N	185	Arkansas	Pittsburgh, PA	2006-08-06	25	10	1	19.87	20	27	5.2	12.5	0.418	2.6	6.3	0.408	2.2	2.7	0.83	3.6	2.9	1.6	0.1	1.1	1.9	15.2	6.9	16.6	3.4	8.3	2.9	3.5	4.7	3.9	2.1	0.1	1.4	2.5	20.2	0.553	0.52	0.502	0.213	0.394	25.9	0.71	2.76	20.7	0.119	0.052	0.171	123	108.3	5.9	2.5	8.5	\N
+1176	2026-01-25 19:32:00	Malik Reneau	malik-reneau	PF	\N	81	\N	238	Miami	Miami, FL	2003-04-01	60	23	4	23.22	20	27.4	7.4	13.1	0.567	0.8	2.4	0.34	4.1	5.1	0.802	6.5	2.2	0.9	0.9	2.6	2.5	19.7	9.7	17.2	1.1	3.1	5.3	6.6	8.6	2.9	1.1	1.2	3.4	3.3	25.9	0.636	0.598	0.18	0.387	0.35	31.6	0.5	0.85	28	0.154	0.088	0.241	123.6	98.3	6.9	2.6	9.5	\N
+1177	2026-01-25 19:32:00	Ryan Conwell	ryan-conwell	SG	\N	76	\N	215	Louisville	Indianapolis, IN	2004-06-15	41	\N	4	22.01	19	29.7	5.9	14.6	0.406	3.8	10.2	0.373	3.7	4.5	0.826	5	2.5	1.3	0.2	1.8	3.1	19.4	7.2	17.7	4.6	12.3	4.5	5.5	6.1	3.1	1.6	0.2	2.2	3.7	23.5	0.579	0.536	0.694	0.309	0.413	29.7	0.55	1.41	21.3	0.12	0.085	0.212	120.9	99.2	7.1	2.9	10	\N
+1179	2026-01-25 19:32:00	KJ Lewis	kj-lewis	SG	\N	76	\N	210	Georgetown	El Paso, TX	2004-08-03	76	\N	3	21.88	20	29.6	5	11.9	0.418	1.1	3.2	0.328	4.3	5.8	0.748	5.3	2.7	2	0.6	2	3	15.3	6	14.4	1.3	3.9	5.2	7	6.5	3.2	2.4	0.7	2.4	3.6	18.6	0.523	0.462	0.27	0.485	0.346	28.4	0.68	1.36	20.4	0.068	0.068	0.135	109.7	104.4	3	2.7	5.6	\N
+1181	2026-01-25 19:32:00	Christian Anderson	christian-anderson	PG	\N	75	\N	178	Texas Tech	Atlanta, GA	2006-04-02	32	\N	2	20.22	20	38.5	6.5	13.5	0.483	3.5	7.9	0.439	3.3	4.3	0.776	3.5	7.5	1.5	0.3	3	1.9	19.8	6.1	12.6	3.2	7.3	3.1	4	3.3	7	1.4	0.2	2.8	1.7	18.5	0.638	0.612	0.584	0.316	0.385	23.3	1.45	2.48	22.1	0.151	0.052	0.203	130.3	109.6	8.1	2.6	10.6	\N
+1183	2026-01-25 19:32:00	Dame Sarr	dame-sarr	SG	SF	79	\N	181	Duke	Oderzo, Italy	2006-06-04	48	\N	1	20.04	20	20.4	1.9	5	0.384	1.1	3.3	0.323	1	1.9	0.526	3.4	0.9	1.1	0.3	1.2	1.9	5.9	3.4	8.8	1.9	5.7	1.8	3.4	6	1.6	1.9	0.5	2	3.4	10.3	0.5	0.49	0.657	0.384	0.326	16.8	0.41	0.78	10.5	0.02	0.108	0.128	101.7	93.3	-0.3	5	4.7	\N
+1185	2026-01-25 19:32:00	Kingston Flemings	kingston-flemings	PG	\N	76	\N	190	Houston	San Antonio, TX	2007-01-03	5	22	1	19.46	19	30.9	6.4	12.2	0.526	1.3	3.4	0.391	2.8	3.5	0.806	3.3	5.4	2	0.4	1.8	1.8	17	7.5	14.2	1.5	3.9	3.3	4.1	3.9	6.3	2.3	0.4	2.1	2.1	19.8	0.612	0.58	0.276	0.289	0.36	25.6	1.36	3.03	27.1	0.163	0.109	0.272	131.3	94.1	7.7	6.8	14.5	\N
+1187	2026-01-25 19:32:00	Richie Saunders	richie-saunders	SG	\N	77	\N	200	BYU	Riverton, UT	2001-09-19	46	\N	4	24.75	20	31.9	6.2	12.4	0.496	2.7	6.8	0.393	3.9	4.7	0.819	5.5	2.1	2	0.3	1.7	2.3	18.8	6.9	14	3	7.6	4.3	5.3	6.2	2.4	2.2	0.3	1.9	2.5	21.2	0.642	0.603	0.544	0.379	0.386	24.3	0.48	1.27	24.9	0.157	0.088	0.238	133.2	100.1	7.4	3.9	11.3	\N
+1194	2020-06-22 19:00:00	Kahlil Whitney	kahlil-whitney	SF	\N	79	84.25	205	Kentucky	Chicago, IL	2001-01-08	\N	\N	1	19.44	18	12.8	1.3	3.4	0.371	0.2	0.9	0.25	0.6	1.3	0.435	1.7	0.4	0.3	0.2	0.8	1.3	3.3	3.6	9.7	0.6	2.5	1.6	3.6	4.8	1.2	0.8	0.5	2.3	3.6	9.4	0.411	0.403	0.258	0.371	0.289	19.5	0.33	0.53	6.6	-0.017	0.052	0.035	84.3	101.8	-2.7	0.7	-2	\N
+1195	2020-06-22 19:00:00	Kaleb Wesson	kaleb-wesson	C	\N	82.25	87.5	253	Ohio State	Westerville, OH	1999-07-29	\N	\N	3	20.89	31	29.5	4.4	9.9	0.444	1.5	3.4	0.425	3.8	5.2	0.731	9.3	1.9	0.7	1	2.5	3.1	14	5.4	12	1.8	4.2	4.6	6.3	11.3	2.4	0.9	1.2	3	3.8	17.1	0.568	0.518	0.346	0.523	0.355	26.1	0.55	0.78	23.3	0.114	0.096	0.205	111.2	89.8	5.4	3.6	9	\N
+1190	2020-06-22 19:00:00	Saben Lee	saben-lee	PG	\N	74	\N	183	Vanderbilt	Phoenix, AZ	1999-06-23	\N	\N	3	20.99	32	32.9	6.3	12.9	0.483	1.2	3.8	0.322	4.8	6.4	0.752	3.5	4.2	1.5	0.3	3.1	1.8	18.6	6.8	14.2	1.3	4.1	5.3	7	3.9	4.6	1.7	0.3	3.4	2	20.3	0.58	0.53	0.292	0.498	0.347	29.4	1.09	1.35	24.3	0.129	0.027	0.152	111.3	107.9	4.9	0.4	5.3	1630240
+1191	2020-06-22 19:00:00	Kenyon Martin Jr.	kenyon-martin-jr	SF	\N	79	79.25	213	IMG Academy	West Hills, CA	2001-01-06	\N	\N	\N	19.45	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1630231
+1192	2020-06-22 19:00:00	Onyeka Okongwu	onyeka-okongwu	PF	C	81	\N	245	USC	Chino, CA	2000-12-11	\N	\N	1	19.52	28	30.6	6.3	10.1	0.616	0	0.1	0.25	3.7	5.1	0.72	8.6	1.1	1.2	2.7	2	2.7	16.2	7.3	11.9	0	0.2	4.3	6	10.2	1.3	1.4	3.2	2.3	3.1	19	0.645	0.618	0.014	0.504	0.321	23.6	0.36	0.54	31.1	0.149	0.098	0.252	122.8	88.5	6.7	4.9	11.6	1630168
+1193	2020-06-22 19:00:00	Jalen Smith	jalen-smith	PF	\N	82.25	86.25	225	Maryland	Baltimore, MD	2000-03-16	\N	\N	2	20.26	31	31.3	5.4	10.1	0.538	1	2.8	0.368	3.6	4.8	0.75	10.5	0.8	0.7	2.4	1.7	2.4	15.5	6.2	11.6	1.2	3.2	4.1	5.5	12.1	0.9	0.8	2.7	2	2.7	17.8	0.626	0.59	0.279	0.474	0.346	22.8	0.26	0.47	29.3	0.148	0.099	0.247	123.9	88.9	7.7	4.3	12	1630188
+1196	2020-06-22 19:00:00	Patrick Williams	patrick-williams	PF	SF	80	\N	225	Florida State	Charlotte, NC	2001-08-06	\N	\N	1	18.87	29	22.5	3.3	7.1	0.459	0.6	1.7	0.32	2.1	2.6	0.838	4	1	1	1	1.7	1.6	9.2	5.2	11.4	0.9	2.8	3.4	4.1	6.4	1.6	1.6	1.7	2.8	2.6	14.8	0.553	0.498	0.242	0.357	0.351	22.2	0.38	0.58	19.4	0.074	0.08	0.153	106.9	94.1	2.3	3.2	5.5	1630172
+1197	2020-06-22 19:00:00	Tyler Bey	tyler-bey	SF	\N	79	85.25	213	Colorado	Las Vegas, NV	1998-02-10	\N	\N	3	22.35	31	29	4.5	8.5	0.53	0.4	1	0.419	4.4	5.9	0.743	9	1.5	1.5	1.2	2.4	1.9	13.8	5.6	10.6	0.5	1.2	5.5	7.3	11.2	1.8	1.9	1.4	3	2.4	17.2	0.611	0.555	0.117	0.693	0.337	24.4	0.47	0.61	26.7	0.116	0.111	0.227	114	85.7	5.2	5	10.1	1630189
+1201	2020-06-22 19:00:00	Tres Tinkle	tres-tinkle	SF	\N	79	82.5	225	Oregon State	Missoula, MT	1996-06-03	\N	\N	4	24.04	31	34.5	6.1	13.8	0.44	1.6	4.8	0.345	4.7	5.8	0.81	6.8	3.2	1.7	0.5	2.3	2.4	18.5	6.3	14.4	1.7	5	4.9	6	7.1	3.3	1.8	0.5	2.4	2.5	19.2	0.559	0.5	0.347	0.419	0.362	28.9	0.72	1.4	25.3	0.127	0.06	0.187	112.2	99.2	6.2	1.5	7.7	\N
+1204	2020-06-22 19:00:00	Anfernee McLemore	anfernee-mclemore	PF	\N	79	\N	220	Auburn	Warwick, GA	1998-06-18	\N	\N	4	22	31	20.3	2.4	5.5	0.435	0.8	3	0.28	1.2	1.8	0.661	4.4	0.4	0.7	1.1	0.9	2.9	6.8	4.2	9.7	1.5	5.3	2.1	3.2	7.8	0.7	1.3	1.9	1.7	5.1	12.1	0.537	0.512	0.547	0.329	0.336	17.1	0.23	0.45	16	0.063	0.07	0.14	109.7	95.6	1	3.5	4.5	\N
+1207	2020-06-22 19:00:00	Yam Madar	yam-madar	PG	\N	75	\N	180	Hapoel Tel Aviv (Israel)	Beit Dagan, Israel	2000-12-21	\N	\N	\N	19.49	32	24.4	3.6	8.1	0.444	0.7	2.7	0.267	2.2	2.7	0.812	2.4	3.4	1	0.2	2.1	2.1	10.1	5.3	12	1.1	4	3.2	3.9	3.6	5	1.5	0.3	3	3.1	14.9	0.538	0.488	0.332	0.328	0.349	20.52	1.12	1.64	12.67	\N	\N	\N	102.8	106.8	\N	\N	\N	\N
+1199	2020-06-22 19:00:00	Precious Achiuwa	precious-achiuwa	PF	\N	80.75	84.75	234	Memphis	Bronx, NY	1999-09-19	\N	\N	1	20.75	31	30.4	5.9	11.9	0.493	0.4	1.3	0.325	3.6	6	0.599	10.8	1	1.1	1.9	2.8	2.4	15.8	6.9	14.1	0.5	1.5	4.3	7.1	12.8	1.1	1.3	2.2	3.3	2.8	18.7	0.534	0.511	0.108	0.507	0.312	27.7	0.27	0.34	23.3	0.064	0.123	0.187	101.3	82.5	2.5	3.4	5.8	1630173
+1200	2020-06-22 19:00:00	Cassius Stanley	cassius-stanley	SG	\N	78.25	79	202	Duke	Los Angeles, CA	1999-08-18	\N	\N	1	20.84	29	27.4	4.4	9.3	0.474	1.1	3	0.36	2.7	3.6	0.733	4.9	1	0.7	0.7	1.9	2.2	12.6	5.8	12.2	1.4	3.9	3.5	4.7	6.4	1.4	0.9	0.9	2.4	2.8	16.5	0.569	0.531	0.319	0.389	0.347	21.9	0.3	0.56	18.5	0.095	0.07	0.166	112.3	96.2	3.6	1.9	5.4	1630199
+1202	2020-06-22 19:00:00	Tyrese Haliburton	tyrese-haliburton	PG	\N	77	\N	175	Iowa State	Oshkosh, WI	2000-02-29	\N	\N	2	20.3	22	36.7	5.6	11.1	0.504	2.4	5.6	0.419	1.7	2	0.822	5.9	6.5	2.5	0.7	2.8	1.3	15.2	5.5	10.9	2.3	5.5	1.7	2	5.8	6.3	2.4	0.7	2.7	1.2	14.9	0.631	0.611	0.508	0.184	0.376	20.1	1.76	2.33	25.9	0.134	0.05	0.188	121.5	101.1	8	3.7	11.7	1630169
+1203	2020-06-22 19:00:00	Jon Teske	jon-teske	C	\N	85	\N	260	Michigan	Medina, OH	1997-05-04	\N	\N	4	23.13	31	27.9	4.5	9.4	0.478	0.5	2.1	0.246	2.1	2.9	0.714	6.7	1.1	1	1.8	1.5	2.5	11.6	5.8	12.1	0.7	2.7	2.7	3.8	8.7	1.5	1.3	2.4	2	3.2	14.9	0.537	0.505	0.223	0.313	0.328	22.7	0.34	0.74	21.6	0.079	0.083	0.162	107.3	93.4	3	4.3	7.3	1630257
+1205	2020-06-22 19:00:00	Josh Green	josh-green	SG	\N	77.5	81.75	214	Arizona	Castle Hill, NSW, Australia	2000-11-16	\N	\N	1	19.59	30	30.9	4.1	9.6	0.424	1	2.8	0.361	2.8	3.6	0.78	4.6	2.6	1.5	0.4	1.6	2.4	12	4.7	11.2	1.2	3.2	3.3	4.2	5.3	3	1.8	0.5	1.9	2.8	14	0.528	0.476	0.288	0.378	0.35	20.7	0.77	1.59	17.9	0.086	0.082	0.164	110.4	93.3	2.8	4.1	6.9	1630182
+1206	2020-06-22 19:00:00	Isaac Okoro	isaac-okoro	SF	\N	78	\N	225	Auburn	Powder Springs, GA	2001-01-26	\N	\N	1	19.39	28	31.5	4.5	8.7	0.514	0.7	2.5	0.286	3.2	4.8	0.672	4.4	2	0.9	0.9	2	2.7	12.9	5.1	9.9	0.8	2.9	3.7	5.5	5.1	2.3	1.1	1	2.2	3.1	14.7	0.587	0.556	0.288	0.551	0.326	19.6	0.67	1.04	19.1	0.104	0.05	0.154	116.5	101.3	3.8	2.5	6.3	1630171
+1208	2020-06-22 19:00:00	Saddiq Bey	saddiq-bey	SF	\N	80	\N	216	Villanova	Largo, MD	1999-04-09	\N	\N	2	21.19	31	33.9	5.6	11.8	0.477	2.5	5.6	0.451	2.3	2.9	0.769	4.7	2.4	0.8	0.4	1.5	2.5	16.1	6	12.6	2.7	6	2.4	3.1	5	2.5	0.8	0.4	1.6	2.6	17.1	0.608	0.584	0.477	0.248	0.376	22.8	0.65	1.61	21.6	0.137	0.053	0.186	121	101	6.2	1.9	8.1	1630180
+1209	2020-06-22 19:00:00	Nick Richards	nick-richards	C	\N	83.5	86.25	242	Kentucky	Kingston, Jamaica	1997-11-29	\N	\N	3	22.55	31	29.6	5.3	8.2	0.642	0	0	\N	3.5	4.7	0.752	7.8	0.2	0.1	2.1	1.6	3.2	14	6.4	9.9	0	0	4.3	5.7	9.4	0.3	0.1	2.6	1.9	3.8	17	0.674	0.642	0	0.571	0.324	20.7	0.08	0.14	25.8	0.148	0.07	0.222	127.8	95.8	4.6	2.4	7	1630208
+1210	2020-06-22 19:00:00	Obi Toppin	obi-toppin	PF	\N	81	\N	220	Dayton	Brooklyn, NY	1998-03-04	\N	\N	2	22.29	31	31.6	7.9	12.5	0.633	1	2.6	0.39	3.2	4.5	0.702	7.5	2.2	1	1.2	2.2	1.6	20	9	14.2	1.2	3	3.6	5.2	8.6	2.5	1.1	1.4	2.5	1.9	22.8	0.684	0.674	0.212	0.364	0.34	28.1	0.52	0.99	32.5	0.183	0.094	0.277	125.3	90.3	9	3.3	12.3	1630167
+1211	2020-06-22 19:00:00	Immanuel Quickley	immanuel-quickley	SG	\N	75	80.25	186	Kentucky	Havre de Grace, MD	1999-06-17	\N	\N	2	21.01	30	33	4.6	11	0.417	2.1	4.8	0.428	4.8	5.2	0.923	4.2	1.9	0.9	0.1	1.6	2.3	16.1	5	12	2.3	5.3	5.2	5.7	4.6	2	1	0.1	1.7	2.5	17.5	0.595	0.511	0.438	0.471	0.389	23.4	0.49	1.17	20.4	0.138	0.057	0.194	121.3	99.8	5.3	2	7.3	1630193
+1212	2020-06-22 19:00:00	Leandro Bolmaro	leandro-bolmaro	SG	\N	79	\N	180	FC Barcelona (Spain)	Córdoba, Argentina	2000-09-11	\N	\N	\N	19.77	24	17.2	3	7	0.423	0.9	3.1	0.293	1.1	1.6	0.711	1.6	2.5	1.2	0.1	1.8	2	8	6.2	14.7	1.9	6.6	2.4	3.3	3.3	5.3	2.4	0.3	3.7	4.2	16.7	0.513	0.488	0.446	0.226	0.351	25.26	0.99	1.45	13.95	\N	\N	\N	101.8	98.9	\N	\N	\N	1630195
+1213	2020-06-22 19:00:00	Borisa Simanic	borisa-simanic	PF	\N	84	84	209	KK Crvena Zvezda (Serbia)	Ljubovija, Serbia	1998-03-20	\N	\N	\N	22.25	39	13.5	1.8	3.4	0.53	0.8	1.8	0.478	0.3	0.4	0.765	1.6	0.8	0.4	0.5	0.7	1.7	4.8	4.8	9	2.3	4.7	0.9	1.2	4.2	2	1	1.3	1.8	4.4	12.7	0.664	0.655	0.523	0.129	0.369	15.26	0.64	1.15	13.82	\N	\N	\N	120.5	109.1	\N	\N	\N	\N
+1215	2020-06-22 19:00:00	Vernon Carey Jr.	vernon-carey-jr	C	\N	82	84	265	Duke	Fort Lauderdale, FL	2001-02-25	\N	\N	1	19.31	31	24.9	6.4	11.1	0.577	0.3	0.7	0.381	4.7	7	0.67	8.8	1	0.7	1.6	2	2.7	17.8	9.3	16.1	0.4	1	6.8	10.2	12.7	1.4	1	2.3	2.9	4	25.7	0.615	0.588	0.061	0.632	0.322	31	0.26	0.48	34.1	0.187	0.104	0.29	121.2	88	7.9	3.4	11.3	1630176
+1216	2020-06-22 19:00:00	Daniel Oturu	daniel-oturu	C	\N	82	\N	240	Minnesota	Woodbury, MN	1999-09-20	\N	\N	2	20.75	31	33.9	7.7	13.6	0.563	0.6	1.7	0.365	4.1	5.8	0.707	11.3	1.1	0.5	2.5	2.8	2.7	20.1	8.2	14.5	0.7	1.8	4.4	6.2	12	1.2	0.6	2.6	3	2.8	21.4	0.612	0.585	0.123	0.428	0.331	28.8	0.27	0.39	30.7	0.141	0.084	0.225	115.1	92.9	7.7	3.4	11.1	1630187
+1217	2020-06-22 19:00:00	Cole Anthony	cole-anthony	PG	\N	75	75.5	184	North Carolina	Manhattan, NY	2000-05-15	\N	\N	1	20.1	22	34.9	6	15.7	0.38	2.2	6.4	0.348	4.4	5.8	0.75	5.7	4	1.3	0.3	3.5	2.9	18.5	6.1	16.2	2.3	6.6	4.5	6	5.9	4.1	1.4	0.3	3.6	3	19.1	0.501	0.451	0.409	0.371	0.364	30	0.8	1.14	17.5	0.062	0.047	0.109	99.9	102.4	3.3	1.8	5.1	1630175
+1218	2020-06-22 19:00:00	Devon Dotson	devon-dotson	PG	\N	73.75	75	185	Kansas	Charlotte, NC	1999-08-02	\N	\N	2	20.88	30	34.9	6.1	13	0.468	1.3	4.1	0.309	4.7	5.7	0.83	4.1	4	2.1	0.1	2.4	1.8	18.1	6.3	13.4	1.3	4.2	4.9	5.9	4.2	4.1	2.2	0.1	2.5	1.9	18.7	0.578	0.517	0.316	0.44	0.357	26.4	0.85	1.64	24.9	0.145	0.092	0.237	118	90.5	6.5	4.8	11.3	1629653
+1219	2020-06-22 19:00:00	Desmond Bane	desmond-bane	SG	\N	77	\N	215	TCU	Richmond, IN	1998-06-25	\N	\N	4	21.98	32	36	6.2	13.6	0.452	2.9	6.5	0.442	1.4	1.8	0.789	6.3	3.9	1.5	0.5	2.3	2.2	16.6	6.2	13.6	2.9	6.5	1.4	1.8	6.3	3.9	1.5	0.5	2.3	2.2	16.6	0.573	0.557	0.477	0.131	0.381	24.4	1.07	1.68	22.6	0.118	0.066	0.184	114.5	97.6	7.1	2.6	9.8	1630217
+1220	2020-06-22 19:00:00	Jahmi'us Ramsey	jahmi-us-ramsey	SG	\N	75.75	78	193	Texas Tech	Arlington, TX	2001-06-09	\N	\N	1	19.03	27	31.2	5.5	12.4	0.442	2.2	5.2	0.426	1.9	2.9	0.641	4	2.2	1.3	0.7	2	2.2	15	6.3	14.3	2.6	6	2.1	3.3	4.6	2.6	1.5	0.8	2.3	2.5	17.4	0.546	0.531	0.421	0.233	0.356	26.2	0.61	1.11	19.1	0.076	0.081	0.157	104.6	93.2	4.3	2.4	6.7	1630186
+1221	2020-06-22 19:00:00	Theo Maledon	theo-maledon	PG	\N	77	80.75	187	ASVEL (France)	Rouen, France	2001-06-12	\N	\N	\N	19.02	46	17.3	2.4	5.7	0.421	0.8	2.5	0.333	1.7	2.1	0.776	1.9	2.7	0.5	0.1	1.6	2.7	7.3	5	11.8	1.8	5.3	3.4	4.4	4	5.6	0.9	0.3	3.4	5.5	15.1	0.545	0.496	0.448	0.375	0.358	22.99	1.19	1.67	12.48	\N	\N	\N	105.8	112.9	\N	\N	\N	1630177
+1222	2020-06-22 19:00:00	CJ Elleby	cj-elleby	SG	\N	78.25	79.25	199	Washington State	Seattle, WA	2000-06-16	\N	\N	2	20.01	32	33.4	6.2	15.6	0.396	2.3	6.8	0.339	3.8	4.6	0.823	7.8	1.9	1.8	0.8	2.2	2.9	18.4	6.6	16.8	2.5	7.3	4.1	5	8.5	2	1.9	0.9	2.3	3.2	19.9	0.519	0.47	0.438	0.295	0.377	29.2	0.46	0.87	22.5	0.086	0.082	0.169	104.7	92.8	4.7	2.8	7.6	1629604
+1223	2020-06-22 19:00:00	Jalen Harris	jalen-harris	PG	\N	76.25	79	193	Nevada	Duncanville, TX	1998-08-14	\N	\N	3	21.85	30	33	7.5	16.7	0.446	2.2	6.2	0.362	4.5	5.5	0.823	6.5	3.9	1.1	0.1	2.4	2.3	21.7	8.1	18.2	2.4	6.7	4.9	6	7	4.3	1.2	0.1	2.6	2.5	23.6	0.56	0.513	0.369	0.327	0.377	32.7	0.81	1.64	26.4	0.149	0.052	0.202	113.4	100.9	6.7	0.9	7.6	1630223
+1224	2020-06-22 19:00:00	Reggie Perry	reggie-perry	PF	\N	81.25	84.25	250	Mississippi State	Thomasville, GA	2000-03-21	\N	\N	2	20.25	31	31.1	5.9	11.8	0.5	0.7	2.3	0.324	4.8	6.3	0.768	10.1	2.3	0.8	1.2	2.9	3.1	17.4	6.8	13.7	0.9	2.7	5.6	7.3	11.7	2.7	1	1.3	3.4	3.6	20.1	0.587	0.531	0.194	0.53	0.341	28.6	0.57	0.8	28.5	0.154	0.066	0.216	116.5	97.5	6.7	1.8	8.5	1629617
+1225	2020-06-22 19:00:00	Tyrell Terry	tyrell-terry	PG	\N	75	73.75	170	Stanford	Minneapolis, MN	2000-09-28	\N	\N	1	19.72	31	32.6	4.7	10.7	0.441	2	4.9	0.408	3.2	3.5	0.891	4.5	3.2	1.4	0.1	2.6	2.1	14.6	5.2	11.9	2.2	5.4	3.5	3.9	5	3.5	1.5	0.1	2.9	2.3	16.2	0.589	0.535	0.456	0.33	0.383	24.5	0.83	1.21	19.3	0.091	0.091	0.178	108	91.3	3.4	2.7	6.1	1630179
+1226	2020-06-22 19:00:00	Paul Reed	paul-reed	PF	\N	81.25	86	219	DePaul	Orlando, FL	1999-06-14	\N	\N	3	21.01	29	31.7	6.3	12.2	0.516	0.6	1.8	0.308	2	2.8	0.738	10.7	1.6	1.9	2.6	2.3	3	15.1	7.1	13.8	0.6	2	2.3	3.1	12.2	1.8	2.1	2.9	2.6	3.4	17.2	0.561	0.538	0.147	0.227	0.332	24	0.48	0.71	27.5	0.096	0.1	0.196	109.6	88.8	4.9	4.2	9.2	1630194
+1227	2020-06-22 19:00:00	Tre Jones	tre-jones	PG	\N	74.5	76	185	Duke	Apple Valley, MN	2000-01-08	\N	\N	2	20.44	29	35.4	5.6	13.2	0.423	1.3	3.7	0.361	3.7	4.8	0.771	4.2	6.4	1.8	0.3	2.7	1.8	16.2	5.7	13.4	1.4	3.8	3.8	4.9	4.3	6.5	1.8	0.4	2.7	1.8	16.5	0.524	0.474	0.282	0.366	0.352	24	1.31	2.37	21.2	0.117	0.078	0.191	113.2	94.6	5.1	3.1	8.2	1630200
+1238	2020-06-22 19:00:00	Abdoulaye N'Doye	abdoulaye-n-doye	PG	\N	78	\N	205	Cholet (France)	Dunkirk, France	1998-03-09	\N	\N	\N	22.28	26	30.8	3.7	7	0.522	0.6	1.3	0.429	2.3	3.1	0.75	4.3	3.9	1.2	0.3	2.1	2.9	10.2	4.3	8.2	0.7	1.6	2.7	3.6	5	4.6	1.4	0.4	2.4	3.4	11.9	0.602	0.563	0.192	0.44	0.341	16.38	1.27	1.89	14.27	\N	\N	\N	115.5	109	\N	\N	\N	\N
+1229	2020-06-22 19:00:00	Ashton Hagans	ashton-hagans	PG	\N	74.5	80	193	Kentucky	Cartersville, GA	1999-07-08	\N	\N	2	20.95	30	33.1	3.6	8.8	0.404	0.5	2.1	0.258	3.8	4.7	0.81	3.9	6.4	1.9	0.2	3.4	2.6	11.5	3.9	9.6	0.6	2.2	4.2	5.1	4.2	6.9	2.1	0.2	3.7	2.8	12.5	0.519	0.434	0.234	0.536	0.339	22.4	1.62	1.85	17.3	0.06	0.072	0.133	101.8	95.6	1.9	2.8	4.7	1630204
+1230	2020-06-22 19:00:00	Deni Avdija	deni-avdija	SF	\N	81	\N	215	Maccabi Tel Aviv (Israel)	Beit Zera, Israel	2001-01-03	\N	\N	\N	19.46	59	21.7	3.4	6.8	0.505	1	3.1	0.333	1.1	1.9	0.588	4.7	2	0.7	0.7	1.6	2.1	9	5.7	11.2	1.7	5.1	1.9	3.2	7.7	3.3	1.1	1.1	2.6	3.4	15	0.586	0.581	0.458	0.285	0.332	19.67	0.75	1.27	15.21	\N	\N	\N	109.1	99.6	\N	\N	\N	1630166
+1231	2020-06-22 19:00:00	Devin Vassell	devin-vassell	SG	SF	79	\N	194	Florida State	Suwanee, GA	2000-08-23	\N	\N	2	19.82	30	28.8	4.8	9.8	0.49	1.5	3.5	0.415	1.6	2.2	0.738	5.1	1.6	1.4	1	0.8	1.9	12.7	6	12.3	1.8	4.4	2	2.7	6.3	2	1.8	1.2	1	2.4	15.9	0.585	0.565	0.361	0.221	0.357	20	0.56	2.13	23.8	0.139	0.079	0.218	126.9	93.6	6.7	4.2	10.9	1630170
+1232	2020-06-22 19:00:00	Xavier Tillman	xavier-tillman	C	\N	80.5	86	267	Michigan State	Grand Rapids, MI	1999-01-12	\N	\N	3	21.43	31	32.1	5.3	9.7	0.55	0.4	1.6	0.26	2.6	4	0.667	10.3	3	1.2	2.1	2	2.6	13.7	6	10.9	0.5	1.8	3	4.5	11.6	3.4	1.3	2.4	2.2	2.9	15.4	0.593	0.572	0.167	0.41	0.318	21	0.86	1.52	26.5	0.125	0.109	0.233	119.5	86.5	6.3	6.2	12.6	1630214
+1233	2020-06-22 19:00:00	Austin Wiley	austin-wiley	C	\N	82	89	249	Auburn	Birmingham, AL	1999-01-08	\N	\N	4	21.44	31	21.4	3.5	6.1	0.574	0	0	0	3.7	5.5	0.671	9.3	0.5	0.5	1.6	1.7	2.7	10.6	5.9	10.2	0	0.1	6.2	9.2	15.6	0.9	0.9	2.7	2.8	4.6	17.9	0.614	0.574	0.005	0.904	0.313	23.1	0.23	0.33	30.2	0.151	0.09	0.241	121.2	90.7	5.2	2.8	8	78526
+1234	2020-06-22 19:00:00	Isaiah Stewart	isaiah-stewart	PF	\N	80.5	88.75	243	Washington	Rochester, NY	2001-05-22	\N	\N	1	19.08	32	32.2	6	10.5	0.57	0.2	0.6	0.25	4.8	6.2	0.774	8.8	0.8	0.5	2.1	2.2	2.6	17	6.7	11.8	0.2	0.7	5.4	6.9	9.8	0.9	0.6	2.3	2.5	2.9	19	0.629	0.577	0.059	0.591	0.327	24.5	0.26	0.38	26.9	0.144	0.078	0.221	119.7	93.6	5	2.4	7.4	1630191
+1235	2020-06-22 19:00:00	Tyrese Maxey	tyrese-maxey	SG	PG	75	\N	198	Kentucky	Garland, TX	2000-11-04	\N	\N	1	19.62	31	34.5	4.8	11.3	0.427	1.1	3.6	0.292	3.2	3.9	0.833	4.3	3.2	0.9	0.4	2.2	2.4	14	5.1	11.8	1.1	3.8	3.4	4	4.5	3.3	0.9	0.4	2.3	2.5	14.6	0.531	0.474	0.322	0.342	0.353	22.7	0.82	1.48	16.3	0.079	0.056	0.135	107.1	99.6	2.4	2	4.4	1630178
+1236	2020-06-22 19:00:00	Payton Pritchard	payton-pritchard	PG	\N	74	76	190	Oregon	West Linn, OR	1998-01-28	\N	\N	4	22.39	31	36.6	7	14.9	0.468	2.8	6.8	0.415	3.7	4.5	0.821	4.3	5.5	1.5	0	2.7	2	20.5	6.9	14.7	2.8	6.7	3.6	4.4	4.3	5.5	1.5	0	2.7	2	20.1	0.601	0.563	0.459	0.303	0.383	28.2	1.12	2.02	27.1	0.187	0.049	0.236	122.9	101.5	9.2	1.9	11.1	1630202
+1237	2020-06-22 19:00:00	Jay Scrubb	jay-scrubb	SG	\N	78.25	81.5	185	John A. Logan (JUCO)	Louisville, KY	2000-09-01	\N	\N	1	19.8	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1630206
+1239	2020-06-22 19:00:00	Mason Jones	mason-jones	SG	\N	77.75	79	207	Arkansas	DeSoto, TX	1998-07-21	\N	\N	3	21.91	31	33.9	6.2	13.6	0.453	2.2	6.3	0.351	7.5	9.1	0.826	5.5	3.4	1.6	0.2	3.2	3.3	22	6.5	14.5	2.3	6.7	8	9.7	5.8	3.6	1.7	0.2	3.4	3.5	23.4	0.614	0.533	0.46	0.668	0.375	31.6	0.73	1.07	27.3	0.16	0.069	0.232	115.7	96.2	6.8	2.6	9.4	1630222
+1240	2021-06-22 19:00:00	David Johnson	david-johnson	PG	\N	76.75	82.5	203	Louisville	Louisville, KY	2001-02-26	\N	\N	2	20.31	19	35.1	4.7	11.5	0.411	1.7	4.4	0.386	1.5	2.1	0.7	5.8	3.2	1.1	0.3	3.2	2.7	12.6	4.9	11.8	1.7	4.5	1.5	2.2	5.9	3.2	1.1	0.3	3.3	2.8	13	0.504	0.484	0.379	0.183	0.349	23.3	0.81	0.98	13.4	0.024	0.06	0.084	94.6	100.1	1.1	1.9	3.1	77139
+1242	2021-06-22 19:00:00	Usman Garuba	usman-garuba	PF	\N	80	\N	229	Real Madrid (Spain)	Madrid, Spain	2002-03-09	\N	\N	\N	19.28	86	17.2	1.8	3.8	0.471	0.5	1.5	0.316	0.6	1	0.659	4.6	0.8	0.7	0.5	1	1.9	4.7	3.7	7.9	1	3.2	1.3	2	9.7	1.7	1.4	1.1	2.1	4	9.8	0.552	0.535	0.407	0.251	0.329	14.74	0.52	0.82	13.32	\N	\N	\N	109.1	104.2	\N	\N	\N	1630586
+1243	2021-06-22 19:00:00	McKinley Wright IV	mckinley-wright-iv	PG	\N	72.25	77.25	192	Colorado	Champlin, MN	1998-10-25	\N	\N	4	22.65	32	32.6	5.6	11.6	0.48	0.9	2.9	0.301	3.2	3.8	0.844	4.3	5.7	1.1	0.3	2.1	1.6	15.2	6.1	12.8	1	3.2	3.6	4.2	4.8	6.3	1.2	0.3	2.3	1.7	16.8	0.568	0.518	0.251	0.329	0.353	25.1	1.46	2.68	24.7	0.161	0.069	0.226	120.7	97.9	6.9	3.3	10.2	1630593
+1250	2021-06-22 19:00:00	Romeo Weems	romeo-weems	SF	\N	79	\N	215	DePaul	Detroit, MI	2001-05-17	\N	\N	2	20.09	18	28.6	2.8	7.4	0.376	0.8	2.3	0.366	0.9	1.3	0.696	5	0.9	1.3	0.6	2.3	2.7	7.3	3.5	9.3	1	2.9	1.1	1.6	6.3	1.1	1.6	0.8	2.9	3.4	9.2	0.455	0.432	0.308	0.173	0.336	17.6	0.34	0.38	8.6	-0.023	0.062	0.039	82.5	100	-2.3	2.7	0.4	\N
+1256	2021-06-22 19:00:00	Balša Koprivica	balsa-koprivica	C	\N	85	\N	240	Florida State	Belgrade, Serbia	2000-05-01	\N	\N	2	21.13	24	19.5	3.7	6.1	0.599	0	0	1	1.8	2.5	0.689	5.6	0.8	0.3	1.4	1.3	2.6	9.1	6.8	11.3	0.1	0.1	3.2	4.7	10.4	1.4	0.5	2.5	2.5	4.8	16.8	0.622	0.602	0.007	0.415	0.317	21.9	0.35	0.56	24.8	0.128	0.068	0.197	119.9	97.1	3.8	2.9	6.7	\N
+1245	2021-06-22 19:00:00	Moses Moody	moses-moody	SG	\N	78	84.75	211	Arkansas	Little Rock, AR	2002-05-31	\N	\N	1	19.05	32	33.8	5.2	12.1	0.427	1.8	5.1	0.358	4.7	5.8	0.812	5.8	1.6	1	0.7	1.6	2.3	16.8	5.5	12.8	1.9	5.4	5	6.2	6.1	1.7	1.1	0.7	1.7	2.5	17.9	0.568	0.503	0.42	0.482	0.367	22.3	0.37	0.98	20.4	0.126	0.067	0.192	119.5	98.1	5.2	2.3	7.4	1630541
+1246	2021-06-22 19:00:00	Davion Mitchell	davion-mitchell	PG	\N	73.25	76.25	202	Baylor	Hinesville, GA	1998-09-05	\N	\N	3	22.79	30	33	5.3	10.3	0.511	2.1	4.7	0.447	1.4	2.1	0.641	2.7	5.5	1.9	0.4	2.4	2.4	14	5.7	11.2	2.3	5.1	1.5	2.3	2.9	6	2.1	0.4	2.7	2.6	15.3	0.619	0.613	0.456	0.207	0.352	20.3	1.36	2.26	21.8	0.141	0.077	0.214	123	96	6.4	3.7	10.1	1630558
+1247	2021-06-22 19:00:00	Josh Christopher	josh-christopher	SG	\N	76.5	81.25	215	Arizona State	Carson, CA	2001-12-08	\N	\N	1	19.53	15	29.7	5.1	11.7	0.432	1.2	3.9	0.305	2.9	3.7	0.8	4.7	1.4	1.5	0.5	1.7	3.2	14.3	6.1	14.2	1.5	4.8	3.6	4.4	5.7	1.7	1.8	0.6	2.1	3.9	17.3	0.529	0.483	0.335	0.312	0.355	25.5	0.38	0.81	17.8	0.054	0.045	0.099	101.2	104.1	2.4	1.8	4.2	1630528
+1248	2021-06-22 19:00:00	Isaiah Todd	isaiah-todd	PF	\N	82	85.25	219	G League	Baltimore, MD	2001-10-17	\N	\N	\N	19.67	15	24.3	4.9	11.1	0.437	1.1	3.1	0.362	0.9	1.1	0.824	4.9	0.8	0.5	0.7	1.5	2.5	12.3	7.2	16.5	1.7	4.6	1.4	1.7	7.2	1.2	0.7	1.1	2.3	3.7	18.2	0.528	0.488	0.281	0.102	0.364	23.21	0.22	0.52	12.27	\N	\N	\N	95.1	111.9	\N	\N	\N	1630225
+1249	2021-06-22 19:00:00	RaiQuan Gray	raiquan-gray	PF	\N	79.75	82.75	269	Florida State	Fort Lauderdale, FL	1999-04-07	\N	\N	3	22.2	25	26.3	4.4	8.4	0.517	0.3	1.2	0.267	2.8	3.7	0.763	6.4	2.2	1.2	0.7	2.2	2.6	11.9	6	11.5	0.4	1.6	3.9	5.1	8.8	3	1.6	1	3	3.6	16.2	0.582	0.536	0.142	0.441	0.331	23.3	0.69	1	22.2	0.103	0.079	0.182	112.5	95.1	3.7	3.7	7.4	1630564
+1251	2021-06-22 19:00:00	JT Thor	jt-thor	PF	\N	81.25	87.25	203	Auburn	Anchorage, AK	2002-08-26	\N	\N	1	18.81	27	23	3.1	7.1	0.44	0.8	2.7	0.297	2.3	3.1	0.741	5	0.9	0.8	1.4	1.6	2	9.4	4.9	11.1	1.3	4.3	3.6	4.9	7.9	1.3	1.3	2.1	2.4	3.2	14.6	0.547	0.497	0.387	0.445	0.344	20.4	0.35	0.55	18.3	0.077	0.051	0.129	108.6	101.6	2.4	2.2	4.7	1630550
+1252	2021-06-22 19:00:00	Filip Petrušev	filip-petrusev	PF	C	83	\N	225	KK Mega Basket (Serbia)	Belgrade, Serbia	2000-04-15	\N	\N	\N	21.18	32	30.1	7.7	13.7	0.563	1.3	2.9	0.462	4.4	6.2	0.714	7.4	1.5	0.4	1	1.9	2.6	21.2	9.2	16.4	1.6	3.5	5.3	7.4	8.9	1.8	0.5	1.2	2.3	3.1	25.4	0.636	0.612	0.212	0.453	0.352	29.34	0.38	0.79	24.51	\N	\N	\N	121.7	108.2	\N	\N	\N	1630196
+1253	2021-06-22 19:00:00	Isaiah Jackson	isaiah-jackson	PF	C	82.5	86.5	206	Kentucky	Pontiac, MI	2002-01-10	\N	\N	1	19.44	25	20.8	3	5.5	0.54	0	0.1	0	2.5	3.6	0.7	6.6	0.7	0.8	2.6	1.5	3	8.4	5.1	9.5	0	0.1	4.4	6.2	11.4	1.2	1.3	4.5	2.6	5.2	14.6	0.587	0.54	0.015	0.657	0.317	20.5	0.36	0.47	25.3	0.092	0.092	0.185	111.9	90.7	2.3	6	8.3	1630543
+1254	2021-06-22 19:00:00	Jason Preston	jason-preston	PG	\N	76	80.5	181	Ohio	Orlando, FL	1999-08-10	\N	\N	3	21.86	20	34.6	6.4	12.4	0.514	1.6	4.1	0.39	1.4	2.4	0.596	7.3	7.3	1.5	0.3	3	1.4	15.7	6.6	12.9	1.7	4.3	1.5	2.4	7.6	7.6	1.5	0.3	3.1	1.4	16.4	0.583	0.579	0.332	0.19	0.334	23.4	1.65	2.42	24.1	0.127	0.058	0.185	115.1	100	5.4	1.8	7.2	1630554
+1255	2021-06-22 19:00:00	Miles McBride	miles-mcbride	PG	\N	74.5	80.75	195	West Virginia	Cincinnati, OH	2000-09-08	\N	\N	2	20.78	29	34.2	5.4	12.6	0.431	1.6	3.8	0.414	3.4	4.2	0.813	3.9	4.8	1.9	0.3	1.8	1.7	15.9	5.7	13.2	1.7	4	3.6	4.5	4.1	5.1	2	0.3	1.9	1.8	16.7	0.544	0.495	0.305	0.338	0.364	22.9	1.24	2.64	22.8	0.137	0.048	0.19	120.3	102.3	6.5	3	9.5	1630540
+1257	2021-06-22 19:00:00	Chris Duarte	chris-duarte	SG	\N	78	\N	190	Oregon	Puerto Plata, Dominican Republic	1997-06-14	\N	\N	4	24.01	26	34.1	6.2	11.6	0.532	2.3	5.5	0.424	2.5	3	0.81	4.6	2.7	1.9	0.8	2.3	1.4	17.1	6.5	12.2	2.5	5.9	2.6	3.2	4.9	2.8	2	0.9	2.4	1.5	18.1	0.657	0.633	0.478	0.262	0.377	23.9	0.67	1.17	26.6	0.149	0.063	0.212	122.1	99.1	8	3.5	11.5	1630537
+1258	2021-06-22 19:00:00	Josh Giddey	josh-giddey	PG	\N	80	79.5	205	Adelaide (Australia)	Melbourne, Australia	2002-10-10	\N	\N	\N	18.69	28	32.1	4	9.5	0.425	1	3.5	0.293	1.7	2.4	0.691	7.4	7.4	1.1	0.5	3.3	1.5	10.8	4.5	10.7	1.2	4	1.9	2.7	8.3	8.3	1.2	0.5	3.7	1.7	12.1	0.506	0.479	0.372	0.256	0.335	19.55	1.86	2.25	14.78	\N	\N	\N	102.8	108.7	\N	\N	\N	1630581
+1267	2021-06-22 19:00:00	Rokas Jokubaitis	rokas-jokubaitis	PG	\N	76	\N	194	Žalgiris (Lithuania)	Mažeikiai, Lithuania	2000-11-19	\N	\N	\N	20.58	74	20.4	2.9	6.3	0.466	0.7	1.9	0.35	1	1.4	0.716	1.7	3.4	0.6	0	1.4	1.6	7.5	5.2	11.1	1.2	3.3	1.7	2.4	3	5.9	1.1	0	2.4	2.8	13.3	0.542	0.518	0.3	0.219	0.341	20.21	1.25	2.43	13.36	\N	\N	\N	112.3	108.2	\N	\N	\N	\N
+1260	2021-06-22 19:00:00	Day'Ron Sharpe	day-ron-sharpe	C	\N	83	\N	265	North Carolina	Winterville, NC	2001-11-06	\N	\N	1	19.62	29	19.2	3.9	7.4	0.519	0	0.1	0	1.8	3.5	0.505	7.6	1.4	0.8	0.9	2	2	9.5	7.3	14	0	0.1	3.3	6.5	14.2	2.7	1.5	1.7	3.7	3.8	17.8	0.521	0.519	0.009	0.468	0.29	26.3	0.59	0.74	25.5	0.079	0.086	0.165	104.8	93	4.3	3.2	7.5	1630549
+1261	2021-06-22 19:00:00	Matthew Hurt	matthew-hurt	PF	\N	81.5	81.5	232	Duke	Rochester, MN	2000-04-20	\N	\N	2	21.16	24	32.7	6.8	12.3	0.556	2.3	5.3	0.444	2.3	3.2	0.724	6.2	1.4	0.8	0.7	1.2	3.2	18.3	7.5	13.5	2.6	5.8	2.5	3.5	6.8	1.6	0.8	0.8	1.3	3.5	20.2	0.663	0.651	0.427	0.258	0.367	22.8	0.38	1.21	26.3	0.179	0.041	0.219	132.5	104.5	8.5	1.5	9.9	1630562
+1262	2021-06-22 19:00:00	Trendon Watford	trendon-watford	SF	\N	80.75	86.25	237	LSU	Mountain Brook, AL	2000-11-09	\N	\N	2	20.61	28	34.6	6.1	12.6	0.48	0.6	2	0.316	3.5	5.4	0.651	7.4	2.9	1.1	0.6	2.6	2.5	16.3	6.3	13.2	0.7	2.1	3.7	5.7	7.7	3	1.2	0.6	2.8	2.6	17	0.536	0.506	0.161	0.429	0.322	24.6	0.63	1.11	20.2	0.091	0.045	0.136	108.3	103.7	4.2	0.9	5.1	1630570
+1263	2021-06-22 19:00:00	Jalen Green	jalen-green	SG	\N	78	\N	178	G League	Fresno, CA	2002-02-09	\N	\N	\N	19.36	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1630224
+1264	2021-06-22 19:00:00	Keon Johnson	keon-johnson	SG	\N	76.75	79.25	185	Tennessee	Shelbyville, TN	2002-03-10	\N	\N	1	19.28	27	25.5	4.1	9.1	0.449	0.5	1.8	0.271	2.6	3.7	0.703	3.5	2.5	1.1	0.4	2.6	2.4	11.3	5.8	12.9	0.7	2.5	3.7	5.3	5	3.5	1.6	0.6	3.7	3.3	16	0.519	0.476	0.194	0.409	0.327	26.8	0.77	0.94	16.3	0.041	0.081	0.122	97.7	94.5	1	3.1	4.1	1630553
+1265	2021-06-22 19:00:00	Joe Wieskamp	joe-wieskamp	SF	\N	79.25	83	205	Iowa	Muscatine, IA	1999-08-23	\N	\N	3	21.82	31	29.3	5.2	10.6	0.491	2.4	5.1	0.462	2.1	3.1	0.677	6.6	1.7	0.9	0.3	1.4	1.5	14.8	6.4	13	2.9	6.3	2.6	3.8	8.2	2.1	1.2	0.4	1.7	1.9	18.3	0.616	0.602	0.482	0.293	0.367	22.4	0.46	1.23	22.7	0.128	0.053	0.181	120.5	101.4	7.4	1.9	9.3	1630580
+1266	2021-06-22 19:00:00	Aaron Wiggins	aaron-wiggins	SG	\N	77	81.75	190	Maryland	Greensboro, NC	1999-01-02	\N	\N	3	22.46	31	33	5.3	11.9	0.446	1.8	5.2	0.356	2	2.5	0.772	5.8	2.5	1.1	0.5	2	2	14.5	5.8	13	2	5.6	2.1	2.8	6.4	2.8	1.2	0.6	2.1	2.2	15.8	0.55	0.523	0.432	0.214	0.362	25.4	0.68	1.3	19.9	0.082	0.063	0.145	106.1	99.2	4.9	2.1	7	1630598
+1268	2021-06-22 19:00:00	Alperen Şengün	alperen-sengun	C	\N	82	\N	240	Beşiktaş (Turkey)	Giresun, Turkey	2002-07-25	\N	\N	\N	18.9	37	28.2	6.8	10.7	0.632	0.2	0.9	0.2	5.2	6.6	0.794	8.7	2.7	1.3	1.6	2.4	3.1	19	8.7	13.7	0.2	1.2	6.7	8.4	11.2	3.5	1.7	2	3.1	4	24.3	0.685	0.641	0.088	0.612	0.328	26.7	0.68	1.11	30.92	\N	\N	\N	132.4	106.7	\N	\N	\N	1630578
+1269	2021-06-22 19:00:00	James Bouknight	james-bouknight	SG	\N	76.75	80.25	190	UConn	Brooklyn, NY	2000-09-18	\N	\N	2	20.75	15	31.7	6.5	14.6	0.447	1.5	5	0.293	4.2	5.4	0.778	5.7	1.8	1.1	0.3	2.8	1.9	18.7	7.4	16.6	1.7	5.7	4.8	6.1	6.4	2	1.3	0.3	3.2	2.1	21.3	0.546	0.498	0.342	0.37	0.356	31.6	0.41	0.64	23.3	0.109	0.067	0.177	108.7	98.4	6.1	2.5	8.6	1630547
+1270	2021-06-22 19:00:00	Neemias Queta	neemias-queta	C	\N	84.5	88	248	Utah State	Barreiro, Portugal	1999-07-13	\N	\N	3	21.93	29	30	5.8	10.3	0.559	0	0.1	0	3.4	4.8	0.707	10.1	2.7	1.1	3.3	2.4	2.4	14.9	6.9	12.4	0	0.1	4.1	5.8	12.2	3.2	1.3	4	2.9	2.9	17.9	0.592	0.559	0.007	0.468	0.318	24.3	0.77	1.12	30.5	0.129	0.133	0.266	116.4	80.6	5.2	6.9	12.2	1629674
+1271	2021-06-22 19:00:00	Jared Butler	jared-butler	PG	\N	75.75	76	193	Baylor	Reserve, LA	2000-08-25	\N	\N	3	20.82	30	30.3	5.9	12.5	0.471	2.6	6.2	0.416	2.4	3	0.78	3.3	4.8	2	0.4	2.8	2.4	16.7	7	14.9	3	7.3	2.8	3.6	3.9	5.7	2.3	0.4	3.4	2.9	19.9	0.599	0.573	0.492	0.242	0.382	27	1.03	1.69	25	0.154	0.084	0.237	118.6	93.7	7.6	4.1	11.7	1630215
+1273	2021-06-22 19:00:00	Cameron Thomas	cameron-thomas	SG	\N	76	\N	210	LSU	Chesapeake, VA	2001-10-13	\N	\N	1	19.68	29	34	7	17.2	0.406	2.3	7.2	0.325	6.7	7.6	0.882	3.4	1.4	0.9	0.2	1.7	1.4	23	7.4	18.3	2.5	7.6	7.1	8	3.6	1.5	0.9	0.2	1.8	1.5	24.4	0.553	0.474	0.418	0.44	0.385	31.6	0.26	0.86	24.1	0.162	0.02	0.183	117.9	109.4	7.1	-0.8	6.3	1630560
+1274	2021-06-22 19:00:00	Charles Bassey	charles-bassey	C	\N	82.25	87	230	Western Kentucky	Lagos, Nigeria	2000-10-28	\N	\N	3	20.64	28	30.4	6.9	11.8	0.59	0.6	2.1	0.305	3.1	4.1	0.759	11.6	0.7	0.4	3.1	2.2	2.4	17.6	8.2	13.9	0.8	2.5	3.7	4.9	13.7	0.8	0.5	3.7	2.6	2.8	20.9	0.643	0.617	0.179	0.353	0.338	26.4	0.21	0.31	32.7	0.155	0.099	0.254	121.1	90.5	6.5	2.6	9.1	1629646
+1276	2021-06-22 19:00:00	Corey Kispert	corey-kispert	SF	\N	79.25	79	224	Gonzaga	Edmonds, WA	1999-03-03	\N	\N	4	22.3	32	31.8	6.5	12.3	0.529	2.8	6.5	0.44	2.7	3.1	0.878	5	1.8	0.9	0.4	1.3	1.7	18.6	7.4	14	3.2	7.3	3	3.5	5.6	2	1	0.5	1.5	1.9	21	0.674	0.644	0.524	0.248	0.398	22.7	0.4	1.38	25.4	0.181	0.071	0.251	133.1	96.6	9.1	2	11.1	1630557
+1277	2021-06-22 19:00:00	Aaron Henry	aaron-henry	SF	\N	78	82.75	210	Michigan State	Indianapolis, IN	1999-08-30	\N	\N	3	21.8	28	32.5	5.8	13	0.449	0.9	2.9	0.296	2.9	3.8	0.762	5.6	3.6	1.3	1.3	2.9	2.2	15.4	6.4	14.4	0.9	3.2	3.2	4.2	6.3	4	1.5	1.4	3.2	2.4	17	0.521	0.482	0.223	0.289	0.341	27.2	0.93	1.26	20.1	0.066	0.053	0.119	101.8	101.2	4.6	3.4	7.9	1630565
+1278	2021-06-22 19:00:00	BJ Boston	bj-boston	SG	\N	79	82.75	188	Kentucky	Norcross, GA	2001-11-28	\N	\N	1	19.56	25	30.4	4.1	11.6	0.355	1.2	4	0.3	2	2.6	0.785	4.5	1.6	1.3	0.2	1.4	2	11.5	4.9	13.8	1.4	4.7	2.4	3.1	5.3	1.9	1.6	0.2	1.7	2.3	13.6	0.447	0.407	0.345	0.224	0.353	23	0.48	1.11	13.3	0.037	0.053	0.084	97.9	102.1	1	2.1	3.1	1630527
+1279	2021-06-22 19:00:00	Daishen Nix	daishen-nix	PG	\N	76.25	78.75	226	G League	Anchorage, AK	2002-02-13	\N	\N	\N	19.35	15	26.5	3.2	8.3	0.384	0.4	2.3	0.176	1.3	1.9	0.714	5.3	5.3	1	0.2	2.9	1.6	8.8	4.3	11.3	0.5	3.1	1.8	2.5	7.2	7.1	1.4	0.3	3.9	2.2	11.9	0.477	0.408	0.272	0.224	0.323	19.49	1.41	1.84	10.66	\N	\N	\N	90.4	111.1	\N	\N	\N	1630227
+1280	2021-06-22 19:00:00	Jericho Sims	jericho-sims	C	\N	82	87.25	250	Texas	Minneapolis, MN	1998-10-20	\N	\N	4	22.66	26	24.5	3.6	5.2	0.696	0	0	\N	2	3.8	0.52	7.2	0.7	0.7	1.1	1.6	2.5	9.2	5.3	7.6	0	0	2.9	5.6	10.6	1	1.1	1.6	2.4	3.7	13.5	0.658	0.696	0	0.741	0.292	17.6	0.31	0.4	21.7	0.094	0.088	0.182	117	93.5	3.6	3.4	6.9	1630579
+1281	2021-06-22 19:00:00	Evan Mobley	evan-mobley	C	\N	84	\N	215	USC	Murietta, CA	2001-06-18	\N	\N	1	20	33	33.9	6	10.3	0.578	0.4	1.2	0.3	4.1	5.8	0.694	8.7	2.4	0.8	2.9	2.2	1.8	16.4	6.3	11	0.4	1.3	4.3	6.2	9.2	2.5	0.8	3.1	2.4	1.9	17.4	0.624	0.595	0.117	0.566	0.322	22.8	0.62	1.07	29.1	0.154	0.093	0.246	123.2	90.9	7.9	5.8	13.7	1630596
+1282	2021-06-22 19:00:00	Jalen Suggs	jalen-suggs	PG	SG	76	\N	205	Gonzaga	West Saint Paul, MN	2001-06-23	\N	\N	1	19.99	30	28.9	5.2	10.3	0.503	1.2	3.5	0.337	2.9	3.8	0.754	5.3	4.5	1.9	0.3	2.9	2.6	14.4	6.4	12.8	1.5	4.3	3.6	4.7	6.6	5.6	2.4	0.4	3.6	3.2	17.9	0.595	0.56	0.338	0.37	0.35	24.8	0.96	1.55	22.6	0.115	0.097	0.212	112.4	90.8	4.8	4.6	9.4	1630591
+1283	2021-06-22 19:00:00	Jaden Springer	jaden-springer	PG	SG	76.25	79.75	202	Tennessee	Charlotte, NC	2002-09-25	\N	\N	1	18.73	25	25.9	4.2	9.1	0.467	0.8	1.8	0.435	3.2	4	0.81	3.5	2.9	1.2	0.4	2.4	2	12.5	5.9	12.6	1.1	2.6	4.5	5.6	4.9	4.1	1.7	0.6	3.3	2.8	17.4	0.57	0.511	0.203	0.441	0.356	26	0.93	1.22	20.9	0.099	0.08	0.179	108.8	94.2	3.6	3.3	6.9	1630531
+1284	2021-06-22 19:00:00	Joel Ayayi	joel-ayayi	PG	SG	77	\N	180	Gonzaga	Bordeaux, France	2000-03-05	\N	\N	3	21.29	32	31.3	4.7	8.1	0.575	1.2	3	0.389	1.6	2	0.781	6.9	2.7	1.1	0.2	1.4	1.8	12	5.4	9.3	1.3	3.4	1.8	2.3	7.9	3.1	1.2	0.2	1.7	2.1	13.9	0.665	0.647	0.367	0.247	0.354	16.1	0.78	1.89	20.6	0.136	0.08	0.212	131	94.9	6.5	3.1	9.6	1630555
+1285	2021-06-22 19:00:00	Sandro Mamukelashvili	sandro-mamukelashvili	C	\N	82	85.25	240	Seton Hall	Tbilisi, Georgia	1999-05-23	\N	\N	4	22.07	27	35.6	6.2	14.3	0.434	1.6	4.6	0.336	3.5	4.9	0.714	7.6	3.2	1.1	0.6	3.3	1.7	17.5	6.3	14.5	1.6	4.7	3.6	5	7.6	3.3	1.1	0.6	3.3	1.8	17.7	0.525	0.488	0.323	0.344	0.347	28.8	0.72	0.98	20.2	0.075	0.054	0.129	102.7	101.6	4.9	1.2	6.2	1630572
+1286	2021-06-22 19:00:00	Jalen Johnson	jalen-johnson	SF	PF	81.25	84.25	210	Duke	Milwaukee, WI	2001-12-18	\N	\N	1	19.5	13	21.4	4.4	8.4	0.523	0.6	1.4	0.444	1.8	2.9	0.632	6.1	2.2	1.2	1.2	2.5	2.2	11.2	7.4	14.1	1	2.3	3.1	4.9	10.2	3.8	1.9	2.1	4.3	3.8	18.9	0.575	0.56	0.165	0.349	0.331	28.6	0.72	0.88	25.8	0.086	0.072	0.158	104.3	95.4	4.3	4.2	8.5	1630552
+1287	2021-06-22 19:00:00	Scottie Barnes	scottie-barnes	PF	\N	80	86.75	225	Florida State	West Palm Beach, FL	2001-08-01	\N	\N	1	19.88	24	24.8	4.1	8.1	0.503	0.5	1.7	0.275	1.7	2.8	0.621	4	4.1	1.5	0.5	2.5	2.2	10.3	5.9	11.8	0.7	2.4	2.5	4	5.8	5.9	2.1	0.7	3.6	3.1	15	0.548	0.531	0.205	0.338	0.316	23.7	1.33	1.66	21.4	0.101	0.067	0.161	109.3	98.3	4.3	3.6	7.9	1630567
+1288	2021-06-22 19:00:00	Isaiah Livers	isaiah-livers	SF	\N	79.25	81.25	232	Michigan	Kalamazoo, MI	1998-07-28	\N	\N	4	22.89	23	31.6	4.4	9.7	0.457	2.2	5	0.431	2	2.3	0.87	6	2	0.6	0.7	1.1	1.6	13.1	5.1	11	2.5	5.7	2.3	2.7	6.8	2.3	0.6	0.8	1.3	1.8	14.9	0.605	0.57	0.52	0.242	0.385	19.8	0.59	1.77	20.5	0.127	0.072	0.198	123.6	97.1	6.7	3.6	10.4	1630587
+1289	2021-06-22 19:00:00	David Duke	david-duke	SG	\N	77.5	80.75	204	Providence	Providence, RI	1999-10-13	\N	\N	3	21.68	26	37.1	5.5	14.3	0.387	2	5	0.389	3.8	4.8	0.792	6.3	4.8	1.2	0.3	3.2	3	16.8	5.4	13.9	1.9	4.9	3.7	4.7	6.2	4.6	1.2	0.3	3.1	2.9	16.4	0.508	0.456	0.352	0.336	0.364	27.3	1	1.51	18.1	0.071	0.05	0.12	102.3	102.1	3.5	1.7	5.2	1630561
+1292	2021-06-22 19:00:00	Juhann Bégarin	juhann-begarin	SG	\N	77	\N	185	Paris Basketball (France)	Les Abymes, Guadeloupe	2002-08-07	\N	\N	\N	18.87	39	26.6	4.3	9.4	0.456	1.4	4.1	0.342	1.7	2.8	0.613	3.5	2.9	1.4	0.5	2.4	1.7	11.7	5.8	12.7	1.9	5.5	2.4	3.8	4.7	3.9	1.8	0.7	3.2	2.4	15.8	0.545	0.53	0.432	0.303	0.338	22.68	0.81	1.23	13.95	\N	\N	\N	103.1	102.3	\N	\N	\N	\N
+1295	2021-06-22 19:00:00	John Petty	john-petty	SG	\N	77.75	81.5	186	Alabama	Huntsville, AL	1998-12-03	\N	\N	4	22.54	32	31.3	4.3	10.3	0.42	2.4	6.5	0.37	1.5	2	0.734	5.2	1.9	1.3	0.6	1.9	2.2	12.6	5	11.9	2.8	7.5	1.7	2.3	5.9	2.2	1.5	0.6	2.2	2.5	14.4	0.556	0.536	0.628	0.193	0.37	19.5	0.56	0.98	15.9	0.072	0.076	0.148	108.8	95.3	3.1	3.7	6.8	\N
+1291	2021-06-22 19:00:00	Nah'Shon Hyland	nah-shon-hyland	SG	\N	75.5	81.25	169	VCU	Middletown, DE	2000-09-14	\N	\N	2	20.76	24	31.9	6.3	14.2	0.447	2.9	7.8	0.371	3.9	4.5	0.862	4.7	2.1	1.9	0.2	3.1	2.2	19.5	7.1	16	3.2	8.7	4.4	5.1	5.3	2.3	2.1	0.2	3.5	2.5	21.9	0.596	0.549	0.547	0.321	0.395	31.8	0.5	0.68	23.7	0.104	0.094	0.198	107.8	91.2	5.5	2.7	8.2	1630538
+1293	2021-06-22 19:00:00	Sharife Cooper	sharife-cooper	PG	\N	73	\N	180	Auburn	Powder Springs, GA	2001-06-11	\N	\N	1	20.02	12	33.1	6	15.3	0.391	1.1	4.8	0.228	7.1	8.6	0.825	4.3	8.1	1	0.3	4.2	2.7	20.2	6.5	16.7	1.2	5.2	7.7	9.3	4.6	8.8	1.1	0.3	4.5	2.9	21.9	0.519	0.427	0.31	0.56	0.352	33.1	1.57	1.94	22.9	0.141	0.03	0.171	110.6	106.6	4.7	-0.4	4.3	1630536
+1294	2021-06-22 19:00:00	Scottie Lewis	scottie-lewis	SG	SF	77.25	84	188	Florida	Hazlet, NJ	2000-03-12	\N	\N	2	21.27	21	25.6	2.7	6.1	0.445	0.7	2.1	0.318	1.8	2.6	0.673	3.1	1.5	1.6	1	1.9	2.5	7.9	3.8	8.6	0.9	2.9	2.5	3.7	4.3	2.1	2.2	1.5	2.6	3.5	11	0.535	0.5	0.344	0.43	0.33	18	0.58	0.79	14.5	0.037	0.067	0.104	100.2	98.1	1.3	4.5	5.8	1630575
+1296	2021-06-22 19:00:00	Yves Pons	yves-pons	SF	\N	78.75	84.75	206	Tennessee	Fuveau, France	1999-05-07	\N	\N	4	22.12	26	28.5	3.5	7.4	0.466	0.7	2.4	0.274	1.2	1.5	0.789	5.3	0.7	0.7	1.8	1	2.1	8.7	4.4	9.4	0.8	3	1.5	1.8	6.7	0.9	0.8	2.3	1.3	2.7	11	0.538	0.51	0.321	0.197	0.342	16.2	0.31	0.7	16.1	0.059	0.086	0.146	109.3	93.1	1.5	4	5.5	1630582
+1297	2021-06-22 19:00:00	Kessler Edwards	kessler-edwards	SF	\N	80	83.25	203	Pepperdine	Rancho Cucamonga, CA	1999-08-09	\N	\N	3	21.86	27	33.9	6.1	12.4	0.491	1.7	4.4	0.378	3.4	3.9	0.876	6.8	1.2	1	1.2	1.8	2.1	17.2	6.4	13.1	1.8	4.7	3.6	4.1	7.2	1.3	1	1.3	1.9	2.3	18.3	0.606	0.558	0.356	0.314	0.373	23.6	0.31	0.67	21.8	0.109	0.061	0.17	114.6	99.7	4.5	1	5.6	1630556
+1298	2021-06-22 19:00:00	Cade Cunningham	cade-cunningham	PG	\N	79	\N	220	Oklahoma State	Arlington, TX	2001-09-25	\N	\N	1	19.73	27	35.4	6.5	14.8	0.438	2.3	5.7	0.4	4.9	5.8	0.846	6.2	3.5	1.6	0.8	4	2.5	20.1	6.6	15.1	2.3	5.8	5	5.9	6.3	3.5	1.6	0.8	4.1	2.5	20.5	0.574	0.515	0.388	0.39	0.379	29.1	0.7	0.86	21.6	0.096	0.071	0.167	106.4	97	5.1	3.2	8.3	1630595
+1299	2021-06-22 19:00:00	Georgios Kalaitzakis	georgios-kalaitzakis	SF	\N	80	\N	205	Panathinaikos (Greece)	Heraklion, Greece	1999-01-02	\N	\N	\N	22.46	27	8.1	0.7	1.9	0.38	0.2	0.9	0.261	1	1.2	0.812	1	0.6	0.4	0.1	0.6	1.9	2.6	3.1	8.2	1	3.8	4.3	5.2	4.6	2.6	1.8	0.7	2.8	8.3	11.5	0.537	0.44	0.46	0.64	0.347	17.5	0.64	0.94	8.91	\N	\N	\N	102.6	105.3	\N	\N	\N	1630686
+1300	2021-06-22 19:00:00	Greg Brown	greg-brown	PF	\N	80.5	84.25	206	Texas	Austin, TX	2001-09-01	\N	\N	1	19.8	26	20.6	3.1	7.4	0.42	1.2	3.5	0.33	2	2.8	0.708	6.2	0.4	0.6	1	2.3	3	9.3	5.5	13	2	6.1	3.4	4.8	10.8	0.7	1	1.7	4	5.2	16.4	0.535	0.497	0.472	0.373	0.353	26.9	0.14	0.17	16	0.022	0.09	0.112	93.6	91.6	-0.2	2.7	2.5	1630535
+1301	2021-06-22 19:00:00	AJ Lawson	aj-lawson	SG	\N	78.75	78.75	179	South Carolina	Toronto, ON	2000-07-15	\N	\N	3	20.93	21	31.3	5.6	14.1	0.394	2.8	8	0.351	2.7	3.8	0.7	4.1	1.2	1.5	0.1	1.5	1.8	16.6	6.4	16.2	3.2	9.2	3.1	4.4	4.7	1.4	1.8	0.2	1.8	2	19.1	0.521	0.493	0.566	0.269	0.373	25.2	0.32	0.81	17.9	0.085	0.03	0.116	108	107.5	4.7	0.8	5.5	1630639
+1302	2021-06-22 19:00:00	Franz Wagner	franz-wagner	SF	\N	80	\N	205	Michigan	Berlin, Germany	2001-08-27	\N	\N	2	19.81	28	31.7	4.4	9.3	0.477	1.3	3.6	0.343	2.4	2.8	0.835	6.5	3	1.3	1	1.3	2.2	12.5	5	10.6	1.4	4.1	2.7	3.2	7.4	3.4	1.4	1.2	1.5	2.5	14.2	0.587	0.544	0.392	0.304	0.361	19.7	0.88	2.33	22.1	0.122	0.09	0.212	121.5	92.3	5.8	6.1	11.9	1630532
+1303	2021-06-22 19:00:00	Jay Huff	jay-huff	PF	C	85	\N	240	Virginia	Durham, NC	1998-08-25	\N	\N	4	22.82	25	27	5.1	8.7	0.585	1.2	3	0.387	1.6	2	0.837	7.1	1	0.5	2.6	1.3	2.6	13	6.8	11.6	1.5	4	2.2	2.6	9.4	1.3	0.7	3.5	1.8	3.5	17.3	0.674	0.652	0.346	0.226	0.364	24	0.34	0.73	31.4	0.166	0.089	0.254	125.9	91.8	6.9	5	11.9	1630643
+1304	2021-06-22 19:00:00	Tre Mann	tre-mann	PG	\N	76.25	76	178	Florida	Gainesville, FL	2001-02-03	\N	\N	2	20.37	24	32.4	5.5	12.1	0.459	1.9	4.7	0.402	3.1	3.7	0.831	5.6	3.5	1.4	0.1	2.8	2.4	16	6.2	13.4	2.1	5.2	3.4	4.1	6.3	3.8	1.5	0.1	3.2	2.6	17.8	0.579	0.536	0.386	0.307	0.373	25.8	0.85	1.22	21.1	0.113	0.062	0.17	111.7	99.6	5	2	7	1630544
+1309	2021-06-22 19:00:00	Marcus Zegarowski	marcus-zegarowski	PG	\N	74	74.75	181	Creighton	Hamilton, MA	1998-08-03	\N	\N	3	22.88	29	33.6	5.6	12	0.464	2.8	6.6	0.421	1.9	2.4	0.786	3.6	4.3	1.3	0.1	2.1	1.9	15.8	6	12.9	3	7	2	2.6	3.9	4.6	1.4	0.1	2.3	2	17	0.6	0.579	0.544	0.201	0.381	23.5	1.02	2.02	20.9	0.119	0.057	0.177	115.8	100.7	5.8	2.3	8.1	\N
+1314	2022-06-22 19:00:00	Ziga Samar	ziga-samar	PG	\N	78	\N	185	Fuenlabrada (Spain)	Jesenice, Slovenia	2001-01-26	\N	\N	\N	21.39	30	20.6	2.7	5.6	0.485	0.8	1.7	0.471	1.3	1.7	0.769	2.7	4.7	1	0.1	1.7	3.1	7.6	4.8	9.8	1.4	3	2.3	3	4.7	8.3	1.8	0.2	2.9	5.4	13.3	0.589	0.556	0.302	0.308	0.356	18.25	2.01	2.84	17.02	\N	\N	\N	120.3	113.6	\N	\N	\N	\N
+1317	2022-06-22 19:00:00	Matteo Spagnolo	matteo-spagnolo	PG	SG	77.5	80	196	Cremona (Italy)	Brindisi, Italy	2003-01-10	\N	\N	\N	19.44	25	27	4.3	9.7	0.44	1.2	2.7	0.441	2.5	2.9	0.861	3.5	2.6	0.8	0	2.6	2.2	12.2	5.7	13	1.6	3.6	3.3	3.8	4.7	3.5	1	0.1	3.5	2.9	16.3	0.552	0.502	0.28	0.296	0.371	23.75	0.73	0.98	13.16	\N	\N	\N	100.5	112.3	\N	\N	\N	\N
+1306	2021-06-22 19:00:00	Trey Murphy III	trey-murphy-iii	SF	SG	81.25	84	206	Virginia	Durham, NC	2000-06-18	\N	\N	3	21	25	29.6	3.8	7.6	0.503	2.1	4.8	0.433	1.5	1.6	0.927	3.4	1.2	0.8	0.4	0.8	2	11.3	4.7	9.3	2.5	5.8	1.9	2	4.1	1.5	1	0.5	0.9	2.4	13.7	0.67	0.639	0.628	0.215	0.394	18.4	0.45	1.58	20.9	0.135	0.049	0.189	129.8	102	5.9	2.4	8.4	1630530
+1307	2021-06-22 19:00:00	Jonathan Kuminga	jonathan-kuminga	SF	\N	80	\N	210	G League	Kinshasa, DR Congo	2002-10-06	\N	\N	\N	18.7	13	32.7	5.5	14.3	0.387	1.2	5	0.246	2.3	3.7	0.625	7.2	2.7	1	0.8	2.6	2.1	15.8	6.1	15.8	1.4	5.5	2.5	4.1	7.9	3	1.1	0.9	2.9	2.3	17.4	0.493	0.43	0.349	0.258	0.329	24.2	0.51	1.03	11.5	\N	\N	\N	90	110	\N	\N	\N	1630228
+1308	2021-06-22 19:00:00	Luka Garza	luka-garza	C	\N	83.25	85.5	243	Iowa	Washington, DC	1998-12-27	\N	\N	4	22.48	31	31.5	9.1	16.4	0.553	1.4	3.2	0.44	4.5	6.4	0.709	8.7	1.7	0.7	1.6	1.5	2.3	24.1	10.4	18.8	1.6	3.7	5.2	7.3	10	2	0.8	1.8	1.7	2.6	27.6	0.62	0.596	0.197	0.392	0.35	32.5	0.38	1.15	35.6	0.226	0.057	0.283	127.3	100.5	11.9	1.8	13.7	1630568
+1310	2021-06-22 19:00:00	Kai Jones	kai-jones	PF	C	83.5	85.75	221	Texas	Nassau, Bahamas	2001-01-18	\N	\N	2	20.42	26	22.8	3.2	5.5	0.58	0.5	1.3	0.382	2	2.8	0.689	4.8	0.6	0.8	0.9	1.4	2.7	8.8	5	8.7	0.8	2.1	3.1	4.5	7.6	1	1.3	1.5	2.2	4.2	13.9	0.646	0.626	0.238	0.517	0.332	18	0.3	0.44	20.7	0.108	0.074	0.182	120.2	96.3	4	3.5	7.5	1630539
+1311	2021-06-22 19:00:00	Herbert Jones	herbert-jones	SF	\N	79.25	84.25	206	Alabama	Greensboro, AL	1998-10-06	\N	\N	4	22.7	33	27.3	3.9	8.8	0.446	0.6	1.7	0.351	2.8	3.9	0.713	6.6	3.3	1.7	1.1	2.8	2.8	11.2	5.2	11.6	0.8	2.3	3.7	5.2	8.7	4.3	2.3	1.5	3.7	3.8	14.8	0.528	0.481	0.197	0.446	0.334	22.7	0.96	1.16	20.6	0.076	0.098	0.173	105.5	90.6	3.4	5.3	8.7	1630529
+1312	2021-06-22 19:00:00	Jeremiah Robinson-Earl	jeremiah-robinson-earl	PF	\N	81	81.75	242	Villanova	Kansas City, KS	2000-11-03	\N	\N	2	20.62	25	34.5	6.2	12.5	0.497	0.9	3.3	0.28	2.4	3.4	0.714	8.5	2.2	1	0.6	1.6	2.3	15.7	6.5	13	1	3.4	2.5	3.5	8.9	2.3	1	0.7	1.7	2.4	16.4	0.558	0.534	0.263	0.269	0.334	24.3	0.56	1.38	23.4	0.125	0.06	0.19	116.2	99.2	5.5	2.1	7.6	1630526
+1313	2021-06-22 19:00:00	Santi Aldama	santi-aldama	PF	C	83	\N	224	Loyola (MD)	Las Palmas, Spain	2001-01-10	\N	\N	2	20.44	17	35	7.9	15.5	0.513	1.9	5.1	0.368	3.5	5.1	0.686	10.1	2.3	1	1.7	3.2	1.9	21.2	8.2	15.9	1.9	5.3	3.6	5.2	10.4	2.4	1	1.8	3.3	1.9	21.8	0.594	0.574	0.331	0.327	0.35	30.5	0.51	0.71	28.6	0.128	0.081	0.208	111.3	94.3	6.2	1.5	7.7	1630583
+1315	2022-06-22 19:00:00	Vince Williams Jr.	vince-williams-jr	SF	\N	78	\N	205	VCU	Toledo, OH	2000-08-30	\N	\N	4	21.8	30	32.4	4.6	9.6	0.477	2.2	5.6	0.387	2.8	3.4	0.814	6	3	1.6	1.1	2.9	2.9	14.1	5.1	10.6	2.4	6.2	3.1	3.8	6.6	3.4	1.8	1.2	3.2	3.2	15.6	0.629	0.591	0.585	0.355	0.375	22.6	0.87	1.06	20.7	0.086	0.103	0.189	110.3	88.7	4.7	4.5	9.2	1631246
+1316	2022-06-22 19:00:00	Jake LaRavia	jake-laravia	SF	\N	80	81.5	227	Wake Forest	Indianapolis, IN	2001-11-03	\N	\N	3	20.62	33	34.2	5	9	0.559	0.8	2.2	0.384	3.7	4.8	0.777	6.6	3.7	1.7	1	2.7	2.8	14.6	5.3	9.5	0.9	2.3	3.9	5	6.9	3.9	1.8	1	2.8	2.9	15.4	0.649	0.606	0.246	0.529	0.346	20.4	0.98	1.37	22.9	0.131	0.074	0.206	121.7	95.9	4.7	3.7	8.5	1631222
+1318	2022-06-22 19:00:00	TyTy Washington	tyty-washington	PG	\N	75.75	80	196	Kentucky	Phoenix, AZ	2001-11-15	\N	14	1	20.59	31	29.2	4.9	10.9	0.451	1.2	3.3	0.35	1.5	2.1	0.75	3.5	3.9	1.3	0.2	1.6	1.5	12.5	6	13.4	1.4	4.1	1.9	2.5	4.3	4.8	1.6	0.2	2	1.9	15.4	0.528	0.504	0.306	0.19	0.35	22.5	1.01	2.35	19.3	0.106	0.066	0.172	114.8	98.4	4.1	3.3	7.4	1631102
+1319	2022-06-22 19:00:00	Tevin Brown	tevin-brown	SG	\N	77	\N	175	Murray State	Fairhope, AL	1998-09-23	\N	\N	4	23.74	34	35.2	5.5	12.9	0.427	3.1	8.1	0.384	2.7	3.6	0.748	5.6	3.1	1.4	0.6	1.8	1.5	16.8	5.6	13.2	3.2	8.3	2.8	3.7	5.7	3.1	1.4	0.6	1.9	1.6	17.2	0.576	0.548	0.63	0.281	0.379	23.1	0.67	1.68	21.6	0.127	0.087	0.214	120.6	93	5.1	2.3	7.3	203485
+1323	2022-06-22 19:00:00	Iverson Molinar	iverson-molinar	SG	PG	75.25	80	183	Mississippi State	Panama City, Panama	1999-12-03	\N	\N	3	22.54	34	34.1	6	13.3	0.454	0.8	3.1	0.252	4.6	5.4	0.868	3.1	3.6	1.2	0.4	2.4	1.5	17.5	6.4	14.1	0.8	3.3	4.9	5.7	3.2	3.8	1.2	0.4	2.5	1.6	18.5	0.553	0.483	0.237	0.403	0.352	27.4	0.86	1.52	21.3	0.117	0.048	0.166	113.5	103.1	5.1	1.2	6.3	\N
+1325	2022-06-22 19:00:00	Gabriele Procida	gabriele-procida	SG	SF	79.75	80	193	Bologna (Italy)	Como, Italy	2002-06-01	\N	\N	\N	20.05	26	18.5	2.3	4.3	0.522	0.9	2.3	0.383	1.5	2	0.784	3	0.7	0.8	0.3	0.7	1	7	4.4	8.5	1.7	4.5	3	3.8	5.9	1.3	1.6	0.7	1.4	1.9	13.6	0.66	0.624	0.531	0.451	0.36	15.89	0.41	0.95	17.45	\N	\N	\N	124.1	111.2	\N	\N	\N	\N
+1327	2022-06-22 19:00:00	Ismael Kamagate	ismael-kamagate	C	\N	83	\N	220	Paris Basketball (France)	Paris, France	2001-01-17	\N	\N	\N	21.42	34	27.1	4.4	6.8	0.643	0	0	\N	2.6	3.9	0.654	6.3	0.7	0.7	1.6	1.7	1.8	11.3	5.8	9	0	0	3.4	5.2	8.3	0.9	0.9	2.1	2.3	2.4	15	0.653	0.643	0	0.578	0.311	18	0.27	0.41	19.48	\N	\N	\N	119	114.1	\N	\N	\N	\N
+1329	2022-06-22 19:00:00	Kofi Cockburn	kofi-cockburn	C	\N	84	88.25	293	Illinois	Kingston, Jamaica	1999-09-01	\N	50	3	22.8	28	30.7	8.1	13.6	0.593	0	0	\N	4.8	7.3	0.655	10.6	0.8	0.8	1	2.3	2.4	20.9	9.5	16	0	0	5.6	8.5	12.4	0.9	1	1.1	2.7	2.8	24.5	0.613	0.593	0	0.533	0.311	32	0.21	0.34	32.1	0.163	0.084	0.247	118.6	94.2	7.4	2	9.3	\N
+1332	2022-06-22 19:00:00	Yannick Nzosa	yannick-nzosa	PF	C	82	\N	195	Málaga (Spain)	Kinshasa, DR Congo	2003-11-15	\N	\N	\N	18.59	40	10.4	0.9	2.4	0.379	0	0.2	0	0.3	0.5	0.611	1.8	0.2	0.3	0.6	0.5	1.5	2.1	3.1	8.2	0	0.5	1	1.6	6.2	0.6	1.1	1.9	1.7	5	7.2	0.401	0.379	0.063	0.189	0.305	14.04	0.19	0.35	7.13	\N	\N	\N	86.1	105.7	\N	\N	\N	\N
+1333	2022-06-22 19:00:00	Makur Maker	makur-maker	PF	C	83.25	85.75	232	Capital City (G League)	Perth, Australia	2000-11-04	\N	\N	\N	21.62	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+1321	2022-06-22 19:00:00	Bryce McGowens	bryce-mcgowens	SG	\N	78.5	80.75	181	Nebraska	Pendleton, SC	2002-11-08	\N	26	1	19.61	31	33.3	5.2	12.8	0.403	1.3	4.7	0.274	5.2	6.3	0.831	5.2	1.4	0.7	0.3	2.1	2	16.8	5.6	13.8	1.4	5.1	5.7	6.8	5.6	1.5	0.8	0.3	2.3	2.2	18.2	0.533	0.453	0.368	0.491	0.358	27.2	0.32	0.66	16.9	0.062	0.023	0.085	103	110	2.3	-1	1.3	1631121
+1322	2022-06-22 19:00:00	Kenneth Lofton Jr.	kenneth-lofton-jr	PF	\N	79	\N	275	Louisiana Tech	Port Arthur, TX	2002-08-14	\N	\N	2	19.85	33	27	6.3	11.7	0.539	0.1	0.6	0.2	3.7	5.5	0.672	10.5	2.8	1.2	0.7	3.1	2.7	16.5	8.4	15.6	0.2	0.8	5	7.4	14	3.7	1.5	1	4.1	3.6	22	0.574	0.544	0.052	0.474	0.31	32.6	0.72	0.9	29.9	0.13	0.099	0.234	110.6	89.8	4.9	2.1	7	1631254
+1324	2022-06-22 19:00:00	Ron Harper Jr.	ron-harper-jr	SF	\N	77.5	85.25	240	Rutgers	Franklin Lakes, NJ	2000-04-12	\N	\N	4	22.19	32	34.3	5.3	12.1	0.442	2.1	5.3	0.398	3	3.8	0.795	5.9	1.9	1	0.6	1.6	2	15.8	5.6	12.7	2.2	5.6	3.2	4	6.2	2	1.1	0.7	1.7	2.1	16.6	0.57	0.53	0.442	0.315	0.37	24	0.48	1.17	20.5	0.106	0.055	0.16	114.3	101.7	4.8	1.6	6.4	1631199
+1326	2022-06-22 19:00:00	Wendell Moore	wendell-moore	SF	\N	77.5	84.5	217	Duke	Charlotte, NC	2001-09-18	\N	22	3	20.75	39	33.9	4.8	9.6	0.5	1.3	3.2	0.413	2.4	3	0.805	5.3	4.4	1.4	0.2	1.9	1.6	13.4	5.1	10.2	1.4	3.4	2.6	3.2	5.6	4.7	1.5	0.2	2.1	1.7	14.2	0.605	0.569	0.335	0.314	0.359	19.5	1.11	2.26	21.4	0.13	0.057	0.187	123.4	101.2	5.3	2.6	7.9	1631111
+1328	2022-06-22 19:00:00	Michael Foster Jr.	michael-foster-jr	PF	\N	81.25	84.25	237	G League	Milwaukee, WI	2003-01-16	\N	9	\N	19.42	28	30.5	6.1	13.1	0.463	0.3	1.4	0.225	1.8	2.3	0.769	9.6	2.3	0.8	1.9	2.6	1.9	15.6	7.2	15.5	0.4	1.7	2.1	2.7	11.4	2.7	0.9	2.3	3.1	2.2	18.4	0.549	0.475	0.109	0.177	0.329	23.93	0.5	0.86	15.82	\N	\N	\N	95.9	107.5	\N	\N	\N	1630701
+1330	2022-06-22 19:00:00	Moussa Diabate	moussa-diabate	PF	\N	82.25	86.5	217	Michigan	Paris, France	2002-01-21	\N	13	1	20.41	32	24.9	3.7	6.8	0.542	0.1	0.4	0.214	1.6	2.6	0.619	6	0.8	0.3	0.9	1.5	2.7	9	5.3	9.8	0.1	0.6	2.4	3.8	8.6	1.2	0.5	1.3	2.1	3.9	13.1	0.565	0.549	0.065	0.389	0.308	19.7	0.31	0.55	17.6	0.08	0.045	0.126	110.9	104.1	1.6	1.1	2.8	1631217
+1331	2022-06-22 19:00:00	E.J. Liddell	e-j-liddell	PF	\N	79	83.75	243	Ohio State	Belleville, IL	2000-12-18	\N	38	3	21.5	32	33.2	6.3	12.9	0.49	1.4	3.8	0.374	5.3	6.9	0.765	7.9	2.5	0.6	2.6	2.4	2.5	19.4	6.9	14	1.6	4.2	5.7	7.5	8.6	2.7	0.6	2.8	2.6	2.7	21.1	0.598	0.546	0.297	0.534	0.354	30.5	0.56	1.04	30.5	0.173	0.06	0.237	120.6	100	8.5	3.3	11.8	1630604
+1334	2022-06-22 19:00:00	AJ Griffin	aj-griffin	SF	\N	78	\N	222	Duke	White Plains, NY	2003-08-25	\N	29	1	18.82	39	24	3.7	7.6	0.493	1.8	4.1	0.447	1.1	1.4	0.792	3.9	1	0.5	0.6	0.6	1.1	10.4	5.6	11.4	2.7	6.1	1.6	2	5.9	1.5	0.8	0.8	1	1.6	15.6	0.63	0.613	0.537	0.179	0.379	18.8	0.37	1.52	20.7	0.128	0.051	0.18	128.9	102.3	6.6	1.5	8.1	1631100
+1335	2022-06-22 19:00:00	Karlo Matković	karlo-matkovic	PF	\N	82	\N	231	KK Mega Basket (Serbia)	Livno, Bosnia and Herzegovina	2001-03-30	\N	\N	\N	21.22	27	22.1	4.9	8	0.609	0	0.1	0	1.9	2.6	0.704	6.2	1	0.5	1.2	1.7	3.1	11.6	7.9	13	0	0.2	3	4.3	10.1	1.7	0.8	2	2.7	5	18.8	0.627	0.609	0.014	0.33	0.318	22.9	0.42	0.62	21.56	\N	\N	\N	116.3	104.7	\N	\N	\N	1631255
+1338	2022-06-22 19:00:00	Hugo Besson	hugo-besson	PG	SG	77.75	77.5	180	New Zealand (NBL)	Angers, France	2001-04-26	\N	\N	\N	21.15	25	27.4	4.7	12.1	0.386	1.9	6.2	0.308	2.6	3.3	0.795	4	2.3	0.6	0	1.8	2.7	13.9	6.2	15.9	2.5	8.2	3.5	4.4	5.2	3	0.8	0.1	2.4	3.6	18.3	0.508	0.465	0.515	0.274	0.374	26.32	0.58	1.27	13.44	\N	\N	\N	99.9	115.8	\N	\N	\N	\N
+1351	2023-06-22 19:00:00	Mike Miles Jr.	mike-miles-jr	PG	\N	74	72.5	205	TCU	Highland Hills, TX	2002-08-24	\N	\N	3	20.82	27	31.9	5.9	11.8	0.497	1.4	3.9	0.362	4.7	6.3	0.749	2.7	2.7	1.2	0.3	2.6	2.1	17.9	6.6	13.3	1.6	4.4	5.4	7.1	3.1	3	1.3	0.3	2.9	2.3	20.2	0.604	0.557	0.33	0.538	0.352	26.5	0.63	1.03	20.1	0.102	0.06	0.167	113.1	101	4.5	2.3	6.8	\N
+1339	2022-06-22 19:00:00	John Butler	john-butler	PF	C	84.75	86.25	174	Florida State	Greenville, SC	2002-12-04	\N	60	1	19.54	31	19	2.2	5.4	0.416	1.1	2.7	0.393	0.4	0.8	0.44	3.2	0.7	0.4	1.2	0.8	2	5.9	4.2	10.2	2	5.1	0.7	1.5	6.1	1.4	0.8	2.2	1.6	3.7	11.1	0.512	0.515	0.506	0.151	0.319	17.4	0.43	0.88	13.3	0.034	0.041	0.075	101	105.1	-0.2	1.7	1.5	1631219
+1340	2022-06-22 19:00:00	Khalifa Diop	khalifa-diop	C	\N	83	\N	231	Gran Canaria (Spain)	Guereo, Senegal	2002-01-15	\N	\N	\N	20.42	54	16	2.6	4.1	0.621	0	0	\N	1.4	2.4	0.566	4.2	0.6	0.5	0.7	1.3	2.8	6.5	5.8	9.3	0	0	3	5.4	9.4	1.5	1	1.6	3	6.3	14.6	0.615	0.621	0	0.576	0.299	19.32	0.37	0.49	16.96	\N	\N	\N	111.4	107.5	\N	\N	\N	2205
+1341	2022-06-22 19:00:00	Nikola Jović	nikola-jovic	SF	\N	83	84.25	223	KK Mega Basket (Serbia)	Belgrade, Serbia	2003-06-09	\N	\N	\N	19.03	29	28.4	4.2	10.2	0.414	1.6	5	0.315	1.9	2.7	0.718	4.8	3.6	0.7	0.4	3.1	2.4	12	5.4	13	2	6.4	2.4	3.4	6	4.6	0.9	0.6	3.9	3	15.2	0.521	0.492	0.492	0.263	0.354	23.8	0.94	1.17	11.89	\N	\N	\N	96.2	107.7	\N	\N	\N	1631107
+1342	2022-06-22 19:00:00	Patrick Baldwin Jr.	patrick-baldwin-jr	SF	PF	82.25	85.75	231	Milwaukee	Sussex, WI	2002-11-18	\N	5	1	19.58	11	28.5	4.1	11.9	0.344	1.5	5.8	0.266	2.4	3.2	0.743	5.8	1.5	0.8	0.8	2.1	1.5	12.1	5.2	15	1.9	7.3	3	4	7.3	1.9	1	1	2.6	1.9	15.2	0.45	0.408	0.489	0.267	0.356	28.3	0.42	0.74	13.9	0	0.051	0.051	89.3	102.7	-0.8	-1	-1.8	1631116
+1343	2022-06-22 19:00:00	Jean Montero	jean-montero	PG	\N	74.25	77.25	172	Overtime Elite	Santo Domingo, Dominican Republic	2003-07-03	\N	\N	\N	18.96	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1626242
+1344	2023-06-22 19:00:00	Dereck Lively II	dereck-lively-ii	C	\N	85	\N	215	Duke	Philadelphia, PA	2004-02-12	\N	1	1	19.35	34	20.6	2.3	3.4	0.658	0.1	0.4	0.154	0.6	1	0.6	5.4	1.1	0.5	2.4	0.7	2.7	5.2	4	6	0.1	0.7	1.1	1.8	9.5	1.9	0.9	4.2	1.2	4.7	9.1	0.662	0.667	0.111	0.299	0.305	11.6	0.84	1.61	22.6	0.103	0.097	0.2	133.9	91.1	2.5	6.8	9.3	1641726
+1345	2023-06-22 19:00:00	GG Jackson	gg-jackson	PF	\N	81.5	83.5	214	South Carolina	Columbia, SC	2004-12-17	\N	16	1	18.5	32	31.9	5.5	14.4	0.384	1.7	5.3	0.324	2.6	3.9	0.677	5.9	0.8	0.8	0.8	2.7	1.5	15.4	6.2	16.3	1.9	6	3	4.4	6.7	1	0.8	0.9	3	1.7	17.4	0.474	0.444	0.369	0.269	0.348	30.8	0.21	0.31	14.9	0.012	0.027	0.039	93.3	109.8	1.2	-1.3	-0.1	1641713
+1346	2023-06-22 19:00:00	Jaime Jaquez Jr.	jaime-jaquez-jr	SG	SF	79.25	81.5	226	UCLA	Camarillo, CA	2001-02-18	\N	95	4	22.33	37	33.2	7.1	14.7	0.481	0.9	2.8	0.317	2.8	3.6	0.77	8.2	2.4	1.5	0.6	1.8	1.9	17.8	7.6	15.9	1	3	3	4	8.9	2.5	1.7	0.6	2	2	19.3	0.543	0.511	0.192	0.249	0.343	27.9	0.52	1.3	25.7	0.124	0.107	0.231	115.2	88.9	6.7	4	10.7	1631170
+1348	2023-06-22 19:00:00	Nick Smith Jr.	nick-smith-jr	PG	SG	77	\N	185	Arkansas	Jacksonville, AR	2004-04-18	\N	3	1	19.17	17	25.8	4.5	11.9	0.376	1.4	4.2	0.338	2.2	2.9	0.74	1.6	1.7	0.8	0.1	1.6	1.5	12.5	6.2	16.6	2	5.8	3	4.1	2.3	2.4	1.2	0.2	2.2	2.1	17.5	0.472	0.436	0.351	0.248	0.357	28.7	0.47	1.07	13	0.027	0.055	0.082	97.3	103.4	1	-0.3	0.7	1641733
+1349	2023-06-22 19:00:00	Mojave King	mojave-king	SG	\N	77	80	201	G League	Brisbane, Australia	2002-07-11	\N	\N	\N	20.94	48	26.6	3.3	8.1	0.404	1	3.2	0.32	1	1.4	0.769	4.4	1.4	0.5	0.4	1	1.5	9.4	4.4	11	1.4	4.3	1.4	1.8	5.9	1.8	0.7	0.5	1.3	2.1	12.7	0.536	0.467	0.393	0.167	0.35	16.15	0.45	1.38	9.17	\N	\N	\N	101.9	123.4	\N	\N	\N	77272
+1350	2023-06-22 19:00:00	Ricky Council IV	ricky-council-iv	SG	\N	78.25	81	208	Arkansas	Durham, NC	2001-08-03	\N	\N	3	21.88	36	34.1	5.2	12	0.433	0.9	3.5	0.27	4.8	6.1	0.794	3.6	2.3	1.1	0.3	2.1	1.8	16.1	5.5	12.7	1	3.7	5.1	6.4	3.8	2.4	1.2	0.3	2.2	1.9	17	0.542	0.472	0.292	0.505	0.345	24.7	0.52	1.08	17.6	0.085	0.059	0.143	110.5	102.1	3.4	1.6	5	1641741
+1352	2023-06-22 19:00:00	Trayce Jackson-Davis	trayce-jackson-davis	PF	\N	81.5	85	240	Indiana	Greenwood, IN	2000-02-22	\N	27	4	23.32	32	34.5	8.2	14.1	0.581	0	0	\N	4.6	6.6	0.695	10.8	4	0.8	2.9	2.5	1.7	20.9	8.5	14.7	0	0	4.8	6.8	11.3	4.2	0.9	3	2.6	1.8	21.8	0.608	0.581	0	0.466	0.317	29.4	0.84	1.59	34.2	0.174	0.087	0.261	121.9	94.1	10.5	5.5	16	1631218
+1353	2023-06-22 19:00:00	Azuolas Tubelis	azuolas-tubelis	PF	\N	82	83	235	Arizona	Vilnius, Lithuania	2002-03-22	\N	\N	3	21.24	35	30.1	7.8	13.7	0.57	0.3	0.9	0.312	3.9	5.1	0.764	9.1	2	1.1	0.7	2.4	2.8	19.8	9.4	16.4	0.3	1.1	4.6	6.1	10.9	2.4	1.4	0.8	2.9	3.3	23.7	0.614	0.58	0.067	0.37	0.331	29.8	0.47	0.83	28.1	0.148	0.083	0.235	119	94.8	6.8	2.9	9.7	\N
+1355	2023-06-22 19:00:00	Nadir Hifi	nadir-hifi	PG	\N	75	\N	180	Paris Basketball (France)	\N	2002-07-16	\N	\N	\N	20.93	33	30.5	5.6	12.1	0.465	1.8	5.4	0.345	3.7	4.4	0.841	2.7	3.4	1.3	0	2.1	2.6	16.8	6.6	14.3	2.2	6.3	4.4	5.2	3.2	4	1.6	0	2.5	3.1	19.8	0.592	0.541	0.445	0.364	0.374	25.29	0.84	1.62	18.38	\N	\N	\N	116.3	110.2	\N	\N	\N	\N
+1357	2023-06-22 19:00:00	Charles Bediako	charles-bediako	C	\N	84	\N	225	Alabama	Brampton, ON	2002-03-10	\N	35	2	21.28	37	20.7	2.9	4.4	0.659	0	0.2	0	0.6	1.7	0.355	6	0.6	0.6	1.8	0.8	3	6.4	5.1	7.7	0	0.3	1	2.9	10.4	1.1	1.1	3.1	1.4	5.3	11.2	0.615	0.659	0.037	0.378	0.269	13.6	0.43	0.8	20.7	0.094	0.104	0.198	124.7	89.6	2.7	6.2	8.9	\N
+1358	2023-06-22 19:00:00	Tarik Biberovic	tarik-biberovic	SF	\N	79	\N	218	Fenerbahce Beko (Turkey)	Zenica, Bosnia and Herzegovina	2001-01-28	\N	\N	\N	22.39	36	13.1	1.6	4.1	0.385	0.9	2.5	0.348	0.5	0.6	0.81	1.9	0.4	0.4	0.1	0.6	1.9	4.5	4.4	11.3	2.4	6.8	1.3	1.6	5.4	1.2	1.1	0.2	1.6	5.3	12.4	0.513	0.49	0.601	0.142	0.373	18.07	0.29	0.76	9.54	\N	\N	\N	104.4	113.2	\N	\N	\N	\N
+1362	2024-06-22 19:00:00	Melvin Ajinca	melvin-ajinca	SG	SF	80.5	79.5	214	Saint-Quentin (France)	Montgeron, France	2004-06-26	\N	\N	\N	19.98	35	24.8	3.3	8.2	0.399	2	5.6	0.357	1.6	2	0.814	3.5	0.7	0.5	0.1	0.7	2.3	10.2	4.8	11.9	2.9	8.1	2.4	2.9	5.1	1.1	0.7	0.1	1.1	3.3	14.8	0.556	0.521	0.681	0.243	0.383	19.25	0.28	1	12.64	\N	\N	\N	114.5	107.4	\N	\N	\N	\N
+1356	2023-06-22 19:00:00	Andre Jackson Jr.	andre-jackson-jr	SG	SF	78.75	81.75	198	UConn	Amsterdam, NY	2001-11-13	\N	35	3	21.6	36	29.1	2.6	5.9	0.432	0.7	2.5	0.281	0.9	1.3	0.646	6.2	4.7	1.1	0.5	2	2.8	6.7	3.2	7.3	0.9	3.1	1.1	1.6	7.7	5.8	1.3	0.6	2.4	3.5	8.2	0.509	0.491	0.418	0.225	0.323	14.4	1.85	2.38	15	0.069	0.088	0.153	112.8	94.3	2.8	5.1	7.9	1641748
+1359	2023-06-22 19:00:00	Omari Moore	omari-moore	SF	\N	78.5	81.75	189	San Jose State	Pasadena, CA	2000-09-18	\N	\N	4	22.75	35	36.5	6.3	14.8	0.429	1.9	5.7	0.338	2.8	3.7	0.758	4.7	4.8	0.7	0.7	2.6	1.2	17.4	6.3	14.6	1.9	5.6	2.7	3.6	4.7	4.7	0.7	0.7	2.5	1.2	17.2	0.525	0.493	0.382	0.247	0.358	27.8	1.08	1.87	20.9	0.11	0.041	0.15	112.1	106.8	5.8	0.8	6.5	1631111
+1360	2023-06-22 19:00:00	Olivier-Maxence Prosper	olivier-maxence-prosper	SF	PF	80	85	212	Marquette	Montreal, QC	2002-07-03	\N	\N	3	20.96	36	29.1	4.2	8.1	0.512	1.1	3.2	0.339	3.1	4.2	0.735	4.7	0.7	0.9	0.1	1.4	2.3	12.5	5.1	10.1	1.3	3.9	3.8	5.2	5.8	0.8	1.1	0.2	1.7	2.8	15.4	0.617	0.578	0.392	0.515	0.346	20.3	0.19	0.48	17.9	0.103	0.05	0.153	119.2	104.2	2.9	0.3	3.2	1641765
+1361	2024-06-22 19:00:00	Ron Holland	ron-holland	SF	PF	79.75	82.75	197	G League	Duncanville, TX	2005-07-07	\N	2	\N	18.95	29	31.9	7.1	15.5	0.46	0.8	3.3	0.24	2.9	3.9	0.728	6.7	2.9	2.3	0.9	3.2	3.2	19.5	8.1	17.5	0.9	3.7	3.2	4.4	7.5	3.3	2.6	1	3.6	3.6	22	0.56	0.486	0.213	0.253	0.334	28.05	0.58	0.9	15.79	\N	\N	\N	95.8	114.8	\N	\N	\N	1641842
+1363	2024-06-22 19:00:00	Nikola Topić	nikola-topic	PG	\N	79	77.5	203	Red Star (Serbia)	Novi Sad, Serbia	2005-08-10	\N	\N	\N	18.86	23	27.8	5.3	10.6	0.498	1.1	3.7	0.306	2.8	3.2	0.878	3.2	5.5	1	0.1	2.3	3	14.5	6.8	13.7	1.5	4.8	3.7	4.2	4.2	7.2	1.2	0.2	3	3.9	18.8	0.599	0.551	0.35	0.305	0.366	23.92	1.44	2.4	19.85	\N	\N	\N	121.4	107.9	\N	\N	\N	1642260
+1364	2024-06-22 19:00:00	Kevin McCullar	kevin-mccullar	SG	\N	78.5	81	206	Kansas	San Antonio, TX	2001-03-15	\N	\N	4	23.27	26	34.2	6.1	13.5	0.454	1.5	4.5	0.333	4.6	5.7	0.805	6	4.1	1.5	0.4	2.5	1.9	18.3	6.4	14.2	1.6	4.7	4.9	6	6.3	4.3	1.6	0.4	2.7	2	19.3	0.567	0.51	0.334	0.426	0.359	28	0.82	1.62	21.1	0.09	0.072	0.162	110.4	100	4.5	2.8	7.4	1641755
+1365	2024-06-22 19:00:00	Tristan da Silva	tristan-da-silva	SF	PF	81.5	82.25	217	Colorado	Munich, Germany	2001-05-15	\N	\N	4	23.1	34	33.8	5.8	11.8	0.492	1.9	4.8	0.395	2.5	3	0.835	5.1	2.4	1.1	0.6	1.8	2	16	6.2	12.5	2	5.1	2.7	3.2	5.4	2.6	1.2	0.6	1.9	2.1	17	0.606	0.572	0.405	0.258	0.372	22.5	0.6	1.34	19.8	0.108	0.056	0.163	120	104	5	2.2	7.1	1641783
+1366	2024-06-22 19:00:00	Terrence Shannon Jr.	terrence-shannon-jr	SG	\N	79	80.75	219	Illinois	Chicago, IL	2000-07-30	\N	94	4	23.89	32	33.9	6.8	14.4	0.475	2.4	6.7	0.362	6.9	8.6	0.801	4	2.3	1	0.9	2	2.2	23	7.3	15.3	2.6	7.1	7.3	9.2	4.2	2.4	1.1	0.9	2.1	2.4	24.4	0.622	0.559	0.462	0.599	0.376	29.2	0.44	1.14	26.9	0.184	0.048	0.236	129.4	106.1	8.9	2.7	11.5	1630545
+1367	2024-06-22 19:00:00	N'Faly Dante	n-faly-dante	C	\N	83.25	90	260	Oregon	Bamako, Mali	2001-10-19	\N	29	4	22.67	22	31.5	7	10	0.695	0	0	\N	3.1	5	0.613	9.2	1.6	1.7	1.9	2.4	2.1	17	8	11.4	0	0	3.5	5.8	10.5	1.8	2	2.1	2.7	2.4	19.5	0.686	0.695	0	0.505	0.305	24	0.46	0.67	30.6	0.139	0.081	0.22	123.8	97.9	7.9	4.9	12.7	1642368
+1368	2024-06-22 19:00:00	Judah Mintz	judah-mintz	PG	\N	76	75.5	176	Syracuse	Fort Washington, MD	2003-07-10	\N	36	2	20.95	32	33.9	5.9	13.4	0.438	0.8	2.7	0.282	6.3	8.3	0.765	3.2	4.4	2.1	0.1	2.9	2.2	18.8	6.2	14.2	0.8	2.8	6.7	8.8	3.4	4.7	2.2	0.1	3.1	2.3	20	0.543	0.466	0.198	0.615	0.338	29.7	0.86	1.51	20.5	0.081	0.048	0.129	108	106.9	2.7	1.5	4.2	\N
+1369	2024-06-22 19:00:00	Mantas Rubstavicius	mantas-rubstavicius	SG	\N	80.5	79.25	200	New Zealand (NBL)	Panevėžys, Lithuania	2002-05-06	\N	\N	\N	22.12	25	19.7	3	5.9	0.517	1.2	2.9	0.425	2	2.5	0.823	2.1	1.2	0.8	0.1	1.1	2.7	9.4	5.5	10.7	2.3	5.3	3.7	4.5	3.8	2.1	1.5	0.2	2	4.9	17.1	0.663	0.622	0.497	0.422	0.375	18.47	0.5	1.07	15.28	\N	\N	\N	123.6	112.6	\N	\N	\N	\N
+1371	2024-06-22 19:00:00	Roko Prkačin	roko-prkacin	PF	\N	81.25	83	225	Girona (Spain)	Zagreb, Croatia	2002-11-26	\N	\N	\N	21.56	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.5	11.9	0	0.1	2.2	3.6	7.4	2.4	1.5	0.5	2.1	5.1	17.2	0.632	0.631	0.007	0.305	0.304	20.8	0.58	1.12	19.3	\N	\N	\N	120.9	114.6	\N	\N	\N	\N
+1374	2024-06-22 19:00:00	Boogie Ellis	boogie-ellis	PG	SG	74	79	185	USC	San Diego, CA	2000-12-12	\N	39	4	23.52	29	33.5	5.6	13.1	0.427	3	7.2	0.418	2.3	3.2	0.72	3.5	3	1.4	0.1	1.8	1.9	16.5	6	14.1	3.2	7.7	2.5	3.4	3.7	3.2	1.6	0.1	1.9	2	17.7	0.565	0.542	0.549	0.245	0.377	24.7	0.74	1.65	17.8	0.082	0.041	0.124	111.9	108.6	3.9	1	4.9	\N
+1376	2024-06-22 19:00:00	Juan Núñez	juan-nunez	PG	\N	77.25	78.5	206	Ratiopharm Ulm (Germany)	Madrid, Spain	2004-06-04	\N	\N	\N	20.04	54	23.1	3.7	7.9	0.47	0.8	2.6	0.319	1.6	2.7	0.607	3.4	4.9	1.7	0	2.3	1.9	9.9	5.8	12.4	1.3	4	2.5	4.2	5.3	7.7	2.6	0.1	3.6	3	15.4	0.537	0.521	0.322	0.339	0.326	22.6	1.53	2.14	17.31	\N	\N	\N	108.5	106.2	\N	\N	\N	\N
+1380	2024-06-22 19:00:00	Allen Flanigan	allen-flanigan	SG	\N	78	\N	215	Ole Miss	Little Rock, AR	2001-04-24	\N	\N	4	23.16	32	30.7	5	11.5	0.434	0.5	1.7	0.273	4.3	5.3	0.817	6.1	2.8	1.5	0.7	2.3	2.5	14.8	5.9	13.5	0.5	2	5.1	6.2	7.1	3.3	1.7	0.8	2.6	2.9	17.3	0.526	0.454	0.149	0.458	0.34	26.8	0.69	1.24	19.6	0.073	0.049	0.118	107.5	106.3	1.9	1.4	3.3	\N
+1372	2024-06-22 19:00:00	Tidjane Salaun	tidjane-salaun	SF	\N	82	85.5	217	Cholet Basket (France)	Orly, France	2005-08-10	\N	\N	\N	18.86	54	23.4	3.4	8.3	0.406	1.4	4.4	0.316	1.6	2.2	0.748	3.9	0.9	1.1	0.2	1.3	2.4	9.7	5.2	12.7	2.1	6.8	2.5	3.4	6.1	1.4	1.7	0.3	2	3.7	15	0.523	0.49	0.531	0.267	0.361	21.28	0.32	0.7	13.07	\N	\N	\N	105	110	\N	\N	\N	1642275
+1373	2024-06-22 19:00:00	Nikola Djurisic	nikola-djurisic	SG	SF	80.25	80	209	KK Mega Basket (Serbia)	Belgrade, Serbia	2004-02-23	\N	\N	\N	20.32	36	29.9	4.9	10.9	0.444	1.1	3.6	0.305	3.9	5.2	0.763	2.8	3.4	1.2	0.4	3.2	2.9	14.8	5.9	13.2	1.3	4.4	4.8	6.2	3.4	4.1	1.4	0.5	3.8	3.4	17.8	0.551	0.495	0.332	0.472	0.348	25.36	0.74	1.07	13.67	\N	\N	\N	102.4	112.7	\N	\N	\N	1642365
+1375	2024-06-22 19:00:00	Alexandre Sarr	alexandre-sarr	PF	C	85	88.25	224	Perth (NBL)	Bordeaux, France	2005-04-26	\N	\N	\N	19.15	30	18	3.6	7.1	0.5	0.5	1.9	0.276	1.9	2.7	0.707	4.5	1	0.4	1.5	1	1.4	9.6	7.1	14.3	1.1	3.9	3.9	5.5	9	2.1	0.9	3.1	2.1	2.7	19.2	0.569	0.537	0.271	0.383	0.335	21.9	0.43	1	20.96	\N	\N	\N	116	107.9	\N	\N	\N	1642259
+1377	2024-06-22 19:00:00	Ja'Kobe Walter	ja-kobe-walter	SG	\N	77.5	82	198	Baylor	McKinney, TX	2004-09-04	\N	8	1	19.79	35	32.3	4.1	10.9	0.376	2.1	6.3	0.341	4.1	5.2	0.792	4.4	1.4	1.1	0.2	1.3	2.1	14.5	4.6	12.2	2.4	7	4.6	5.8	4.9	1.6	1.2	0.3	1.5	2.3	16.2	0.541	0.474	0.574	0.478	0.371	23.4	0.35	1.06	17.1	0.106	0.042	0.149	119.2	107.8	4.6	1.2	5.8	1642266
+1379	2024-06-22 19:00:00	Pacome Dadiet	pacome-dadiet	SG	\N	81	81	217	Ratiopharm Ulm (Germany)	Lyon, France	2005-07-27	\N	\N	\N	18.9	59	15.3	2.4	4.7	0.502	0.8	2.3	0.358	1	1.4	0.744	2.3	0.6	0.5	0.1	0.8	1.5	6.6	5.6	11.1	2	5.5	2.4	3.3	5.3	1.4	1.3	0.3	2	3.5	15.5	0.613	0.59	0.491	0.294	0.358	18.48	0.34	0.71	14.31	\N	\N	\N	115.9	110.7	\N	\N	\N	1642359
+1381	2024-06-22 19:00:00	DaRon Holmes II	daron-holmes-ii	PF	\N	82	85	236	Dayton	Goodyear, AZ	2002-08-15	\N	46	3	21.85	33	32.5	6.6	12.1	0.544	1	2.5	0.386	6.2	8.8	0.713	8.5	2.6	0.9	2.1	2.2	2	20.4	7.3	13.4	1.1	2.8	6.9	9.7	9.4	2.9	1	2.3	2.5	2.2	22.6	0.627	0.584	0.208	0.724	0.34	31.5	0.6	1.16	31.7	0.176	0.086	0.261	123.8	96.5	8.3	4	12.3	1641747
+1382	2024-06-22 19:00:00	AJ Johnson	aj-johnson	SG	\N	77.5	80.5	167	Illawarra (NBL)	Woodland Hills, CA	2004-12-01	\N	47	\N	19.55	29	8.2	1.1	3.2	0.355	0.3	1.2	0.278	0.2	0.4	0.538	1.2	0.8	0.2	0.1	0.7	0.9	2.9	5	14	1.5	5.4	1.1	2	5.4	3.5	0.9	0.6	3	3.9	12.5	0.418	0.409	0.387	0.14	\N	21.16	0.66	1.15	7.08	\N	\N	\N	85.8	112.2	\N	\N	\N	1642358
+1383	2024-06-22 19:00:00	PJ Hall	pj-hall	PF	\N	81.5	85.5	240	Clemson	Spartanburg, SC	2002-02-21	\N	48	4	22.33	36	28.9	6.7	13.7	0.488	1.4	4.6	0.315	3.5	4.5	0.779	6.4	1.4	0.8	1.4	1.9	3.1	18.3	8.3	17	1.8	5.7	4.4	5.6	8	1.8	1	1.8	2.3	3.9	22.8	0.579	0.541	0.335	0.331	0.359	31.8	0.34	0.76	25.6	0.119	0.065	0.185	114.3	102	5.7	2.7	8.4	1641790
+1384	2024-06-22 19:00:00	Ousmane N'Diaye	ousmane-n-diaye	PF	C	82	\N	210	Saski Baskonia B (Spain)	Guediawaye, Senegal	2004-03-19	\N	\N	\N	20.25	13	17.6	1.8	4.1	0.434	0.7	2.6	0.265	0.8	1	0.769	4.1	0.2	0.4	0.5	0.9	0.7	5	3.6	8.3	1.4	5.3	1.6	2	8.3	0.3	0.8	0.9	1.9	1.4	10.2	0.549	0.519	0.642	0.245	\N	14.89	0.11	0.17	11.36	\N	\N	\N	103.2	120	\N	\N	\N	\N
+1387	2025-06-22 19:00:00	Jahmai Mashack	jahmai-mashack	SG	\N	76	\N	202	Tennessee	Fontana, CA	2002-11-10	\N	81	4	22.61	38	28.2	1.9	4.3	0.454	0.5	1.5	0.351	1.6	2.2	0.723	4.2	1.5	1.7	0.5	0.9	2.3	6	2.5	5.5	0.7	1.9	2	2.8	5.4	1.9	2.2	0.7	1.2	2.9	7.7	0.563	0.515	0.35	0.509	0.333	11.6	0.81	1.63	13.8	0.056	0.086	0.142	120	97.3	1.2	7	8.2	\N
+1388	2025-06-22 19:00:00	Bogoljub Marković	bogoljub-markovic	PF	\N	83	\N	190	KK Mega Basket (Serbia)	Uzise, Serbia	2005-07-12	\N	\N	\N	19.94	32	29.2	4.8	8.8	0.546	1	2.7	0.388	3.3	4.3	0.765	6.9	2.6	0.8	0.9	2.7	3.3	13.9	5.9	10.9	1.3	3.3	4	5.2	8.5	3.2	1	1.1	3.3	4	17.2	0.642	0.605	0.301	0.482	0.35	21.8	0.73	0.95	18.1	\N	\N	\N	114.6	107	\N	\N	\N	\N
+1390	2025-06-22 19:00:00	Kadary Richmond	kadary-richmond	PG	SG	77	\N	180	St. John's	Brooklyn, NY	2001-08-25	\N	91	4	23.82	36	32.3	5.3	10.9	0.487	0.2	1.1	0.175	1.6	3.1	0.536	6.4	5.3	2	0.9	2	2	12.4	5.9	12.1	0.2	1.2	1.8	3.4	7.1	5.9	2.2	1	2.2	2.2	13.9	0.504	0.496	0.102	0.281	0.292	20.9	1.41	2.69	20.3	0.069	0.113	0.182	111	90.1	3.2	6.9	10.1	\N
+1391	2025-06-22 19:00:00	RJ Luis Jr.	rj-luis-jr	SF	\N	79	82.5	210	St. John's	Miami, FL	2002-11-27	\N	\N	3	22.56	35	31.8	6.5	14.9	0.439	1.3	3.9	0.336	3.8	5.1	0.747	7.2	2	1.4	0.6	2.2	2.2	18.2	7.4	16.9	1.5	4.4	4.3	5.8	8.1	2.3	1.6	0.6	2.5	2.5	20.6	0.525	0.483	0.262	0.341	0.35	28.9	0.43	0.93	21.3	0.09	0.101	0.19	111.4	92.8	4.7	4	8.6	\N
+1392	2025-06-22 19:00:00	Jaxson Robinson	jaxson-robinson	SG	\N	78	83.25	189	Kentucky	Ada, OK	2002-12-03	\N	\N	4	22.55	24	28.1	4.6	10.7	0.432	2.6	6.9	0.376	1.2	1.6	0.763	3.5	1.7	0.6	0.5	0.9	1.9	13	5.9	13.7	3.3	8.8	1.5	2	4.5	2.2	0.7	0.6	1.2	2.4	16.7	0.569	0.553	0.642	0.148	0.383	21.4	0.5	1.86	16.1	0.083	0.036	0.119	116.7	111.6	4.6	0.9	5.5	\N
+1393	2025-06-22 19:00:00	Tyrese Hunter	tyrese-hunter	PG	\N	72	\N	180	Memphis	Racine, WI	2003-08-11	\N	39	4	21.86	32	34	4.6	11	0.415	2.3	5.7	0.401	2.3	2.9	0.774	3.8	3.6	1.5	0.2	2.3	1.6	13.7	4.8	11.6	2.4	6	2.4	3.1	4.1	3.8	1.6	0.2	2.4	1.7	14.4	0.552	0.518	0.517	0.264	0.371	20.6	0.91	1.58	15.4	0.07	0.055	0.125	113	106	3.1	1.7	4.8	\N
+1394	2025-06-22 19:00:00	Wooga Poplar	wooga-poplar	SG	\N	77	\N	197	Villanova	Philadelphia, PA	2003-01-05	\N	\N	4	22.45	36	31.9	5.3	11.6	0.46	1.9	5	0.387	2.6	3.1	0.856	7	1.5	1.3	0.3	1.8	2.2	15.3	6	13.1	2.2	5.7	3	3.5	7.9	1.7	1.4	0.3	2	2.5	17.2	0.584	0.544	0.434	0.266	0.378	25.4	0.38	0.82	20.8	0.094	0.063	0.157	115.3	103.3	4.2	2.1	6.3	\N
+1396	2025-06-22 19:00:00	Grant Nelson	grant-nelson	PF	\N	83.25	84	230	Alabama	Devils Lake, ND	2002-03-18	\N	\N	4	23.26	37	25.4	4.2	8	0.522	0.6	2.5	0.258	2.5	3.7	0.667	7.6	1.6	0.5	1.2	1.8	2.6	11.5	5.9	11.3	0.9	3.6	3.5	5.3	10.7	2.3	0.7	1.7	2.6	3.8	16.3	0.588	0.563	0.315	0.468	0.326	20.7	0.5	0.88	18.5	0.081	0.06	0.141	115.3	104.3	3.5	3.9	7.4	\N
+1397	2025-06-22 19:00:00	Viktor Lakhin	viktor-lakhin	C	\N	83	\N	245	Clemson	Anapa, Russia	2001-07-30	\N	\N	4	23.89	34	23.6	4.4	8.7	0.507	0.7	1.9	0.375	1.9	2.7	0.696	6.4	1.5	1	1.5	1.5	2.9	11.4	6.7	13.3	1.1	2.9	2.9	4.1	9.7	2.3	1.6	2.2	2.3	4.3	17.4	0.571	0.547	0.216	0.311	0.337	25.7	0.52	1	25.1	0.11	0.1	0.209	117.1	93.4	4.4	4.4	8.8	\N
+1398	2025-06-22 19:00:00	Dink Pate	dink-pate	SF	\N	79.5	81.75	201	Mexico City	Dallas, TX	2006-03-10	\N	30	\N	19.28	34	26.9	4	9.8	0.407	0.9	3.5	0.258	0.7	1.3	0.581	5.2	1.9	0.6	0.1	1.7	2	10.1	5.3	13.1	1.2	4.7	1	1.7	6.9	2.5	0.8	0.1	2.3	2.7	13.5	0.485	0.453	0.361	0.13	0.32	20.4	0.52	1.09	8.1	-0.083	0.048	-0.031	\N	\N	\N	\N	\N	\N
+1386	2024-06-22 19:00:00	Jared McCain	jared-mccain	PG	SG	75.25	75.5	203	Duke	Sacramento, CA	2004-02-20	\N	10	1	20.33	36	31.6	4.9	10.5	0.462	2.4	5.8	0.414	2.1	2.4	0.885	5	1.9	1.1	0.1	1.3	1.6	14.3	5.5	12	2.8	6.6	2.4	2.8	5.7	2.2	1.2	0.1	1.5	1.8	16.3	0.611	0.577	0.554	0.23	0.391	21.1	0.52	1.45	19.4	0.116	0.067	0.183	124	101.2	6	2.6	8.5	1642272
+1389	2025-06-22 19:00:00	Coleman Hawkins	coleman-hawkins	PF	\N	81.5	84	215	Kansas State	Antelope, CA	2001-12-10	\N	\N	4	23.53	30	33.6	4	10	0.401	1.2	4	0.303	1.5	2.6	0.577	6.9	4.3	1.8	1.3	2.9	2.5	10.7	4.3	10.7	1.3	4.2	1.6	2.8	7.4	4.6	1.9	1.4	3.1	2.7	11.5	0.478	0.462	0.398	0.261	0.322	21.3	1.14	1.5	15.3	0.012	0.079	0.091	96.6	99	1.8	4.3	6.1	1641722
+1395	2025-06-22 19:00:00	Mark Sears	mark-sears	PG	\N	72	74	183	Alabama	Muscle Shoals, AL	2002-02-19	\N	\N	4	23.33	37	32.3	5.4	13.4	0.403	2.4	7.1	0.345	5.4	6.4	0.844	2.9	5.1	0.9	0.1	2.7	1.5	18.6	6	15	2.7	7.9	6	7.1	3.3	5.7	1	0.1	3	1.7	20.8	0.567	0.494	0.526	0.478	0.384	26.9	0.98	1.92	18.9	0.124	0.03	0.154	119.4	112.3	6	1.2	7.1	1641813
+1399	2025-06-22 19:00:00	Kobe Johnson	kobe-johnson	SG	\N	78	\N	200	UCLA	Milwaukee, WI	2003-01-15	\N	\N	4	22.43	34	29	2.9	6.1	0.464	1.1	3.1	0.362	1.1	1.6	0.704	5.9	2.9	1.6	0.3	1.5	2.9	7.9	3.5	7.6	1.4	3.8	1.4	2	7.4	3.7	2	0.3	1.8	3.5	9.9	0.575	0.555	0.502	0.258	0.343	15	1.19	2	16.4	0.073	0.085	0.158	118	96.9	3.3	5	8.3	\N
+1400	2025-06-22 19:00:00	Izan Almansa	izan-almansa	PF	\N	82.5	85.75	220	Perth (NBL)	Murcia, Spain	2005-06-07	\N	\N	\N	20.04	36	16.1	2.9	5.6	0.52	0.2	0.6	0.304	1.1	1.9	0.586	4	0.8	0.4	0.3	0.6	1.7	7.2	6.5	12.6	0.4	1.4	2.5	4.4	9	1.7	0.9	0.7	1.2	3.7	16	0.548	0.537	0.114	0.347	0.308	18.1	0.39	1.4	16.1	\N	\N	\N	119.4	116.6	\N	\N	\N	\N
+1401	2025-06-22 19:00:00	Eric Dixon	eric-dixon	PF	\N	80.75	83.5	259	Villanova	Willow Grove, PA	2001-01-26	\N	\N	4	24.4	35	34.8	7.7	17.1	0.451	2.9	7.2	0.407	5	6.1	0.813	5.1	1.9	0.8	0.3	2.1	2	23.3	8	17.6	3	7.5	5.1	6.3	5.3	2	0.9	0.3	2.2	2.1	24.1	0.583	0.537	0.424	0.358	0.386	34.7	0.38	0.89	25.7	0.154	0.039	0.194	119.5	109.9	8.3	0.1	8.5	\N
+1404	2025-06-22 19:00:00	Andre Curbelo	andre-curbelo	PG	\N	73	\N	175	Southern Miss	Vega Baja, Puerto Rico	2001-10-13	\N	44	4	23.68	20	24.3	3.9	9.2	0.421	0.5	1.4	0.357	1.6	2.1	0.756	3.6	4.7	1.9	0.3	3.4	2.6	9.8	5.7	13.6	0.7	2.1	2.3	3	5.3	6.9	2.8	0.4	5	3.9	14.5	0.482	0.448	0.153	0.224	0.339	27.1	1.49	1.39	14.2	-0.025	0.066	0.049	89.9	102.1	-3.7	0.4	-3.2	\N
+1405	2025-06-22 19:00:00	Arthur Kaluma	arthur-kaluma	PF	\N	79.25	84.5	222	Texas	Glendale, AZ	2002-03-01	\N	48	4	23.3	33	29.3	4.3	9.2	0.462	1	2.8	0.359	2.8	3.5	0.784	7.5	1.8	0.9	0.9	1.6	2.1	12.3	5.3	11.4	1.2	3.4	3.4	4.3	9.2	2.2	1.2	1.1	1.9	2.6	15.1	0.564	0.516	0.302	0.38	0.351	21.8	0.54	1.15	20	0.087	0.066	0.153	115.5	102.2	4.5	3.1	7.6	\N
+1406	2025-06-22 19:00:00	Saliou Niang	saliou-niang	SG	\N	77	\N	190	Trento (Italy)	Dakar, Senegal	2004-05-14	\N	\N	\N	21.1	54	20.1	2.9	5.7	0.513	0.2	0.6	0.314	1.9	2.7	0.696	5.2	1.5	0.7	0.2	2	2.5	7.9	5.2	10.2	0.4	1.2	3.4	4.9	9.3	2.7	1.3	0.3	3.6	4.5	14.2	0.569	0.531	0.114	0.484	0.323	20.3	0.59	0.74	13.9	\N	\N	\N	104.8	107.3	\N	\N	\N	\N
+1409	2025-06-22 19:00:00	Matthew Cleveland	matthew-cleveland	SG	SF	79	\N	200	Miami	Atlanta, GA	2002-09-15	\N	30	4	22.76	29	30.3	6.3	12.3	0.511	1.2	3.1	0.382	3.8	4.9	0.776	4.4	1.7	0.8	0.8	1.3	1.3	17.6	7.5	14.7	1.4	3.6	4.5	5.9	5.3	2	0.9	1	1.6	1.6	20.9	0.6	0.559	0.249	0.399	0.354	27.3	0.44	1.32	24.7	0.137	0	0.137	122.6	120.5	6.9	-1.3	5.6	\N
+1412	2025-06-22 19:00:00	Payton Sandfort	payton-sandfort	SF	\N	79.5	80	212	Iowa	Wuakee, IA	2002-07-12	\N	\N	4	22.94	33	31.9	5.6	13.8	0.407	2.5	7.5	0.34	3	3.3	0.891	6	2.9	0.8	0.7	1.8	2.6	16.7	6.3	15.5	2.9	8.4	3.3	3.8	6.8	3.2	0.9	0.8	2	3	18.9	0.545	0.5	0.544	0.242	0.393	26.9	0.57	1.61	18.5	0.08	0.034	0.114	111	111.8	4.2	0.2	4.4	\N
+1403	2025-06-22 19:00:00	Brice Williams	brice-williams	SG	\N	78.5	82.75	206	Nebraska	Huntersville, NC	2001-07-05	\N	\N	4	23.96	35	34.1	6.5	13.8	0.471	1.9	5.3	0.37	5.4	6.1	0.883	4.1	2.9	1.1	0.3	2.4	1.8	20.4	6.9	14.6	2.1	5.6	5.7	6.5	4.3	3	1.1	0.3	2.5	1.9	21.5	0.609	0.541	0.38	0.442	0.379	28.7	0.63	1.2	22.4	0.124	0.05	0.171	118.5	107.5	6.2	1.8	8	1630172
+1407	2025-06-22 19:00:00	Hunter Sallis	hunter-sallis	SG	PG	77	82	181	Wake Forest	Omaha, NE	2003-03-26	\N	16	4	22.24	32	35.9	6.6	14.4	0.457	1.3	4.8	0.277	3.7	4.6	0.804	5.1	2.8	1.2	0.5	2.4	2.3	18.3	6.6	14.5	1.3	4.9	3.7	4.6	5.1	2.8	1.2	0.5	2.4	2.3	18.3	0.549	0.503	0.335	0.32	0.353	27.7	0.65	1.15	18.8	0.066	0.066	0.132	107.6	102.5	3.2	2.4	5.6	1642282
+1408	2025-06-22 19:00:00	Tamar Bates	tamar-bates	SG	\N	77	82.25	191	Missouri	Kansas City, KS	2003-02-21	\N	25	4	22.33	34	26	4.6	9	0.508	1.5	3.9	0.397	2.6	2.7	0.946	2.6	1	1.3	0.1	1.3	1.8	13.3	6.4	12.5	2.1	5.3	3.5	3.8	3.6	1.4	1.8	0.2	1.8	2.4	18.4	0.643	0.593	0.427	0.3	0.389	22.1	0.34	0.77	20.4	0.122	0.041	0.168	126.9	109	5.8	2	7.8	1642926
+1410	2025-06-22 19:00:00	Caleb Love	caleb-love	PG	\N	76	\N	195	Arizona	St. Louis, MO	2001-09-27	\N	18	4	23.73	37	34.1	5.8	14.5	0.398	2.6	7.8	0.34	3	3.4	0.889	4.4	3.4	1.2	0.3	1.9	1.2	17.2	6.1	15.4	2.8	8.2	3.2	3.6	4.7	3.6	1.2	0.3	2.1	1.3	18.2	0.534	0.489	0.535	0.234	0.391	25.8	0.71	1.76	17.7	0.089	0.051	0.14	114.4	107.3	5.3	2.1	7.5	1631126
+1411	2025-06-22 19:00:00	Vladislav Goldin	vladislav-goldin	C	\N	85.25	89.25	253	Michigan	Nalchik, Russia	2001-05-12	\N	\N	4	24.11	37	27.5	6	9.9	0.607	0.3	0.9	0.333	4.3	5.9	0.731	7	1.1	0.5	1.4	2.3	2	16.6	7.8	12.9	0.4	1.2	5.7	7.7	9.2	1.4	0.7	1.8	3	2.6	21.7	0.654	0.622	0.09	0.598	0.329	26.7	0.32	0.47	25.7	0.13	0.075	0.204	121.5	100	6.6	3.8	10.4	1642884
+1413	2025-06-22 19:00:00	Ryan Nembhard	ryan-nembhard	PG	\N	72.25	74.25	176	Gonzaga	Aurora, ON	2003-03-10	\N	62	4	22.28	35	35.1	3.8	8.5	0.446	1.1	2.7	0.404	1.9	2.5	0.77	3	9.8	1.7	0.1	2.5	1.6	10.5	3.9	8.7	1.1	2.8	2	2.6	3	10.1	1.8	0.1	2.5	1.6	10.8	0.547	0.51	0.318	0.294	0.349	17	2.44	4	18	0.101	0.068	0.169	121.2	101.8	5	3.1	8.1	1642948
+1414	2025-06-22 19:00:00	Hugo González	hugo-gonzalez	SF	\N	78	\N	207	Real Madrid (Spain)	Madrid, Spain	2006-02-05	\N	\N	\N	19.37	69	10.7	1.2	2.8	0.408	0.4	1.3	0.284	0.7	1	0.758	1.8	0.6	0.3	0.3	0.6	1.8	3.4	3.9	9.5	1.2	4.3	2.4	3.2	5.9	1.9	1	1	2	6.1	11.4	0.517	0.472	0.449	0.337	0.345	17	0.49	0.95	9.8	\N	\N	\N	104.6	108.2	\N	\N	\N	1642864
+80	2025-06-25 20:00:00	Ace Bailey	ace-bailey	SF	\N	80.75	84.5	203	Rutgers	Chattanooga, TN	2006-08-13	\N	2	1	18.85	30	33.3	6.8	14.7	0.46	1.6	4.5	0.346	2.5	3.6	0.692	7.2	1.3	1	1.3	2	2.8	17.6	7.3	15.9	1.7	4.9	2.7	3.9	7.7	1.4	1.1	1.4	2.2	3	19	0.536	0.514	0.308	0.243	0.346	27.5	0.3	0.62	19.9	0.068	0.044	0.112	108.2	109.1	3.7	0.8	4.5	1642846
+86	2025-06-25 20:00:00	Walter Clayton Jr.	walter-clayton-jr	PG	\N	75.25	76	199	Florida	Lake Wales, FL	2003-03-06	\N	\N	4	22.29	39	32.6	6	13.4	0.448	3	7.8	0.386	3.2	3.7	0.875	3.7	4.2	1.2	0.5	2.4	1.9	18.3	6.7	14.8	3.3	8.6	3.6	4.1	4.1	4.6	1.3	0.6	2.7	2.1	20.2	0.602	0.56	0.578	0.275	0.398	25.6	0.91	1.73	21.6	0.138	0.066	0.205	124.4	102.4	7.8	3.4	11.2	1642383
+93	2025-06-25 20:00:00	Jeremiah Fears	jeremiah-fears	PG	\N	75.75	77.25	180	Oklahoma	Joliet, IL	2006-10-14	\N	40	1	18.68	34	30.2	5.3	12.2	0.434	1.1	3.9	0.284	5.4	6.3	0.851	4.1	4.1	1.6	0.1	3.4	1.9	17.1	6.3	14.5	1.3	4.7	6.4	7.5	4.9	4.9	2	0.1	4.1	2.2	20.4	0.562	0.48	0.323	0.518	0.36	31.5	0.91	1.21	20.7	0.082	0.047	0.132	108.2	107.5	4.2	1.7	5.9	1642847
+108	2025-06-25 20:00:00	Collin Murray-Boyles	collin-murray-boyles	PF	\N	79.75	84.75	239	South Carolina	Columbia, SC	2005-06-10	\N	64	2	20.03	32	30.6	6.2	10.6	0.586	0.3	1.1	0.265	4.2	5.9	0.707	8.3	2.4	1.5	1.3	2.4	2.6	16.8	7.3	12.4	0.3	1.2	4.9	6.9	9.7	2.8	1.7	1.6	2.9	3	19.8	0.63	0.599	0.101	0.556	0.321	26.7	0.79	0.99	27.8	0.127	0.073	0.2	119.6	100.4	6.9	5	11.9	1642867
+115	2025-06-25 20:00:00	Drake Powell	drake-powell	SG	\N	78.5	84	200	North Carolina	Pittsboro, NC	2005-09-08	\N	13	1	19.78	37	25.6	2.8	5.7	0.483	1	2.6	0.379	0.9	1.5	0.648	3.4	1.1	0.7	0.7	0.7	1.8	7.4	3.9	8	1.4	3.6	1.3	2.1	4.8	1.5	1	1	1	2.5	10.5	0.581	0.569	0.45	0.256	0.336	13.8	0.51	1.48	12.9	0.059	0.046	0.106	118	107.9	2.8	3.3	6.1	1642962
+122	2025-06-25 20:00:00	Kobe Sanders	kobe-sanders	SG	\N	80.25	80.25	203	Nevada	San Diego, CA	2002-05-30	\N	\N	4	23.06	33	31.7	5.2	11.4	0.46	1.2	3.6	0.342	4.1	5.2	0.795	3.9	4.5	1.1	0.3	1.8	2.2	15.8	6	13	1.4	4.1	4.7	5.9	4.4	5.1	1.3	0.3	2.1	2.5	18	0.572	0.515	0.319	0.455	0.355	27.1	1.1	2.41	22	0.122	0.054	0.176	118.8	106.5	5.6	1.5	7	1642920
+128	2025-06-25 20:00:00	John Tonje	john-tonje	SG	\N	78	81	212	Wisconsin	North Omaha, NE	2001-04-23	\N	\N	4	24.16	37	31.1	5.5	11.9	0.465	2.3	5.9	0.388	6.2	6.9	0.909	5.3	1.8	0.7	0.2	1.8	1.7	19.6	6.4	13.7	2.7	6.8	7.2	7.9	6.1	2.1	0.8	0.3	2.1	2	22.6	0.647	0.562	0.499	0.579	0.392	28	0.42	0.99	24.8	0.163	0.056	0.222	128.2	105.2	8.6	2.4	11	1642910
+1336	2022-06-22 19:00:00	MarJon Beauchamp	marjon-beauchamp	SG	\N	78.5	84.75	197	G League	Yakima, WA	2001-10-12	\N	47	\N	20.68	24	34.5	6.2	12	0.512	0.8	2.8	0.273	1.2	1.6	0.718	6.5	2	1.5	0.8	1.9	2.3	15.1	6.4	12.6	0.8	2.9	1.2	1.7	6.8	2.1	1.6	0.8	2	2.3	15.7	0.589	0.543	0.228	0.135	0.331	18.52	0.5	1.07	14.22	\N	\N	\N	104.9	110.6	\N	\N	\N	1630699
+1085	2020-06-22 19:00:00	James Wiseman	james-wiseman	C	\N	85	90	237	Memphis	Memphis, TN	2001-03-30	\N	\N	1	19.22	3	23	6.7	8.7	0.769	0	0.3	0	6.3	9	0.704	10.7	0.3	0.3	3	1	1.7	19.7	10.4	13.6	0	0.5	9.9	14.1	16.7	0.5	0.5	4.7	1.6	2.6	30.8	0.76	0.769	0.038	0.038	0.318	29.1	0.15	0.33	52.7	0.29	0.116	0.406	149.8	80.8	13.1	4.9	18	1630164
+1189	2020-06-22 19:00:00	RJ Hampton	rj-hampton	SG	PG	77	\N	188	NZ Breakers (NBL)	Little Elm, TX	2001-02-07	\N	\N	\N	19.36	17	21.3	3.5	8.5	0.417	0.9	3	0.294	1.6	2.2	0.737	3.9	2.5	1.2	0.4	1.5	2.1	9.6	6	14.3	1.5	5.1	2.8	3.8	6.7	4.2	2	0.7	2.5	3.6	16.2	0.503	0.469	0.354	0.264	0.347	22.42	0.8	1.68	15.27	\N	\N	\N	104.8	111.3	\N	\N	\N	1630181
+1198	2020-06-22 19:00:00	Myles Powell	myles-powell	PG	\N	73.5	79	194	Seton Hall	Trenton, NJ	1997-07-07	\N	\N	4	22.95	28	31.5	7	17.5	0.398	2.8	9.2	0.306	4.3	5.4	0.795	4.3	2.9	1.2	0.2	2.8	2.1	21	8	20	3.2	10.5	4.9	6.2	4.9	3.3	1.4	0.2	3.2	2.4	24	0.524	0.479	0.527	0.308	0.386	35.6	0.6	1.04	22.3	0.104	0.059	0.163	104.9	99.1	6.2	0.9	7.1	1629619
+1214	2020-06-22 19:00:00	Robert Woodard II	robert-woodard-ii	SF	\N	79	86	230	Mississippi State	Columbus, MS	1999-09-22	\N	\N	2	20.74	31	33.1	4.4	8.9	0.495	1	2.3	0.429	1.6	2.5	0.641	6.5	1.3	1.1	1	1.9	1.9	11.4	4.8	9.7	1.1	2.5	1.8	2.7	7.1	1.4	1.2	1.1	2	2	12.4	0.564	0.549	0.255	0.284	0.332	18.2	0.42	0.69	18.1	0.078	0.051	0.129	111.4	101.4	4.1	1.9	6	1630218
+1228	2020-06-22 19:00:00	Killian Hayes	killian-hayes	PG	SG	77	\N	187	Ratiopharm Ulm (Germany)	Cholet, France	2001-07-27	\N	\N	\N	18.9	33	24.8	4.2	8.6	0.482	0.9	3.1	0.294	2.4	2.7	0.876	2.8	5.4	1.5	0.3	3.2	3	11.6	6	12.5	1.3	4.5	3.4	3.9	4.1	7.8	2.1	0.4	4.7	4.3	16.8	0.585	0.535	0.359	0.313	0.363	24.34	1.59	1.68	16.54	\N	\N	\N	107.6	109.7	\N	\N	\N	1630165
+1241	2021-06-22 19:00:00	Quentin Grimes	quentin-grimes	SG	\N	77.25	80	205	Houston	The Woodlands, TX	2000-05-08	\N	\N	3	21.12	30	32.8	5.8	14.2	0.406	3.3	8.3	0.403	3	3.8	0.788	5.7	2	1.4	0.3	1.8	2.2	17.8	6.3	15.6	3.7	9.1	3.3	4.1	6.3	2.2	1.5	0.3	2	2.4	19.6	0.558	0.523	0.582	0.265	0.392	26.9	0.45	1.07	23.5	0.15	0.098	0.248	120.3	90.1	7.9	2.9	10.8	1629656
+1244	2021-06-22 19:00:00	Joshua Primo	joshua-primo	SG	\N	77	81.25	189	Alabama	Toronto, ON	2002-12-24	\N	\N	1	18.48	30	22.5	2.8	6.5	0.431	1.4	3.8	0.381	1.1	1.5	0.75	3.4	0.8	0.6	0.3	1.4	1.7	8.1	4.5	10.4	2.3	6	1.8	2.4	5.4	1.3	0.9	0.5	2.2	2.7	13	0.565	0.541	0.579	0.226	0.365	17.6	0.37	0.61	13.2	0.059	0.065	0.125	107.8	98.7	1.6	2.1	3.7	1630563
+1259	2021-06-22 19:00:00	Austin Reaves	austin-reaves	SG	\N	77.75	78.25	197	Oklahoma	Newark, AR	1998-05-29	\N	\N	4	23.06	25	34.5	5.6	12.6	0.443	1.3	4.2	0.305	5.9	6.8	0.865	5.5	4.6	0.9	0.3	3	1.7	18.3	5.8	13.1	1.3	4.4	6.1	7.1	5.7	4.8	1	0.3	3.1	1.8	19.1	0.579	0.494	0.334	0.541	0.362	27.7	0.97	1.55	23.6	0.135	0.046	0.186	114	102.8	6	1.3	7.3	1630559
+1272	2021-06-22 19:00:00	Ayo Dosunmu	ayo-dosunmu	PG	SG	77	82.25	194	Illinois	Chicago, IL	2000-01-17	\N	\N	3	21.42	28	35.1	7.5	15.4	0.488	1.1	2.9	0.39	4	5.1	0.783	6.3	5.3	1.1	0.2	3.3	2.1	20.1	7.7	15.7	1.2	3	4.1	5.2	6.5	5.4	1.1	0.2	3.4	2.1	20.6	0.566	0.526	0.191	0.333	0.351	29.5	0.99	1.58	24	0.134	0.073	0.207	112.9	96.8	6.4	3.1	9.5	1630245
+1275	2021-06-22 19:00:00	Dalano Banton	dalano-banton	PG	\N	81	\N	204	Nebraska	Toronto, ON	1999-11-07	\N	\N	2	21.61	27	27.3	3.3	8.1	0.411	0.7	3	0.247	2.1	3.3	0.659	5.9	3.9	1	0.9	2.5	2.1	9.6	4.4	10.7	1	4	2.8	4.3	7.8	5.1	1.3	1.2	3.3	2.7	12.6	0.495	0.457	0.37	0.402	0.326	21.8	1.32	1.57	16.1	0.033	0.06	0.092	96.8	99.8	1.6	3	4.7	1630625
+1290	2021-06-22 19:00:00	Ziaire Williams	ziaire-williams	SF	\N	81.75	82.25	188	Stanford	Lancaster, CA	2001-09-12	\N	\N	1	19.77	20	27.9	3.8	10.2	0.374	1.2	4	0.291	2	2.5	0.796	4.6	2.2	0.9	0.6	2.9	2.4	10.7	4.9	13.1	1.5	5.1	2.5	3.2	5.9	2.8	1.1	0.7	3.7	3.1	13.8	0.473	0.431	0.389	0.241	0.355	26.5	0.62	0.76	11.2	-0.014	0.065	0.043	86.3	99.2	-1.2	1.5	0.3	1630533
+1305	2021-06-22 19:00:00	DJ Steward	dj-steward	PG	SG	73.75	79	162	Duke	Chicago, IL	2001-10-02	\N	\N	1	19.71	24	30.8	4.7	11	0.426	1.8	5.3	0.341	1.8	2.2	0.811	3.9	2.4	1.1	0.6	2	1.2	13	5.5	12.9	2.1	6.1	2.1	2.6	4.5	2.8	1.3	0.7	2.3	1.4	15.2	0.538	0.508	0.475	0.2	0.369	22.8	0.61	1.19	17.5	0.081	0.038	0.114	107.7	105.7	3.8	0.7	4.5	1630597
+1320	2022-06-22 19:00:00	JD Davison	jd-davison	PG	\N	74.5	78.5	192	Alabama	Latohatchee, AL	2002-10-03	\N	15	1	19.71	33	25.8	3	6.5	0.463	0.8	2.5	0.301	1.8	2.5	0.728	4.8	4.3	1	0.4	2.9	1.2	8.5	4.2	9	1.1	3.5	2.5	3.4	6.6	6	1.4	0.5	4	1.7	11.9	0.558	0.521	0.388	0.379	0.339	18.8	1.56	1.51	16	0.056	0.038	0.099	104.5	105.4	3.3	1.9	5.2	1631120
+1337	2022-06-22 19:00:00	Trevion Williams	trevion-williams	PF	\N	80.75	86.75	265	Purdue	Chicago, IL	2000-09-16	\N	\N	4	21.76	37	20.1	4.9	9	0.547	0.1	0.4	0.357	2	3.4	0.597	7.4	3	0.9	0.6	2.1	2.1	12	8.8	16.1	0.2	0.7	3.6	6	13.3	5.4	1.7	1.1	3.8	3.8	21.4	0.565	0.554	0.042	0.372	0.307	32.5	1.05	1.42	31.9	0.161	0.086	0.247	114.9	93.8	7.4	4.4	11.9	1626210
+1347	2023-06-22 19:00:00	Jalen Hood-Schifino	jalen-hood-schifino	PG	SG	77.5	82.25	217	Indiana	Pittsburgh, PA	2003-06-19	\N	26	1	20	32	33.1	5.3	12.6	0.417	1.2	3.5	0.333	1.8	2.4	0.776	4.1	3.7	0.8	0.3	2.8	2.4	13.5	5.7	13.7	1.3	3.8	2	2.6	4.5	4	0.9	0.3	3	2.7	14.7	0.492	0.463	0.275	0.189	0.35	25.7	0.79	1.31	13	0.023	0.049	0.072	95.8	104.3	0.4	0.3	0.7	1641720
+1354	2023-06-22 19:00:00	James Nnaji	james-nnaji	C	\N	84	91.25	251	Barcelona (Spain)	Makurdi, Nigeria	2004-08-14	\N	\N	\N	18.85	56	9	1.4	2	0.717	0	0	\N	0.6	1.2	0.507	2.1	0.3	0.1	0.6	0.8	1.2	3.5	5.8	8.1	0	0	2.4	4.8	8.6	1.1	0.6	2.3	3	4.8	14	0.677	0.717	0	0.593	0.29	17.89	0.3	0.38	16.98	\N	\N	\N	113.3	103.5	\N	\N	\N	1630192
+1370	2024-06-22 19:00:00	KJ Simpson	kj-simpson	PG	\N	73.5	76.5	187	Colorado	Panorama City, CA	2002-08-08	\N	97	3	21.87	37	35.1	6.6	13.8	0.475	2.1	4.9	0.434	4.4	5	0.876	5.8	4.9	1.6	0.1	2.2	2.5	19.7	6.7	14.2	2.2	5	4.5	5.2	6	5	1.7	0.1	2.2	2.6	20.2	0.606	0.552	0.355	0.363	0.382	26.7	1.01	2.23	24.8	0.157	0.062	0.222	125.5	102.5	6.9	3.2	10.1	1642354
+1378	2024-06-22 19:00:00	Carlton Carrington	carlton-carrington	PG	\N	77	80	195	Pittsburgh	Baltimore, MD	2005-07-21	\N	\N	1	18.92	33	33.2	4.8	11.7	0.412	2	6.1	0.322	2.2	2.8	0.785	5.2	4.1	0.6	0.2	1.9	2.4	13.8	5.2	12.7	2.1	6.6	2.4	3.1	5.6	4.5	0.6	0.3	2.1	2.6	15	0.53	0.496	0.523	0.241	0.366	23	1.04	2.12	16.3	0.08	0.051	0.131	111.5	105.2	2.6	1.3	3.9	1642267
+1385	2024-06-22 19:00:00	Kel'el Ware	kel-el-ware	C	\N	85	88.5	230	Indiana	Little Rock, AR	2004-04-20	\N	8	2	20.17	30	32.2	6.3	10.7	0.586	0.6	1.3	0.425	2.8	4.5	0.634	9.9	1.5	0.6	1.9	1.6	2	15.9	7	12	0.6	1.5	3.2	5	11	1.7	0.7	2.1	1.8	2.3	17.8	0.621	0.612	0.125	0.417	0.324	22.9	0.43	0.96	25	0.112	0.062	0.174	120.3	102.3	5.8	2.7	8.5	1642276
+1402	2025-06-22 19:00:00	Chucky Hepburn	chucky-hepburn	PG	\N	74	\N	190	Louisville	Omaha, NE	2003-02-09	\N	\N	4	22.36	34	34.8	4.9	11.3	0.432	1.9	5.6	0.328	4.8	5.6	0.844	3.5	5.8	2.4	0.1	3	2.7	16.4	5	11.7	1.9	5.8	4.9	5.8	3.6	6	2.5	0.1	3.1	2.8	16.9	0.586	0.514	0.5	0.5	0.37	24.4	1.28	1.92	20.9	0.111	0.078	0.193	118.2	99.5	4.5	4.8	9.3	1642935
+1	2026-01-05 20:23:00	Dame Sarr	dame-sarr	SG	SF	79	\N	181	Duke	Oderzo, Italy	2006-06-04	30	\N	1	20.04	18	20.2	2	5.2	0.387	1.2	3.4	0.344	0.9	1.9	0.5	3.3	0.9	1.2	0.3	1.1	1.8	6.1	3.6	9.2	2.1	6	1.7	3.4	5.9	1.6	2.2	0.6	2	3.2	10.9	0.504	0.5	0.656	0.366	0.327	17.4	0.4	0.8	11.2	0.011	0.11	0.132	101.4	92.3	-0.2	5.1	4.9	\N
 \.
 
 
@@ -34603,6 +35957,805 @@ COPY public.team_player_salaries (id, year, team_id, player_id, cap_hit_percent,
 
 
 --
+-- Data for Name: team_season_finances; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.team_season_finances (id, team_season_id, total_salary, luxury_tax_paid, over_first_apron, over_second_apron) FROM stdin;
+\.
+
+
+--
+-- Data for Name: team_season_playoff_rounds; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.team_season_playoff_rounds (id, team_season_id, round, wins, losses, won_round, eliminated_by_team_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: team_seasons; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.team_seasons (id, team_id, season, wins, losses, win_pct, league_rank, playoff_rank, conference_record, division_record, home_record, road_record, last_10_record, conference_games_back, division_games_back, points_per_game, opp_points_per_game, point_diff_per_game, clinched_conference_title, clinched_division_title, clinched_playoff_birth) FROM stdin;
+1	10	2000	67	15	0.817	\N	1	40-12	20-4	36-5	31-10	\N	0	0	101	92	9	\N	\N	\N
+2	17	2000	56	26	0.683	\N	1	36-18	20-8	36-5	20-21	\N	0	0	101	97	5	\N	\N	\N
+3	25	2000	55	27	0.671	\N	2	33-19	14-10	31-10	24-17	\N	12	0	97	92	5	\N	\N	\N
+4	11	2000	52	30	0.634	\N	2	34-20	18-6	33-8	19-22	\N	4	0	94	91	3	\N	\N	\N
+5	15	2000	50	32	0.61	\N	3	32-22	14-10	33-8	17-24	\N	6	2	92	91	1	\N	\N	\N
+6	20	2000	59	23	0.72	\N	3	38-14	21-3	30-11	29-12	\N	8	8	98	91	7	\N	\N	\N
+7	18	2000	49	33	0.598	\N	4	36-18	13-11	29-12	20-21	\N	7	3	95	93	1	\N	\N	\N
+8	19	2000	53	29	0.646	\N	4	30-22	15-9	32-9	21-20	\N	14	14	99	94	5	\N	\N	\N
+9	29	2000	49	33	0.598	\N	4	36-18	20-8	30-11	19-22	\N	7	7	98	96	3	\N	\N	\N
+10	22	2000	53	29	0.646	\N	4	33-19	16-8	31-10	22-19	\N	14	2	96	90	6	\N	\N	\N
+11	24	2000	45	37	0.549	\N	6	29-25	16-12	26-15	19-22	\N	11	11	97	97	0	\N	\N	\N
+12	13	2000	50	32	0.61	\N	6	32-20	18-6	26-15	24-17	\N	17	5	99	96	3	\N	\N	\N
+13	12	2000	42	40	0.512	\N	7	28-26	16-12	23-18	19-22	\N	14	14	101	101	0	\N	\N	\N
+14	23	2000	45	37	0.549	\N	7	31-21	12-12	24-17	21-20	\N	22	22	99	98	1	\N	\N	\N
+15	28	2000	42	40	0.512	\N	7	30-24	16-12	27-14	15-26	\N	14	14	104	102	2	\N	\N	\N
+16	21	2000	44	38	0.537	\N	8	25-27	9-15	30-11	14-27	\N	23	23	105	102	3	\N	\N	\N
+17	16	2000	41	41	0.5	\N	9	27-27	12-13	26-15	15-26	\N	15	11	100	99	1	\N	\N	\N
+18	5	2000	40	42	0.488	\N	9	28-24	12-12	22-19	18-23	\N	27	15	101	102	-1	\N	\N	\N
+19	6	2000	35	47	0.427	\N	10	22-30	10-14	25-16	10-31	\N	32	20	99	101	-2	\N	\N	\N
+20	1	2000	35	47	0.427	\N	10	24-30	12-12	26-15	9-32	\N	21	17	99	100	-1	\N	\N	\N
+21	8	2000	34	48	0.415	\N	11	23-29	8-16	22-19	12-29	\N	33	21	100	100	-1	\N	\N	\N
+22	2	2000	32	50	0.39	\N	11	20-34	8-20	22-19	10-31	\N	24	24	97	101	-4	\N	\N	\N
+23	14	2000	31	51	0.378	\N	12	21-33	9-16	22-19	9-32	\N	25	21	98	99	-1	\N	\N	\N
+24	26	2000	22	60	0.268	\N	12	12-40	6-18	12-29	10-31	\N	45	33	94	100	-6	\N	\N	\N
+25	7	2000	19	63	0.232	\N	13	9-43	2-22	12-29	7-34	\N	48	48	96	104	-8	\N	\N	\N
+26	27	2000	29	53	0.354	\N	13	19-35	7-17	17-24	12-29	\N	27	23	97	100	-3	\N	\N	\N
+27	9	2000	15	67	0.183	\N	14	8-44	5-19	10-31	5-36	\N	52	52	92	104	-12	\N	\N	\N
+28	0	2000	28	54	0.341	\N	14	20-34	11-17	21-20	7-34	\N	28	28	94	100	-5	\N	\N	\N
+29	4	2000	17	65	0.207	\N	15	13-41	5-23	12-29	5-36	\N	39	39	85	94	-9	\N	\N	\N
+30	22	2001	58	24	0.707	\N	1	39-13	19-5	33-8	25-16	\N	0	0	96	88	8	\N	\N	\N
+31	18	2001	56	26	0.683	\N	1	40-14	18-6	29-12	27-14	\N	0	0	95	90	4	\N	\N	\N
+32	12	2001	52	30	0.634	\N	2	38-16	19-9	31-10	21-20	\N	4	0	101	97	4	\N	\N	\N
+33	10	2001	56	26	0.683	\N	2	34-18	14-10	31-10	25-16	\N	2	0	101	97	3	\N	\N	\N
+34	21	2001	55	27	0.671	\N	3	35-17	16-8	33-8	22-19	\N	3	1	102	96	6	\N	\N	\N
+35	11	2001	50	32	0.61	\N	3	34-20	15-10	29-12	21-20	\N	6	6	89	87	2	\N	\N	\N
+36	5	2001	53	29	0.646	\N	4	30-22	14-10	28-13	25-16	\N	5	5	101	96	4	\N	\N	\N
+37	15	2001	48	34	0.585	\N	4	32-22	16-9	30-11	18-23	\N	8	8	89	86	3	\N	\N	\N
+38	25	2001	53	29	0.646	\N	4	31-21	14-10	28-13	25-16	\N	5	5	97	92	5	\N	\N	\N
+39	24	2001	47	35	0.573	\N	5	36-18	18-10	27-14	20-21	\N	9	5	98	95	2	\N	\N	\N
+40	29	2001	46	36	0.561	\N	6	37-17	20-8	28-13	18-23	\N	10	6	92	90	2	\N	\N	\N
+41	19	2001	51	31	0.622	\N	6	30-22	12-12	31-10	20-21	\N	7	5	94	92	2	\N	\N	\N
+42	20	2001	50	32	0.61	\N	7	26-26	12-12	28-13	22-19	\N	8	6	95	91	4	\N	\N	\N
+43	16	2001	43	39	0.524	\N	7	30-24	14-10	26-15	17-24	\N	13	13	98	97	1	\N	\N	\N
+44	17	2001	41	41	0.5	\N	8	29-25	15-13	26-15	15-26	\N	15	11	93	93	0	\N	\N	\N
+45	13	2001	47	35	0.573	\N	8	27-25	11-13	30-11	17-24	\N	11	11	97	96	1	\N	\N	\N
+46	8	2001	45	37	0.549	\N	9	20-32	11-13	24-17	21-20	\N	13	13	97	95	2	\N	\N	\N
+47	1	2001	36	46	0.439	\N	9	24-30	11-13	20-21	16-25	\N	20	20	95	97	-2	\N	\N	\N
+48	23	2001	44	38	0.537	\N	10	27-25	17-7	26-15	18-23	\N	14	12	97	97	0	\N	\N	\N
+49	28	2001	32	50	0.39	\N	10	25-29	16-12	18-23	14-27	\N	24	20	96	97	-2	\N	\N	\N
+50	2	2001	30	52	0.366	\N	11	22-32	11-17	20-21	10-31	\N	26	22	92	97	-4	\N	\N	\N
+51	6	2001	40	42	0.488	\N	11	27-25	13-11	29-12	11-30	\N	18	18	97	99	-2	\N	\N	\N
+52	9	2001	31	51	0.378	\N	12	18-34	9-15	22-19	9-32	\N	27	25	93	95	-3	\N	\N	\N
+53	14	2001	26	56	0.317	\N	12	16-38	8-16	18-23	8-33	\N	30	30	92	97	-5	\N	\N	\N
+54	26	2001	23	59	0.28	\N	13	11-41	2-22	15-26	8-33	\N	35	35	92	98	-6	\N	\N	\N
+55	0	2001	25	57	0.305	\N	13	16-38	9-19	18-23	7-34	\N	31	27	91	96	-5	\N	\N	\N
+56	27	2001	19	63	0.232	\N	14	13-41	3-21	12-29	7-34	\N	37	37	93	100	-7	\N	\N	\N
+57	7	2001	17	65	0.207	\N	14	9-43	4-20	11-30	6-35	\N	41	39	93	102	-9	\N	\N	\N
+58	4	2001	15	67	0.183	\N	15	13-41	4-24	10-31	5-36	\N	41	37	88	97	-9	\N	\N	\N
+59	21	2002	61	21	0.744	\N	1	37-15	15-9	36-5	25-16	8-2	0	0	105	97	8	t	f	t
+60	14	2002	52	30	0.634	\N	1	35-19	16-8	33-8	19-22	6-4	0	0	96	92	4	t	t	t
+61	28	2002	50	32	0.61	\N	2	38-16	20-8	26-15	24-17	7-3	2	0	94	92	2	f	t	t
+62	22	2002	58	24	0.707	\N	2	38-14	21-3	32-9	26-15	9-1	3	0	97	91	6	f	t	t
+63	1	2002	49	33	0.598	\N	3	35-19	17-7	27-14	22-19	8-2	3	3	96	94	2	t	f	t
+64	10	2002	58	24	0.707	\N	3	37-15	16-8	34-7	24-17	7-3	3	3	101	94	7	t	t	t
+65	29	2002	44	38	0.537	\N	4	31-23	17-11	21-20	23-18	6-4	8	6	94	93	1	f	f	f
+66	5	2002	57	25	0.695	\N	4	34-18	16-8	30-11	27-14	7-3	4	1	105	101	4	f	f	t
+67	13	2002	50	32	0.61	\N	5	29-23	15-9	29-12	21-20	6-4	11	8	99	96	3	f	f	t
+68	16	2002	44	38	0.537	\N	5	29-25	12-12	27-14	17-24	5-5	8	8	101	99	2	f	t	t
+69	18	2002	43	39	0.524	\N	6	31-23	14-11	22-19	21-20	5-5	9	9	91	89	2	f	f	t
+70	20	2002	49	33	0.598	\N	6	27-25	14-10	30-11	19-22	5-5	12	12	97	94	3	f	f	t
+71	23	2002	45	37	0.549	\N	7	26-26	13-11	26-15	19-22	4-6	16	16	98	95	3	f	f	t
+72	24	2002	42	40	0.512	\N	7	29-25	17-11	24-17	18-23	8-2	10	8	91	92	0	f	f	t
+73	17	2002	42	40	0.512	\N	8	27-27	13-15	25-16	17-24	6-4	10	8	97	97	0	f	f	t
+74	25	2002	44	38	0.537	\N	8	25-27	8-16	25-16	19-22	4-6	17	14	96	95	1	f	t	t
+75	12	2002	41	41	0.5	\N	9	29-25	17-11	25-16	16-25	3-7	11	9	98	98	0	f	f	f
+76	9	2002	39	43	0.476	\N	9	23-29	9-15	25-16	14-27	3-7	22	22	96	96	0	f	f	f
+77	27	2002	37	45	0.451	\N	10	25-29	12-13	22-19	15-26	3-7	15	15	93	94	-1	f	f	t
+78	19	2002	36	46	0.439	\N	10	24-28	12-12	23-18	13-28	3-7	25	25	95	96	-1	f	f	t
+79	8	2002	28	54	0.341	\N	11	18-34	9-15	18-23	10-31	2-8	33	30	92	97	-5	f	f	t
+80	11	2002	36	46	0.439	\N	11	22-32	10-14	18-23	18-23	4-6	16	16	87	89	-2	f	f	f
+81	6	2002	27	55	0.329	\N	12	19-33	8-16	20-21	7-34	5-5	34	31	92	98	-6	f	f	t
+82	0	2002	33	49	0.402	\N	12	21-33	11-17	23-18	10-31	4-6	19	17	94	98	-4	f	f	t
+83	26	2002	23	59	0.28	\N	13	14-38	7-17	15-26	8-33	4-6	38	35	90	97	-7	f	f	f
+84	15	2002	30	52	0.366	\N	13	20-34	4-20	19-22	11-30	3-7	22	22	92	96	-4	f	f	f
+85	7	2002	21	61	0.256	\N	14	13-39	5-19	14-27	7-34	3-7	40	40	98	103	-5	f	f	f
+86	2	2002	29	53	0.354	\N	14	20-34	12-16	20-21	9-32	4-6	23	21	95	99	-3	f	f	t
+87	4	2002	21	61	0.256	\N	15	13-41	5-23	14-27	7-34	4-6	31	29	90	98	-9	f	f	f
+88	22	2003	60	22	0.732	\N	1	36-16	17-7	33-8	27-14	8-2	0	0	96	90	5	t	t	t
+89	28	2003	50	32	0.61	\N	1	35-19	19-9	30-11	20-21	4-6	0	0	91	88	4	t	t	t
+90	14	2003	49	33	0.598	\N	2	34-20	16-8	33-8	16-25	5-5	1	0	95	90	5	f	t	t
+91	21	2003	59	23	0.72	\N	2	36-16	17-7	35-6	24-17	8-2	1	0	102	95	7	f	t	t
+92	17	2003	48	34	0.585	\N	3	35-19	19-9	32-9	16-25	6-4	2	2	97	93	4	f	f	t
+93	5	2003	60	22	0.732	\N	3	34-18	18-6	33-8	27-14	6-4	0	0	103	95	8	f	f	t
+94	13	2003	51	31	0.622	\N	4	33-19	15-9	33-8	18-23	5-5	9	9	98	96	2	f	f	t
+95	18	2003	48	34	0.585	\N	4	35-19	17-7	25-16	23-18	5-5	2	1	97	95	2	f	f	t
+96	10	2003	50	32	0.61	\N	5	33-19	15-9	31-10	19-22	8-2	10	9	100	98	2	t	t	t
+97	3	2003	47	35	0.573	\N	5	32-22	17-11	29-12	18-23	7-3	3	3	94	92	2	f	t	t
+98	1	2003	44	38	0.537	\N	6	31-23	13-12	25-16	19-22	6-4	6	5	93	93	0	t	f	t
+99	20	2003	50	32	0.61	\N	6	29-23	15-9	27-14	23-18	5-5	10	9	95	93	3	f	f	t
+100	25	2003	47	35	0.573	\N	7	30-22	15-9	29-12	18-23	4-6	13	13	95	92	2	f	t	t
+101	12	2003	42	40	0.512	\N	7	32-22	16-12	25-16	17-24	8-2	8	8	100	99	0	f	f	t
+102	16	2003	42	40	0.512	\N	8	31-23	14-11	26-15	16-25	4-6	8	7	99	98	0	f	t	t
+103	19	2003	44	38	0.537	\N	8	26-26	12-12	30-11	14-27	6-4	16	15	96	94	1	f	f	t
+104	8	2003	43	39	0.524	\N	9	26-26	11-13	28-13	15-26	6-4	17	17	94	92	2	f	f	t
+105	27	2003	37	45	0.451	\N	9	26-28	11-13	23-18	14-27	3-7	13	12	92	93	-1	f	f	t
+106	23	2003	40	42	0.488	\N	10	26-26	11-13	25-16	15-26	5-5	20	19	92	92	0	f	f	f
+107	15	2003	37	45	0.451	\N	10	23-31	9-15	24-17	13-28	5-5	13	12	96	97	-1	f	f	f
+108	7	2003	38	44	0.463	\N	11	19-33	8-16	24-17	14-27	3-7	22	21	102	104	-1	f	f	f
+109	0	2003	35	47	0.427	\N	11	24-30	14-14	26-15	9-32	6-4	15	15	94	98	-4	f	f	t
+110	4	2003	30	52	0.366	\N	12	22-32	12-16	27-14	3-38	4-6	20	20	95	100	-5	f	f	f
+111	26	2003	28	54	0.341	\N	12	12-40	5-19	20-21	8-33	2-8	32	32	98	101	-3	f	f	f
+112	9	2003	27	55	0.329	\N	13	16-36	6-18	16-25	11-30	5-5	33	32	94	98	-4	f	f	f
+113	11	2003	25	57	0.305	\N	13	18-36	5-19	16-25	9-32	3-7	25	24	86	91	-5	f	f	f
+114	24	2003	24	58	0.293	\N	14	18-36	10-18	15-26	9-32	1-9	26	26	91	97	-6	f	f	t
+115	6	2003	17	65	0.207	\N	14	8-44	3-21	13-28	4-37	1-9	43	43	84	92	-8	f	f	t
+116	2	2003	17	65	0.207	\N	15	9-45	5-23	14-27	3-38	3-7	33	33	91	101	-10	f	f	t
+117	17	2004	61	21	0.744	1	1	61-21	61-21	34-7	27-14	8-2	0	0	91	86	6	t	t	t
+118	13	2004	58	24	0.707	2	1	58-24	58-24	31-10	27-14	9-1	0	0	95	89	5	t	t	t
+119	14	2004	47	35	0.573	9	2	47-35	47-35	28-13	19-22	5-5	14	0	90	88	3	t	t	t
+120	10	2004	56	26	0.683	4	2	56-26	56-26	34-7	22-19	7-3	2	0	98	94	4	t	t	t
+121	22	2004	57	25	0.695	3	3	57-25	57-25	33-8	24-17	10-0	1	1	91	84	7	f	f	t
+122	28	2004	54	28	0.659	6	3	54-28	54-28	31-10	23-18	8-2	7	7	90	84	6	f	f	t
+123	21	2004	55	27	0.671	5	4	55-27	55-27	34-7	21-20	4-6	3	1	103	98	5	f	f	t
+124	11	2004	42	40	0.512	12	4	42-40	42-40	29-12	13-28	7-3	19	5	90	90	1	t	t	t
+125	3	2004	41	41	0.5	14	5	41-41	41-41	25-16	16-25	4-6	20	20	92	92	0	t	t	t
+126	5	2004	52	30	0.634	7	5	52-30	52-30	36-5	16-25	8-2	6	6	105	101	4	f	f	f
+127	26	2004	50	32	0.61	8	6	50-32	50-32	31-10	19-22	4-6	8	8	97	94	2	f	f	t
+128	12	2004	41	41	0.5	15	6	41-41	41-41	27-14	14-27	5-5	20	20	98	97	1	f	f	f
+129	15	2004	39	43	0.476	17	7	39-43	39-43	23-18	16-25	6-4	22	8	92	93	-1	f	f	f
+130	8	2004	45	37	0.549	10	7	45-37	45-37	27-14	18-23	3-7	13	13	90	88	2	f	f	t
+131	6	2004	43	39	0.524	11	8	43-39	43-39	29-12	14-27	6-4	15	15	97	96	1	f	f	t
+132	1	2004	36	46	0.439	20	8	36-46	36-46	19-22	17-24	4-6	25	11	95	97	-1	t	t	t
+133	2	2004	35	47	0.427	21	9	35-47	35-47	23-18	12-29	3-7	26	26	93	96	-3	f	t	t
+134	25	2004	42	40	0.512	13	9	42-40	42-40	28-13	14-27	5-5	16	16	89	90	-1	f	t	t
+135	24	2004	33	49	0.402	22	10	33-49	33-49	18-23	15-26	3-7	28	28	85	88	-3	f	f	t
+136	20	2004	41	41	0.5	16	10	41-41	41-41	25-16	16-25	4-6	17	15	91	92	-1	f	f	t
+137	7	2004	37	45	0.451	18	11	37-45	37-45	27-14	10-31	5-5	21	19	93	94	-1	f	f	f
+138	18	2004	33	49	0.402	23	11	33-49	33-49	21-20	12-29	3-7	28	14	88	90	-2	f	f	t
+139	0	2004	28	54	0.341	26	12	28-54	28-54	18-23	10-31	5-5	33	33	93	97	-5	f	f	t
+140	23	2004	37	45	0.451	19	12	37-45	37-45	21-20	16-25	3-7	21	19	97	98	-1	f	f	f
+141	27	2004	25	57	0.305	27	13	25-57	25-57	17-24	8-33	2-8	36	22	92	97	-6	f	f	t
+142	19	2004	29	53	0.354	24	13	29-53	29-53	18-23	11-30	5-5	29	27	94	98	-4	f	f	t
+143	9	2004	28	54	0.341	25	14	28-54	28-54	18-23	10-31	1-9	30	28	95	99	-5	f	f	f
+144	4	2004	23	59	0.28	28	14	23-59	23-59	14-27	9-32	3-7	38	38	90	96	-6	f	f	f
+145	16	2004	21	61	0.256	29	15	21-61	21-61	11-30	10-31	2-8	40	26	94	101	-7	f	t	f
+146	19	2005	62	20	0.756	1	1	38-14	12-4	31-10	31-10	7-3	0	0	110	103	7	t	t	t
+147	11	2005	59	23	0.72	2	1	41-11	15-1	35-6	24-17	5-5	0	0	102	95	7	t	t	t
+148	22	2005	59	23	0.72	3	2	36-16	10-6	38-3	21-20	6-4	3	0	96	88	8	f	t	t
+149	28	2005	54	28	0.659	5	2	35-17	8-8	32-9	22-19	9-1	5	0	93	89	4	f	t	t
+150	4	2005	47	35	0.573	10	3	32-20	8-8	27-14	20-21	6-4	12	7	94	93	1	f	f	t
+151	5	2005	58	24	0.707	4	3	35-17	11-5	29-12	29-12	9-1	4	1	102	97	6	f	f	t
+152	1	2005	45	37	0.549	11	4	30-22	8-8	27-14	18-23	6-4	14	0	101	100	1	f	t	t
+153	23	2005	52	30	0.634	6	4	31-21	11-5	26-15	26-15	2-8	10	0	99	97	2	f	t	t
+154	8	2005	51	31	0.622	\N	5	33-19	10-6	26-15	25-16	7-3	11	8	95	91	4	f	f	t
+155	27	2005	45	37	0.549	12	5	28-24	10-6	29-12	16-25	4-6	14	14	101	101	0	f	f	t
+156	21	2005	50	32	0.61	8	6	28-24	10-6	30-11	20-21	6-4	12	12	104	102	2	f	f	t
+157	17	2005	44	38	0.537	14	6	29-23	9-7	25-16	19-22	6-4	15	10	93	92	1	f	f	t
+158	6	2005	49	33	0.598	9	7	28-24	9-7	31-10	18-23	8-2	13	3	100	98	2	f	f	t
+159	18	2005	43	39	0.524	16	7	33-19	8-8	25-16	18-23	8-2	16	2	99	100	-1	f	f	t
+160	14	2005	42	40	0.512	17	8	31-21	11-5	24-17	18-23	8-2	17	3	91	93	-2	f	f	t
+161	26	2005	45	37	0.549	13	8	27-25	7-9	26-15	19-22	4-6	17	14	93	91	2	f	f	t
+162	2	2005	42	40	0.512	18	9	26-26	7-9	29-12	13-28	4-6	17	12	97	96	1	f	f	f
+163	13	2005	44	38	0.537	15	9	30-22	10-6	24-17	20-21	6-4	18	8	97	95	1	f	f	f
+164	16	2005	36	46	0.439	20	10	21-31	6-10	24-17	12-29	2-8	23	23	100	102	-2	f	f	f
+165	9	2005	37	45	0.451	\N	10	20-32	6-10	27-14	10-31	5-5	25	25	96	96	-1	f	f	f
+166	10	2005	34	48	0.415	21	11	21-31	6-10	22-19	12-29	1-9	28	28	99	102	-3	t	f	f
+167	24	2005	33	49	0.402	23	11	20-32	7-9	22-19	11-30	3-7	26	12	100	101	-2	f	f	f
+168	15	2005	33	49	0.402	24	12	21-31	6-10	22-19	11-30	4-6	26	12	97	100	-2	f	f	f
+169	7	2005	34	48	0.415	22	12	20-32	6-10	20-21	14-27	7-3	28	28	99	101	-2	f	f	f
+170	20	2005	27	55	0.329	26	13	13-39	4-12	18-23	9-32	3-7	35	25	93	97	-4	f	f	f
+171	12	2005	30	52	0.366	25	13	24-28	8-8	23-18	7-34	3-7	29	24	97	100	-3	f	f	f
+172	25	2005	26	56	0.317	27	14	20-32	6-10	18-23	8-33	4-6	36	26	93	97	-4	f	f	f
+173	29	2005	18	64	0.22	28	14	11-41	7-9	14-27	4-37	3-7	41	41	94	100	-6	f	f	f
+174	0	2005	13	69	0.159	30	15	8-44	2-14	9-32	4-37	2-8	46	46	93	102	-10	f	f	f
+175	3	2005	18	64	0.22	29	15	10-42	2-14	11-30	7-34	1-9	44	41	88	96	-7	f	t	f
+176	22	2006	63	19	0.768	\N	1	42-10	13-3	34-7	29-12	7-3	0	0	96	89	7	t	f	t
+177	28	2006	64	18	0.78	1	1	39-13	13-3	37-4	27-14	6-4	0	0	97	90	7	t	t	t
+178	5	2006	60	22	0.732	\N	2	37-15	13-3	34-7	26-15	6-4	3	3	99	93	6	f	f	t
+179	11	2006	52	30	0.634	5	2	35-17	13-3	31-10	21-20	4-6	12	0	100	96	4	f	t	t
+180	2	2006	50	32	0.61	6	3	34-18	11-5	31-10	19-22	7-3	14	14	98	95	2	f	f	t
+181	19	2006	54	28	0.659	4	3	32-20	10-6	31-10	23-18	5-5	9	0	108	103	6	f	t	t
+182	6	2006	44	38	0.537	12	4	25-27	10-6	26-15	18-23	4-6	19	0	100	100	0	f	t	f
+183	14	2006	49	33	0.598	7	4	33-19	10-6	29-12	20-21	5-5	15	0	94	92	1	f	t	t
+184	26	2006	49	33	0.598	8	5	31-21	6-10	30-11	19-22	8-2	14	14	92	88	4	f	f	t
+185	27	2006	42	40	0.512	13	5	29-23	8-8	27-14	15-26	5-5	22	10	102	100	2	f	f	t
+186	17	2006	41	41	0.5	14	6	24-28	6-10	27-14	14-27	6-4	23	23	94	92	2	f	f	t
+187	9	2006	47	35	0.573	9	6	27-25	7-9	27-14	20-21	5-5	16	7	97	96	2	f	f	t
+188	10	2006	45	37	0.549	10	7	27-25	9-7	27-14	18-23	7-3	18	9	99	97	3	f	f	t
+189	4	2006	41	41	0.5	\N	7	30-22	4-12	21-20	20-21	9-1	23	23	98	97	1	f	f	t
+190	21	2006	44	38	0.537	11	8	30-22	10-6	27-14	17-24	8-2	19	10	99	97	2	f	f	t
+191	12	2006	40	42	0.481	\N	8	29-23	6-10	24-16	15-26	4-6	24	24	98	99	-1	f	f	t
+192	25	2006	41	41	0.5	16	9	26-26	11-5	22-19	19-22	7-3	22	3	92	95	-3	f	f	f
+193	18	2006	38	44	0.463	19	9	22-30	10-6	23-18	15-26	4-6	26	11	99	101	-2	f	f	f
+194	3	2006	38	44	0.463	18	10	25-27	7-9	24-17	14-27	3-7	25	25	93	96	-3	f	f	f
+195	16	2006	36	46	0.439	\N	10	24-28	9-7	26-15	10-31	8-2	28	16	95	96	-1	f	f	f
+196	23	2006	35	47	0.427	21	11	20-32	10-6	22-19	13-28	6-4	28	9	103	106	-3	f	f	f
+197	1	2006	33	49	0.402	25	11	19-33	10-6	21-20	12-29	3-7	31	16	98	100	-2	f	f	f
+198	8	2006	34	48	0.415	\N	12	19-33	1-15	15-26	19-22	2-8	29	29	90	92	-2	f	f	f
+199	24	2006	27	55	0.329	26	12	20-32	6-10	15-26	12-29	1-9	37	22	101	104	-3	f	f	f
+200	29	2006	26	56	0.317	27	13	18-34	5-11	17-24	9-32	6-4	38	26	97	101	-4	f	f	f
+201	7	2006	34	48	0.415	23	13	19-33	4-12	21-20	13-28	4-6	29	20	98	100	-1	f	f	f
+202	0	2006	26	56	0.317	28	14	19-33	5-11	18-23	8-33	4-6	38	26	97	102	-5	f	f	f
+203	13	2006	33	49	0.402	24	14	20-32	6-10	24-17	9-32	3-7	30	11	92	94	-2	f	f	f
+204	15	2006	23	59	0.28	\N	15	15-37	4-12	15-26	8-33	4-6	41	26	96	102	-6	f	f	f
+205	20	2006	21	61	0.256	30	15	10-42	3-13	15-26	6-35	1-9	42	23	89	98	-9	f	f	f
+206	5	2007	67	15	0.817	\N	1	40-12	14-2	36-5	31-10	6-4	0	0	100	93	7	t	t	t
+207	28	2007	53	29	0.646	\N	1	36-16	9-7	26-15	27-14	7-3	0	0	96	92	4	t	t	t
+208	2	2007	50	32	0.61	\N	2	31-21	10-6	30-11	20-21	7-3	3	3	97	93	4	f	f	t
+209	19	2007	61	21	0.744	\N	2	36-16	11-5	33-8	28-13	7-3	6	0	110	103	7	f	t	t
+210	24	2007	47	35	0.573	\N	3	33-19	11-5	30-11	17-24	7-3	6	0	99	98	1	f	t	t
+211	22	2007	58	24	0.707	\N	3	38-14	10-6	31-10	27-14	6-4	9	9	99	90	8	f	f	t
+212	11	2007	44	38	0.537	\N	4	27-25	9-7	27-14	17-24	5-5	9	0	95	96	-1	f	t	t
+213	25	2007	51	31	0.622	\N	4	32-20	10-6	31-10	20-21	4-6	16	0	101	99	3	f	t	t
+214	8	2007	52	30	0.634	\N	5	28-24	8-8	28-13	24-17	6-4	15	15	97	92	5	f	f	t
+215	4	2007	49	33	0.598	\N	5	36-16	12-4	31-10	18-23	7-3	4	4	99	94	5	f	f	t
+216	6	2007	45	37	0.549	\N	6	27-25	9-7	23-18	22-19	9-1	22	6	105	104	2	f	f	t
+217	14	2007	41	41	0.5	\N	6	31-21	10-6	24-17	17-24	8-2	12	6	98	98	-1	f	f	t
+218	10	2007	42	40	0.512	\N	7	28-24	10-6	25-16	17-24	4-6	25	19	103	103	0	t	t	t
+219	27	2007	41	41	0.5	\N	7	27-25	8-8	26-15	15-26	2-8	12	3	104	105	-1	f	f	t
+220	16	2007	40	42	0.488	\N	8	26-26	9-7	25-16	15-26	7-3	13	4	95	94	1	f	t	t
+221	7	2007	42	40	0.512	\N	8	28-24	6-10	30-11	12-29	9-1	25	19	107	107	0	f	f	t
+222	17	2007	35	47	0.427	\N	9	25-27	8-8	22-19	13-28	4-6	18	18	96	98	-2	f	f	f
+223	9	2007	40	42	0.488	\N	9	23-29	8-8	25-16	15-26	5-5	27	21	96	96	0	f	f	f
+224	18	2007	35	47	0.427	\N	10	24-28	9-7	21-20	14-27	6-4	18	12	95	98	-3	f	f	t
+225	3	2007	39	43	0.476	\N	10	23-29	6-10	24-17	15-26	7-3	28	28	96	97	-2	f	t	t
+226	21	2007	33	49	0.402	\N	11	18-34	5-11	20-21	13-28	3-7	34	28	101	103	-2	f	f	f
+227	29	2007	33	49	0.402	\N	11	24-28	9-7	20-21	13-28	6-4	20	11	97	101	-4	f	f	t
+228	20	2007	32	50	0.39	\N	12	19-33	7-9	18-23	14-27	3-7	35	19	94	98	-4	f	f	f
+229	15	2007	33	49	0.402	\N	12	22-30	3-13	19-22	14-27	2-8	20	14	97	100	-3	f	f	f
+230	13	2007	32	50	0.39	\N	13	18-34	6-10	20-21	12-29	2-8	35	19	96	100	-4	f	f	f
+231	0	2007	30	52	0.366	\N	13	17-35	5-11	18-23	12-29	3-7	23	14	94	98	-5	f	f	t
+232	23	2007	31	51	0.378	\N	14	18-34	8-8	20-21	11-30	1-9	36	20	99	102	-3	f	f	f
+233	12	2007	28	54	0.341	\N	14	15-37	1-15	18-23	10-31	3-7	25	25	100	104	-4	f	f	f
+234	1	2007	24	58	0.293	\N	15	16-36	7-9	12-29	12-29	2-8	29	23	96	99	-3	t	f	f
+235	26	2007	22	60	0.268	\N	15	14-38	2-14	14-27	8-33	4-6	45	45	102	107	-5	f	f	f
+236	10	2008	57	25	0.695	\N	1	37-15	12-4	30-11	27-14	8-2	0	0	109	101	7	t	t	t
+237	1	2008	66	16	0.805	\N	1	41-11	14-2	35-6	31-10	9-1	0	0	101	90	10	t	t	t
+238	3	2008	56	26	0.683	\N	2	34-18	10-6	30-11	26-15	6-4	1	0	101	96	5	f	t	t
+239	28	2008	59	23	0.72	\N	2	37-15	11-5	34-7	25-16	8-2	7	0	97	90	7	f	t	t
+240	16	2008	52	30	0.634	\N	3	38-14	12-4	25-16	27-14	6-4	14	0	104	99	5	f	t	t
+241	22	2008	56	26	0.683	\N	3	33-19	10-6	34-7	22-19	7-3	1	0	95	91	5	f	f	t
+242	2	2008	45	37	0.549	\N	4	28-24	7-9	27-14	18-23	5-5	21	14	96	97	0	f	f	t
+243	25	2008	54	28	0.659	\N	4	33-19	10-6	37-4	17-24	7-3	3	0	106	99	7	f	t	t
+244	27	2008	43	39	0.524	\N	5	29-23	10-6	25-16	18-23	5-5	23	9	99	99	0	f	f	t
+245	8	2008	55	27	0.671	\N	5	33-19	8-8	31-10	24-17	6-4	2	1	97	92	5	f	f	t
+246	24	2008	41	41	0.5	\N	6	29-23	10-6	25-16	16-25	4-6	25	25	100	97	3	f	f	t
+247	19	2008	55	27	0.671	\N	6	31-21	10-6	30-11	25-16	7-3	2	2	110	105	5	f	f	t
+248	18	2008	40	42	0.488	\N	7	25-27	7-9	22-19	18-23	3-7	26	26	97	96	0	f	f	t
+249	5	2008	51	31	0.622	\N	7	33-19	10-6	34-7	17-24	6-4	6	5	100	96	5	f	f	t
+250	0	2008	37	45	0.451	\N	8	24-28	9-7	25-16	12-29	5-5	29	15	98	100	-2	f	f	t
+251	6	2008	50	32	0.61	\N	8	31-21	10-6	33-8	17-24	6-4	7	4	111	107	4	f	f	t
+252	17	2008	36	46	0.439	\N	9	24-28	5-11	21-20	15-26	7-3	30	23	104	105	-1	f	f	f
+253	7	2008	48	34	0.585	\N	9	28-24	10-6	27-14	21-20	4-6	9	9	111	109	2	f	f	f
+254	20	2008	41	41	0.5	\N	10	26-26	11-5	28-13	13-28	3-7	16	13	95	96	-1	f	f	f
+255	14	2008	34	48	0.415	\N	10	26-26	4-12	21-20	13-28	3-7	32	32	96	101	-5	f	f	f
+256	4	2008	33	49	0.402	\N	11	24-28	11-5	20-21	13-28	5-5	33	26	97	100	-3	f	f	f
+257	21	2008	38	44	0.463	\N	11	21-31	3-13	26-15	12-29	6-4	19	19	103	105	-2	f	f	f
+258	9	2008	23	59	0.28	\N	12	13-39	5-11	13-28	10-31	2-8	34	34	94	101	-7	f	f	f
+259	29	2008	32	50	0.39	\N	12	19-33	7-9	21-20	11-30	5-5	34	20	97	101	-4	f	f	f
+260	13	2008	22	60	0.268	\N	13	14-38	3-13	15-26	7-34	3-7	35	32	96	102	-7	f	f	f
+261	12	2008	26	56	0.317	\N	13	18-34	6-10	19-22	7-34	2-8	40	33	97	104	-7	f	f	f
+262	15	2008	23	59	0.28	\N	14	20-32	5-11	15-26	8-33	3-7	43	43	97	104	-7	f	f	f
+263	26	2008	22	60	0.268	\N	14	11-41	2-14	14-27	8-33	3-7	35	34	101	107	-6	f	f	f
+264	23	2008	20	62	0.244	\N	15	12-40	6-10	13-28	7-34	3-7	37	34	98	106	-9	f	f	f
+265	11	2008	15	67	0.183	\N	15	8-44	2-14	9-32	6-35	2-8	51	37	91	100	-9	f	f	f
+266	2	2009	66	16	0.805	\N	1	40-12	13-3	39-2	27-14	7-3	0	0	100	91	9	t	t	t
+267	10	2009	65	17	0.793	\N	1	44-8	14-2	36-5	29-12	7-3	0	0	107	99	8	t	t	t
+268	6	2009	54	28	0.659	\N	2	35-17	12-4	33-8	21-20	8-2	11	0	104	101	3	f	t	t
+269	1	2009	62	20	0.756	\N	2	41-11	15-1	35-6	27-14	8-2	4	0	101	93	8	f	t	t
+270	22	2009	54	28	0.659	\N	3	36-16	10-6	28-13	26-15	6-4	11	0	97	93	4	f	t	t
+271	16	2009	59	23	0.72	\N	3	37-15	14-2	32-9	27-14	5-5	7	0	101	94	7	f	t	t
+272	0	2009	47	35	0.573	\N	4	30-22	11-5	31-10	16-25	5-5	19	12	98	97	2	f	f	t
+273	20	2009	54	28	0.659	\N	4	32-20	11-5	34-7	20-21	9-1	11	0	99	94	5	f	f	t
+274	11	2009	43	39	0.524	\N	5	28-24	9-7	28-13	15-26	5-5	23	16	98	98	0	f	f	t
+275	8	2009	53	29	0.646	\N	5	35-17	9-7	33-8	20-21	6-4	12	1	98	94	4	f	f	t
+276	5	2009	50	32	0.61	\N	6	29-23	7-9	32-9	18-23	7-3	15	4	102	100	2	f	f	t
+277	18	2009	41	41	0.5	\N	6	25-27	6-10	24-17	17-24	4-6	25	21	97	97	0	f	f	t
+278	4	2009	41	41	0.5	\N	7	24-28	9-7	28-13	13-28	7-3	25	25	102	102	0	f	f	t
+279	3	2009	49	33	0.598	\N	7	30-22	9-7	28-13	21-20	4-6	16	5	96	94	2	f	f	t
+280	28	2009	39	43	0.476	\N	8	26-26	7-9	21-20	18-23	4-6	27	27	94	95	0	f	f	t
+281	25	2009	48	34	0.585	\N	8	33-19	10-6	33-8	15-26	3-7	17	6	104	101	3	f	f	t
+282	19	2009	46	36	0.561	\N	9	30-22	11-5	28-13	18-23	6-4	19	19	109	108	2	f	f	f
+283	17	2009	36	46	0.439	\N	9	23-29	7-9	25-16	11-30	6-4	30	30	105	106	-1	f	f	f
+284	29	2009	35	47	0.427	\N	10	20-32	5-11	23-18	12-29	3-7	31	24	94	95	-1	f	f	f
+285	7	2009	29	53	0.354	\N	10	18-34	6-10	21-20	8-33	4-6	36	36	109	112	-4	f	f	f
+286	13	2009	24	58	0.293	\N	11	13-39	3-13	11-30	13-28	4-6	41	30	98	103	-5	f	f	f
+287	14	2009	34	48	0.415	\N	11	23-29	8-8	19-22	15-26	4-6	32	28	98	101	-2	f	f	f
+288	12	2009	34	48	0.415	\N	12	21-31	4-12	22-19	12-29	3-7	32	32	99	100	-1	f	f	f
+289	26	2009	24	58	0.293	\N	12	14-38	5-11	16-25	8-33	6-4	41	30	94	99	-5	f	f	f
+290	23	2009	23	59	0.28	\N	13	15-37	4-12	15-26	8-33	3-7	42	31	97	103	-6	f	f	f
+291	24	2009	33	49	0.402	\N	13	22-30	6-10	18-23	15-26	6-4	33	29	99	102	-3	f	f	f
+292	9	2009	19	63	0.232	\N	14	10-42	2-14	11-30	8-33	1-9	46	46	95	104	-9	f	f	f
+293	15	2009	32	50	0.39	\N	14	20-32	5-11	20-21	12-29	3-7	34	30	105	108	-3	f	f	f
+294	27	2009	19	63	0.232	\N	15	10-42	1-15	13-28	6-35	3-7	47	40	96	104	-7	f	f	f
+295	21	2009	17	65	0.207	\N	15	16-36	7-9	11-30	6-35	1-9	48	48	101	109	-9	f	f	f
+296	2	2010	61	21	0.744	\N	1	38-14	12-4	35-6	26-15	4-6	0	0	102	96	7	t	t	t
+297	10	2010	57	25	0.695	\N	1	35-17	13-3	34-7	23-18	4-6	0	0	102	97	5	t	t	t
+298	5	2010	55	27	0.671	\N	2	33-19	10-6	28-13	27-14	8-2	2	0	102	99	3	f	t	t
+299	16	2010	59	23	0.72	\N	2	39-13	10-6	34-7	25-16	9-1	2	0	103	95	7	f	t	t
+300	0	2010	53	29	0.646	\N	3	32-20	8-8	34-7	19-22	7-3	8	6	102	97	5	f	f	t
+301	19	2010	54	28	0.659	\N	3	35-17	12-4	32-9	22-19	8-2	3	3	110	105	5	f	f	t
+302	6	2010	53	29	0.646	\N	4	34-18	12-4	34-7	19-22	6-4	4	0	106	102	4	f	t	t
+303	1	2010	50	32	0.61	\N	4	33-19	13-3	24-17	26-15	3-7	11	0	99	96	4	f	t	t
+304	25	2010	53	29	0.646	\N	5	31-21	8-8	32-9	21-20	6-4	4	0	104	99	5	f	f	t
+305	11	2010	47	35	0.573	\N	5	32-20	9-7	24-17	23-18	9-1	14	12	97	94	2	f	f	t
+306	12	2010	46	36	0.561	\N	6	31-21	10-6	28-13	18-23	6-4	15	15	98	96	2	f	f	t
+307	20	2010	50	32	0.61	\N	6	33-19	8-8	26-15	24-17	7-3	7	3	98	95	3	f	f	t
+308	29	2010	44	38	0.537	\N	7	27-25	10-6	31-10	13-28	6-4	17	15	95	94	1	f	f	t
+309	22	2010	50	32	0.61	\N	7	31-21	9-7	29-12	21-20	6-4	7	5	101	96	5	f	f	t
+310	4	2010	41	41	0.5	\N	8	28-24	10-6	24-17	17-24	7-3	20	20	97	99	-2	f	f	t
+311	23	2010	50	32	0.61	\N	8	28-24	9-7	27-14	23-18	6-4	7	3	101	98	3	f	f	t
+312	8	2010	42	40	0.512	\N	9	28-24	9-7	23-18	19-22	6-4	15	13	102	103	0	f	f	f
+313	24	2010	40	42	0.488	\N	9	29-23	11-5	25-16	15-26	5-5	21	10	104	106	-2	f	f	f
+314	17	2010	32	50	0.39	\N	10	23-29	6-10	23-18	9-32	6-4	29	29	101	104	-3	f	f	f
+315	26	2010	40	42	0.488	\N	10	22-30	5-11	23-18	17-24	2-8	17	15	102	104	-2	f	f	f
+316	3	2010	37	45	0.451	\N	11	26-26	7-9	24-17	13-28	3-7	20	18	100	103	-2	f	f	f
+317	15	2010	29	53	0.354	\N	11	20-32	6-10	18-23	11-30	3-7	32	21	102	106	-4	f	f	f
+318	9	2010	29	53	0.354	\N	12	15-37	5-11	21-20	8-33	2-8	28	28	96	102	-6	f	f	f
+319	28	2010	27	55	0.329	\N	12	18-34	2-14	17-24	10-31	4-6	34	34	94	99	-5	f	f	f
+320	18	2010	27	55	0.329	\N	13	14-38	7-9	12-29	15-26	2-8	34	23	98	102	-4	f	f	f
+321	7	2010	26	56	0.317	\N	13	15-37	5-11	18-23	8-33	6-4	31	31	109	112	-4	f	f	f
+322	27	2010	26	56	0.317	\N	14	18-34	3-13	15-26	11-30	5-5	35	33	96	101	-5	f	f	f
+323	21	2010	25	57	0.305	\N	14	16-36	5-11	18-23	7-34	1-9	32	32	100	104	-4	f	f	f
+324	13	2010	15	67	0.183	\N	15	8-44	3-13	10-31	5-36	1-9	42	38	98	108	-10	f	f	f
+325	14	2010	12	70	0.146	\N	15	8-44	3-13	8-33	4-37	3-7	49	38	92	102	-9	f	f	f
+326	22	2011	61	21	0.744	\N	1	38-14	10-6	36-5	25-16	4-6	0	0	104	98	6	t	t	t
+327	4	2011	62	20	0.756	\N	1	39-13	15-1	36-5	26-15	9-1	0	0	99	91	7	t	t	t
+328	10	2011	57	25	0.695	\N	2	36-16	12-4	30-11	27-14	5-5	4	0	101	95	6	f	t	t
+329	11	2011	58	24	0.707	\N	2	38-14	13-3	30-11	28-13	8-2	4	0	102	95	7	f	t	t
+330	5	2011	57	25	0.695	\N	3	35-17	8-8	29-12	28-13	6-4	4	4	100	96	4	f	f	t
+331	1	2011	56	26	0.683	\N	3	37-15	13-3	33-8	23-18	5-5	6	0	97	91	5	f	t	t
+332	16	2011	52	30	0.634	\N	4	36-16	11-5	29-12	23-18	6-4	10	6	99	94	5	f	f	t
+333	23	2011	55	27	0.671	\N	4	33-19	13-3	30-11	25-16	7-3	6	0	105	101	4	f	t	t
+334	6	2011	50	32	0.61	\N	5	30-22	9-7	33-8	17-24	7-3	11	5	107	103	5	f	f	t
+335	0	2011	44	38	0.537	\N	5	31-21	9-7	24-17	20-21	4-6	18	14	95	96	-1	f	f	t
+336	20	2011	48	34	0.585	\N	6	30-22	10-6	30-11	18-23	6-4	13	7	96	95	2	f	f	t
+337	15	2011	42	40	0.512	\N	6	28-24	10-6	23-18	19-22	7-3	20	14	107	106	1	f	f	t
+338	3	2011	46	36	0.561	\N	7	27-25	9-7	28-13	18-23	5-5	15	15	95	94	1	f	f	t
+339	18	2011	41	41	0.5	\N	7	25-27	9-7	26-15	15-26	4-6	21	15	99	98	2	f	f	t
+340	26	2011	46	36	0.561	\N	8	30-22	8-8	30-11	16-25	6-4	15	15	100	98	2	f	f	t
+341	17	2011	37	45	0.451	\N	8	28-24	9-7	24-17	13-28	5-5	25	25	100	101	-1	f	f	t
+342	8	2011	43	39	0.524	\N	9	25-27	5-11	25-16	18-23	5-5	18	18	106	104	2	f	f	f
+343	12	2011	35	47	0.427	\N	9	26-26	6-10	22-19	13-28	6-4	27	27	92	93	-1	f	f	f
+344	29	2011	34	48	0.415	\N	10	22-30	4-12	21-20	13-28	4-6	28	24	93	97	-4	f	f	f
+345	19	2011	40	42	0.488	\N	10	23-29	9-7	23-18	17-24	4-6	21	17	105	106	-1	f	f	f
+346	28	2011	30	52	0.366	\N	11	22-30	7-9	21-20	9-32	5-5	32	32	97	101	-4	f	f	f
+347	25	2011	39	43	0.476	\N	11	21-31	7-9	21-20	18-23	3-7	22	16	99	101	-2	f	f	f
+348	7	2011	36	46	0.439	\N	12	21-31	5-11	26-15	10-31	6-4	25	21	103	106	-2	f	f	f
+349	14	2011	24	58	0.293	\N	12	13-39	3-13	19-22	5-36	1-9	38	32	94	100	-6	f	f	f
+350	27	2011	23	59	0.28	\N	13	16-36	3-13	20-21	3-38	6-4	39	35	97	105	-7	f	f	f
+351	9	2011	32	50	0.39	\N	13	19-33	7-9	23-18	9-32	4-6	29	25	99	102	-3	f	f	f
+352	21	2011	24	58	0.293	\N	14	15-37	7-9	11-30	13-28	4-6	37	33	99	105	-5	f	f	f
+353	24	2011	22	60	0.268	\N	14	14-38	5-11	16-25	6-35	2-8	40	34	99	105	-6	f	f	f
+354	2	2011	19	63	0.232	\N	15	15-37	3-13	12-29	7-34	5-5	43	43	95	104	-9	f	f	f
+355	13	2011	17	65	0.207	\N	15	7-45	1-15	12-29	5-36	0-10	44	38	101	108	-7	f	f	f
+356	4	2012	50	16	0.758	\N	1	38-10	13-1	26-7	24-9	7-3	0	0	96	88	8	t	t	t
+357	22	2012	50	16	0.758	\N	1	35-13	12-4	28-5	22-11	10-0	0	0	104	96	7	t	t	t
+358	11	2012	46	20	0.697	\N	2	35-13	9-5	28-5	18-15	6-4	4	0	98	93	6	f	t	t
+359	23	2012	47	19	0.712	\N	2	34-14	10-3	26-7	21-12	6-4	3	0	103	97	6	f	t	t
+360	10	2012	41	25	0.621	\N	3	32-16	9-5	26-7	15-18	6-4	9	0	97	96	1	f	t	t
+361	17	2012	42	24	0.636	\N	3	29-19	9-4	23-10	19-14	8-2	8	8	98	94	3	f	f	t
+362	1	2012	39	27	0.591	\N	4	32-16	8-6	24-9	15-18	7-3	11	0	92	89	3	f	t	t
+363	26	2012	41	25	0.621	\N	4	26-22	7-8	26-7	15-18	8-2	9	9	95	93	2	f	f	t
+364	0	2012	40	26	0.606	\N	5	31-17	11-3	23-10	17-16	7-3	10	6	97	93	3	f	f	t
+365	9	2012	40	26	0.606	\N	5	29-19	7-7	24-9	16-17	6-4	10	1	98	95	3	f	f	t
+366	6	2012	38	28	0.576	\N	6	22-26	6-7	20-13	18-15	8-2	12	9	104	101	3	f	f	t
+367	16	2012	37	29	0.561	\N	6	30-18	8-7	21-12	16-17	4-6	13	9	94	93	1	f	f	t
+368	5	2012	36	30	0.545	\N	7	26-22	8-5	23-10	13-20	5-5	14	14	96	95	1	f	f	t
+369	15	2012	36	30	0.545	\N	7	28-20	8-6	22-11	14-19	7-3	14	3	98	95	3	f	f	t
+370	18	2012	35	31	0.53	\N	8	28-20	7-6	19-14	16-17	6-4	15	4	94	89	4	f	f	t
+371	25	2012	36	30	0.545	\N	8	25-23	9-4	25-8	11-22	7-3	14	11	100	99	1	f	f	t
+372	8	2012	34	32	0.515	\N	9	23-25	6-8	22-11	12-21	3-7	16	16	98	98	0	f	f	f
+373	12	2012	31	35	0.47	\N	9	24-24	7-8	17-16	14-19	3-7	19	19	99	99	0	f	f	f
+374	19	2012	33	33	0.5	\N	10	23-25	9-5	19-14	14-19	4-6	17	8	98	99	0	f	f	f
+375	28	2012	25	41	0.379	\N	10	20-28	4-11	18-15	7-26	4-6	25	25	91	96	-5	f	f	f
+376	20	2012	28	38	0.424	\N	11	20-28	4-10	20-13	8-25	1-9	22	19	97	98	-1	f	f	f
+377	24	2012	23	43	0.348	\N	11	15-33	7-8	13-20	10-23	3-7	27	16	91	94	-3	f	f	f
+378	13	2012	26	40	0.394	\N	12	19-29	4-9	13-20	13-20	1-9	24	21	98	100	-2	f	f	f
+379	14	2012	22	44	0.333	\N	12	16-32	5-9	9-24	13-20	3-7	28	17	93	99	-6	f	f	f
+380	2	2012	21	45	0.318	\N	13	13-35	3-12	11-22	10-23	2-8	29	29	93	100	-7	f	f	f
+381	7	2012	23	43	0.348	\N	13	16-32	7-8	12-21	11-22	1-9	27	18	98	101	-3	f	f	f
+382	21	2012	22	44	0.333	\N	14	16-32	3-10	16-17	6-27	3-7	28	19	99	104	-6	f	f	f
+383	27	2012	20	46	0.303	\N	14	16-32	7-7	11-22	9-24	8-2	30	26	94	98	-5	f	f	f
+384	3	2012	21	45	0.318	\N	15	14-34	3-11	11-22	10-23	6-4	29	29	90	93	-4	f	f	f
+385	29	2012	7	59	0.106	\N	15	5-43	1-14	4-29	3-30	0-10	43	39	87	101	-14	f	f	f
+386	11	2013	66	16	0.805	\N	1	41-11	15-1	37-4	29-12	9-1	0	0	103	95	8	t	t	t
+387	23	2013	60	22	0.732	\N	1	39-13	10-6	34-7	26-15	7-3	0	0	106	97	9	t	t	t
+388	15	2013	54	28	0.659	\N	2	37-15	10-6	31-10	23-18	8-2	12	0	100	96	4	f	t	t
+389	22	2013	58	24	0.707	\N	2	33-19	12-4	35-6	23-18	3-7	2	0	103	97	6	f	t	t
+390	17	2013	49	32	0.605	\N	3	31-20	13-3	30-11	19-21	5-5	16.5	0	95	91	4	f	t	t
+391	6	2013	57	25	0.695	\N	3	38-14	11-5	38-3	19-22	8-2	3	3	106	101	5	f	f	t
+392	14	2013	49	33	0.598	\N	4	36-16	11-5	26-15	23-18	7-3	17	5	97	95	2	f	f	t
+393	9	2013	56	26	0.683	\N	4	35-17	11-5	32-9	24-17	7-3	4	0	101	95	6	f	t	t
+394	26	2013	56	26	0.683	\N	5	34-18	10-6	32-9	24-17	8-2	4	2	93	89	4	f	f	t
+395	4	2013	45	37	0.549	\N	5	34-18	9-7	24-17	21-20	5-5	21	4.5	93	93	0	f	f	t
+396	0	2013	44	38	0.537	\N	6	29-23	11-5	25-16	19-22	4-6	22	22	98	98	0	f	f	t
+397	7	2013	47	35	0.573	\N	6	28-24	9-7	28-13	19-22	6-4	13	9	101	100	1	f	f	t
+398	10	2013	45	37	0.549	\N	7	28-24	8-8	29-12	16-25	8-2	15	11	102	101	1	f	f	t
+399	1	2013	41	40	0.506	\N	7	27-24	7-9	27-13	14-27	4-6	24.5	12.5	97	97	0	f	f	t
+400	8	2013	45	37	0.549	\N	8	24-28	6-10	29-12	16-25	6-4	15	13	106	102	3	f	f	t
+401	12	2013	38	44	0.463	\N	8	24-28	7-9	21-20	17-24	3-7	28	11.5	99	100	-2	f	f	t
+402	18	2013	34	48	0.415	\N	9	22-30	7-9	23-18	11-30	5-5	32	20	93	97	-3	f	f	f
+403	25	2013	43	39	0.524	\N	9	26-26	9-7	30-11	13-28	7-3	17	17	98	98	0	f	f	f
+404	5	2013	41	41	0.5	\N	10	24-28	7-9	24-17	17-24	6-4	19	17	101	102	-1	f	f	f
+405	24	2013	34	48	0.415	\N	10	22-30	5-11	21-20	13-28	7-3	32	20	97	99	-1	f	f	f
+406	20	2013	33	49	0.402	\N	11	18-34	6-10	22-19	11-30	0-10	27	27	98	101	-3	f	f	f
+407	28	2013	29	53	0.354	\N	11	25-27	8-8	18-23	11-30	5-5	37	20.5	95	99	-4	f	f	f
+408	27	2013	29	53	0.354	\N	12	15-37	5-11	22-19	7-34	3-7	37	37	93	96	-3	f	f	f
+409	13	2013	31	51	0.378	\N	12	17-35	4-12	20-21	11-30	5-5	29	29	96	98	-2	f	f	f
+410	21	2013	28	54	0.341	\N	13	14-38	7-9	20-21	8-33	2-8	32	28	100	105	-5	f	f	f
+411	2	2013	24	58	0.293	\N	13	18-34	3-13	14-27	10-31	2-8	42	25.5	97	101	-5	f	f	f
+412	3	2013	27	55	0.329	\N	14	15-37	5-11	16-25	11-30	2-8	33	31	94	98	-4	f	f	f
+413	29	2013	21	61	0.256	\N	14	18-34	6-10	15-26	6-35	4-6	45	45	93	103	-9	f	f	f
+414	16	2013	20	62	0.244	\N	15	10-42	3-13	12-29	8-33	2-8	46	46	94	101	-7	f	f	f
+415	19	2013	25	57	0.305	\N	15	17-35	5-11	17-24	8-33	2-8	35	31	95	102	-6	f	f	f
+416	22	2014	62	20	0.756	\N	1	38-14	12-4	32-9	30-11	6-4	0	0	105	98	8	t	t	t
+417	17	2014	56	26	0.683	\N	1	38-14	12-4	35-6	21-20	4-6	0	0	97	92	4	t	t	t
+418	23	2014	59	23	0.72	\N	2	36-16	11-5	34-7	25-16	6-4	3	0	106	100	6	f	t	t
+419	11	2014	54	28	0.659	\N	2	34-18	12-4	32-9	22-19	4-6	2	0	102	97	5	f	t	t
+420	24	2014	48	34	0.585	\N	3	32-20	11-5	26-15	22-19	7-3	8	0	101	98	3	f	t	t
+421	9	2014	57	25	0.695	\N	3	36-16	12-4	34-7	23-18	7-3	5	0	108	101	7	f	t	t
+422	8	2014	54	28	0.659	\N	4	31-21	11-5	33-8	21-20	5-5	8	8	108	103	5	f	f	t
+423	4	2014	48	34	0.585	\N	4	35-17	11-5	27-14	21-20	8-2	8	8	94	92	2	f	f	t
+424	20	2014	54	28	0.659	\N	5	31-21	13-3	31-10	23-18	9-1	8	5	107	103	4	f	f	t
+425	27	2014	44	38	0.537	\N	5	33-19	10-6	22-19	22-19	7-3	12	10	101	99	1	f	f	t
+426	14	2014	44	38	0.537	\N	6	26-26	9-7	28-13	16-25	5-5	12	4	99	100	-1	f	f	t
+427	7	2014	51	31	0.622	\N	6	31-21	11-5	27-14	24-17	6-4	11	6	104	99	5	f	f	t
+428	29	2014	43	39	0.524	\N	7	30-22	6-10	25-16	18-23	8-2	13	11	97	97	0	f	f	t
+429	26	2014	50	32	0.61	\N	7	29-23	4-12	27-14	23-18	7-3	12	12	96	95	2	f	f	t
+430	0	2014	38	44	0.463	\N	8	28-24	8-8	24-17	14-27	7-3	18	16	101	101	0	f	f	t
+431	5	2014	49	33	0.598	\N	8	29-23	9-7	26-15	23-18	6-4	13	13	105	102	2	f	f	t
+432	19	2014	48	34	0.585	\N	9	28-24	8-8	26-15	22-19	5-5	14	9	105	103	3	f	f	f
+433	15	2014	37	45	0.451	\N	9	26-26	10-6	19-22	18-23	7-3	19	11	99	99	-1	f	f	f
+434	13	2014	40	42	0.488	\N	10	23-29	7-9	24-17	16-25	4-6	22	19	107	104	3	f	f	f
+435	2	2014	33	49	0.402	\N	10	21-31	7-9	19-22	14-27	5-5	23	23	98	102	-3	f	f	f
+436	28	2014	29	53	0.354	\N	11	23-29	6-10	17-24	12-29	3-7	27	27	101	105	-4	f	f	f
+437	6	2014	36	46	0.439	\N	11	20-32	5-11	22-19	14-27	4-6	26	23	104	107	-2	f	f	f
+438	1	2014	25	57	0.305	\N	12	21-31	5-11	16-25	9-32	2-8	31	23	96	101	-4	f	f	f
+439	3	2014	34	48	0.415	\N	12	15-37	4-12	22-19	12-29	2-8	28	28	100	102	-3	f	f	f
+440	21	2014	28	54	0.341	\N	13	15-37	3-13	17-24	11-30	3-7	34	29	101	103	-3	f	f	f
+441	16	2014	23	59	0.28	\N	13	17-35	4-12	19-22	4-37	3-7	33	31	97	102	-5	f	f	f
+442	18	2014	19	63	0.232	\N	14	14-38	5-11	10-31	9-32	4-6	37	29	99	110	-10	f	f	f
+443	10	2014	27	55	0.329	\N	14	15-37	6-10	14-27	13-28	3-7	35	30	103	109	-6	f	f	f
+444	12	2014	15	67	0.183	\N	15	12-40	4-12	10-31	5-36	1-9	41	41	95	104	-8	f	f	f
+445	25	2014	25	57	0.305	\N	15	13-39	4-12	16-25	9-32	2-8	37	34	95	102	-7	f	f	f
+446	0	2015	60	22	0.732	\N	1	38-14	12-4	35-6	25-16	5-5	0	0	103	97	5	t	t	t
+447	7	2015	67	15	0.817	\N	1	42-10	13-3	39-2	28-13	8-2	0	0	110	100	10	t	t	t
+448	2	2015	53	29	0.646	\N	2	35-17	11-5	31-10	22-19	7-3	7	0	103	99	4	f	t	t
+449	8	2015	56	26	0.683	\N	2	33-19	8-8	30-11	26-15	7-3	11	0	104	100	3	f	t	t
+450	9	2015	56	26	0.683	\N	3	37-15	12-4	30-11	26-15	9-1	11	11	107	100	7	f	f	t
+451	4	2015	50	32	0.61	\N	3	33-19	8-8	27-14	23-18	7-3	10	3	101	98	3	f	f	t
+452	24	2015	49	33	0.598	\N	4	33-19	11-5	27-14	22-19	7-3	11	0	104	101	3	f	t	t
+453	20	2015	51	31	0.622	\N	4	31-21	11-5	32-9	19-22	4-6	16	0	103	99	4	f	t	t
+454	27	2015	46	36	0.561	\N	5	30-22	10-6	29-12	17-24	6-4	14	14	99	98	1	f	f	t
+455	26	2015	55	27	0.671	\N	5	35-17	9-7	31-10	24-17	5-5	12	1	98	95	3	f	f	t
+456	12	2015	41	41	0.5	\N	6	30-22	7-9	23-18	18-23	5-5	19	12	98	97	0	f	f	t
+457	22	2015	55	27	0.671	\N	6	32-20	8-8	33-8	22-19	9-1	12	1	103	97	6	f	f	t
+458	5	2015	50	32	0.61	\N	7	29-23	7-9	27-14	23-18	5-5	17	6	105	102	3	f	f	t
+459	1	2015	40	42	0.488	\N	7	28-24	12-4	21-20	19-22	8-2	20	9	101	101	0	f	f	t
+460	3	2015	45	37	0.549	\N	8	29-23	8-8	28-13	17-24	7-3	22	11	99	99	1	f	f	t
+461	14	2015	38	44	0.463	\N	8	24-28	10-6	19-22	19-22	6-4	22	11	98	101	-3	f	f	t
+462	17	2015	38	44	0.463	\N	9	28-24	8-8	23-18	15-26	7-3	22	15	97	97	0	f	f	f
+463	23	2015	45	37	0.549	\N	9	25-27	10-6	29-12	16-25	4-6	22	6	104	102	2	f	f	f
+464	11	2015	37	45	0.451	\N	10	25-27	6-10	20-21	17-24	4-6	23	23	95	97	-3	f	f	f
+465	19	2015	39	43	0.476	\N	10	21-31	6-10	22-19	17-24	1-9	28	28	102	103	-1	f	f	f
+466	29	2015	33	49	0.402	\N	11	25-27	8-8	19-22	14-27	2-8	27	27	94	97	-3	f	f	f
+467	25	2015	38	44	0.463	\N	11	23-29	9-7	21-20	17-24	7-3	29	13	95	95	0	f	f	f
+468	28	2015	32	50	0.39	\N	12	23-29	6-10	18-23	14-27	4-6	28	21	99	100	-1	f	f	f
+469	6	2015	30	52	0.366	\N	12	19-33	6-10	19-22	11-30	3-7	37	21	101	105	-4	f	f	f
+470	21	2015	29	53	0.354	\N	13	18-34	7-9	18-23	11-30	3-7	38	38	101	105	-4	f	f	f
+471	16	2015	25	57	0.305	\N	13	15-37	4-12	13-28	12-29	3-7	35	35	96	101	-6	f	f	f
+472	10	2015	21	61	0.256	\N	14	9-43	2-14	12-29	9-32	2-8	46	46	98	105	-7	f	f	f
+473	18	2015	18	64	0.22	\N	14	12-40	2-14	12-29	6-35	0-10	42	31	92	101	-9	f	f	f
+474	15	2015	17	65	0.207	\N	15	11-41	5-11	10-31	7-34	3-7	43	32	92	101	-9	f	f	f
+475	13	2015	16	66	0.195	\N	15	7-45	4-12	9-32	7-34	0-10	51	35	98	107	-9	f	f	f
+476	2	2016	57	25	0.695	\N	1	35-17	8-8	33-8	24-17	6-4	0	0	104	98	6	t	t	t
+477	7	2016	73	9	0.89	\N	1	46-6	15-1	39-2	34-7	8-2	0	0	115	104	11	t	t	t
+478	22	2016	67	15	0.817	\N	2	43-9	14-2	40-1	27-14	6-4	6	0	104	93	11	f	t	t
+479	24	2016	56	26	0.683	\N	2	39-13	14-2	32-9	24-17	7-3	1	0	103	98	5	f	t	t
+480	23	2016	55	27	0.671	\N	3	37-15	13-3	32-9	23-18	5-5	18	0	110	103	7	f	t	t
+481	11	2016	48	34	0.585	\N	3	31-21	10-6	28-13	20-21	6-4	9	0	100	98	2	f	t	t
+482	9	2016	53	29	0.646	\N	4	31-21	9-7	29-12	24-17	8-2	20	20	105	100	4	f	f	t
+483	0	2016	48	34	0.585	\N	4	29-23	8-8	27-14	21-20	6-4	9	0	103	99	4	f	f	t
+484	1	2016	48	34	0.585	\N	5	31-21	10-6	28-13	20-21	6-4	9	8	106	103	3	f	f	t
+485	20	2016	44	38	0.537	\N	5	29-23	11-5	28-13	16-25	7-3	29	11	105	104	1	f	f	t
+486	5	2016	42	40	0.512	\N	6	27-25	7-9	23-18	19-22	7-3	31	25	102	103	0	f	f	t
+487	29	2016	48	34	0.585	\N	6	33-19	8-8	30-11	18-23	7-3	9	0	103	101	3	f	f	t
+488	17	2016	45	37	0.549	\N	7	30-22	8-8	26-15	19-22	7-3	12	12	102	100	2	f	f	t
+489	26	2016	42	40	0.512	\N	7	25-27	7-9	26-15	16-25	1-9	31	25	99	101	-2	f	f	t
+490	8	2016	41	41	0.5	\N	8	28-24	8-8	23-18	18-23	6-4	32	26	107	106	0	f	f	t
+491	28	2016	44	38	0.537	\N	8	29-23	10-6	26-15	18-23	6-4	13	13	102	101	1	f	f	t
+492	4	2016	42	40	0.512	\N	9	25-27	10-6	26-15	16-25	6-4	15	15	102	103	-1	f	f	f
+493	25	2016	40	42	0.488	\N	9	24-28	8-8	24-17	16-25	5-5	33	15	98	96	2	f	f	f
+494	27	2016	41	41	0.5	\N	10	30-22	10-6	22-19	19-22	6-4	16	7	104	105	-1	f	f	f
+495	21	2016	33	49	0.402	\N	10	19-33	8-8	18-23	15-26	5-5	40	40	107	109	-2	f	f	f
+496	6	2016	33	49	0.402	\N	11	18-34	4-12	18-23	15-26	3-7	40	22	102	105	-3	f	f	f
+497	16	2016	35	47	0.427	\N	11	21-31	4-12	23-18	12-29	6-4	22	13	102	104	-2	f	f	f
+498	12	2016	33	49	0.402	\N	12	21-31	4-12	23-18	10-31	3-7	24	24	99	103	-4	f	f	f
+499	3	2016	30	52	0.366	\N	12	20-32	4-12	21-20	9-32	4-6	43	37	103	107	-4	f	f	f
+500	13	2016	29	53	0.354	\N	13	18-34	4-12	14-27	15-26	5-5	44	26	102	106	-4	f	f	f
+501	15	2016	32	50	0.39	\N	13	21-31	8-8	18-23	14-27	3-7	25	24	98	101	-3	f	f	f
+502	14	2016	21	61	0.256	\N	14	12-40	6-10	14-27	7-34	0-10	36	35	99	106	-7	f	f	f
+503	19	2016	23	59	0.28	\N	14	17-35	6-10	14-27	9-32	3-7	50	50	101	108	-7	f	f	f
+504	10	2016	17	65	0.207	\N	15	8-44	2-14	12-29	5-36	2-8	56	56	97	107	-10	f	f	f
+505	18	2016	10	72	0.122	\N	15	3-49	2-14	7-34	3-38	1-9	47	46	97	108	-10	f	f	f
+506	1	2017	53	29	0.646	\N	1	36-16	11-5	30-11	23-18	7-3	0	0	108	105	3	t	t	t
+507	7	2017	67	15	0.817	\N	1	42-10	14-2	36-5	31-10	9-1	0	0	116	104	12	t	t	t
+508	2	2017	51	31	0.622	\N	2	35-17	8-8	31-10	20-21	4-6	2	0	110	107	3	f	t	t
+509	22	2017	61	21	0.744	\N	2	36-16	11-5	31-10	30-11	5-5	6	0	105	98	7	f	t	t
+510	8	2017	55	27	0.671	\N	3	36-16	10-6	30-11	25-16	5-5	12	6	115	110	6	f	f	t
+511	24	2017	51	31	0.622	\N	3	34-18	14-2	28-13	23-18	8-2	2	2	107	103	4	f	f	t
+512	9	2017	51	31	0.622	\N	4	31-21	10-6	29-12	22-19	8-2	16	16	109	104	4	f	f	t
+513	27	2017	49	33	0.598	\N	4	32-20	8-8	30-11	19-22	5-5	4	0	109	107	2	f	t	t
+514	0	2017	43	39	0.524	\N	5	30-22	6-10	23-18	20-21	6-4	10	6	103	104	-1	f	f	t
+515	25	2017	51	31	0.622	\N	5	31-21	8-8	29-12	22-19	7-3	16	0	101	97	4	f	t	t
+516	12	2017	42	40	0.512	\N	6	27-25	10-6	23-18	19-22	5-5	11	9	104	104	0	f	f	t
+517	23	2017	47	35	0.573	\N	6	29-23	10-6	28-13	19-22	6-4	20	4	107	106	1	f	f	t
+518	17	2017	42	40	0.512	\N	7	26-26	8-8	29-12	13-28	6-4	11	9	105	105	0	f	f	t
+519	26	2017	43	39	0.524	\N	7	28-24	8-8	24-17	19-22	3-7	24	18	100	100	0	f	f	t
+520	4	2017	41	41	0.5	\N	8	28-24	9-7	25-16	16-25	7-3	12	10	103	102	0	f	f	t
+521	20	2017	41	41	0.5	\N	8	28-24	11-5	25-16	16-25	7-3	26	10	108	108	-1	f	f	t
+522	6	2017	40	42	0.488	\N	9	24-28	6-10	22-19	18-23	5-5	27	11	112	111	1	f	f	f
+523	11	2017	41	41	0.5	\N	9	27-25	9-7	23-18	18-23	6-4	12	8	103	102	1	f	f	f
+524	3	2017	34	48	0.415	\N	10	20-32	6-10	21-20	13-28	4-6	33	27	104	106	-2	f	f	f
+525	28	2017	37	45	0.451	\N	10	21-31	5-11	24-17	13-28	3-7	16	14	101	102	-1	f	f	f
+526	5	2017	33	49	0.402	\N	11	19-33	5-11	21-20	12-29	2-8	34	28	98	101	-3	f	f	f
+527	29	2017	36	46	0.439	\N	11	22-30	10-6	22-19	14-27	4-6	17	13	105	105	0	f	f	f
+528	15	2017	31	51	0.378	\N	12	22-30	5-11	19-22	12-29	4-6	22	22	104	108	-4	f	f	f
+529	21	2017	32	50	0.39	\N	12	21-31	7-9	17-24	15-26	5-5	35	35	103	107	-4	f	f	f
+530	13	2017	31	51	0.378	\N	13	18-34	5-11	20-21	11-30	3-7	36	20	106	107	-1	f	f	f
+531	16	2017	29	53	0.354	\N	13	20-32	7-9	16-25	13-28	3-7	24	20	101	108	-7	f	f	f
+532	10	2017	26	56	0.317	\N	14	16-36	6-10	17-24	9-32	5-5	41	41	105	111	-7	f	f	f
+533	18	2017	28	54	0.341	\N	14	19-33	7-9	17-24	11-30	1-9	25	25	102	108	-6	f	f	f
+534	14	2017	20	62	0.244	\N	15	11-41	3-13	13-28	7-34	5-5	33	33	106	113	-7	f	f	f
+535	19	2017	24	58	0.293	\N	15	11-41	3-13	15-26	9-32	2-8	43	43	108	113	-6	f	f	f
+536	8	2018	65	17	0.793	\N	1	41-11	12-4	34-7	31-10	7-3	0	0	112	104	8	t	t	t
+537	24	2018	59	23	0.72	\N	1	40-12	12-4	34-7	25-16	6-4	0	0	112	104	8	t	t	t
+538	1	2018	55	27	0.671	\N	2	33-19	12-4	27-14	28-13	6-4	4	4	104	100	4	f	f	t
+539	7	2018	58	24	0.707	\N	2	34-18	13-3	29-12	29-12	4-6	7	0	113	107	6	f	t	t
+540	20	2018	49	33	0.598	\N	3	31-21	9-7	28-13	21-20	5-5	16	0	106	103	3	f	t	t
+541	18	2018	52	30	0.634	\N	3	34-18	9-7	30-11	22-19	10-0	7	7	110	105	5	f	f	t
+542	2	2018	50	32	0.61	\N	4	35-17	11-5	29-12	21-20	7-3	9	0	111	110	1	f	t	t
+543	23	2018	48	34	0.585	\N	4	28-24	5-11	27-14	21-20	5-5	17	1	108	104	3	f	f	t
+544	17	2018	48	34	0.585	\N	5	32-20	10-6	27-14	21-20	7-3	11	2	106	104	1	f	f	t
+545	25	2018	48	34	0.585	\N	5	34-18	7-9	28-13	20-21	7-3	17	1	104	100	4	f	f	t
+546	11	2018	44	38	0.537	\N	6	31-21	11-5	26-15	18-23	5-5	15	0	103	103	0	f	t	t
+547	3	2018	48	34	0.585	\N	6	27-25	9-7	24-17	24-17	6-4	17	17	112	110	1	f	f	t
+548	22	2018	47	35	0.573	\N	7	29-23	9-7	33-8	14-27	5-5	18	18	103	100	3	f	f	t
+549	12	2018	44	38	0.537	\N	7	27-25	6-10	25-16	19-22	6-4	15	6	106	107	0	f	f	t
+550	27	2018	43	39	0.524	\N	8	28-24	8-8	23-18	20-21	3-7	16	1	107	106	1	f	f	t
+551	13	2018	47	35	0.573	\N	8	34-18	10-6	30-11	17-24	6-4	18	2	110	107	2	f	f	t
+552	28	2018	39	43	0.476	\N	9	24-28	9-7	25-16	14-27	7-3	20	11	104	104	0	f	f	f
+553	6	2018	46	36	0.561	\N	9	28-24	9-7	31-10	15-26	7-3	19	3	110	109	1	f	f	f
+554	29	2018	36	46	0.439	\N	10	22-30	11-5	21-20	15-26	5-5	23	8	108	108	0	f	f	f
+555	9	2018	42	40	0.512	\N	10	24-28	12-4	22-19	20-21	4-6	23	16	109	109	0	f	f	f
+556	10	2018	35	47	0.427	\N	11	19-33	6-10	20-21	15-26	3-7	30	23	108	110	-2	f	f	f
+557	15	2018	29	53	0.354	\N	11	17-35	6-10	19-22	10-31	3-7	30	30	104	108	-4	f	f	f
+558	21	2018	27	55	0.329	\N	12	14-38	5-11	14-27	13-28	4-6	38	31	99	106	-7	f	f	f
+559	14	2018	28	54	0.341	\N	12	19-33	1-15	15-26	13-28	5-5	31	31	107	110	-4	f	f	f
+560	5	2018	24	58	0.293	\N	13	14-38	5-11	15-26	9-32	2-8	41	41	102	105	-3	f	f	f
+561	4	2018	27	55	0.329	\N	13	21-31	4-12	17-24	10-31	3-7	32	23	103	110	-7	f	f	f
+562	16	2018	25	57	0.305	\N	14	15-37	5-11	17-24	8-33	4-6	34	19	103	108	-5	f	f	f
+563	26	2018	22	60	0.268	\N	14	18-34	5-11	16-25	6-35	3-7	43	43	99	106	-6	f	f	f
+564	19	2018	21	61	0.256	\N	15	15-37	4-12	10-31	11-30	2-8	44	37	104	113	-9	f	f	f
+565	0	2018	24	58	0.293	\N	15	12-40	5-11	16-25	8-33	3-7	35	20	103	109	-5	f	f	f
+566	7	2019	57	25	0.695	\N	1	35-17	13-3	30-11	27-14	8-2	0	0	118	111	6	t	t	t
+567	12	2019	60	22	0.732	\N	1	40-12	14-2	33-8	27-14	7-3	0	0	118	109	9	t	t	t
+568	6	2019	54	28	0.659	\N	2	34-18	12-4	34-7	20-21	5-5	3	0	111	107	4	f	t	t
+569	24	2019	58	24	0.707	\N	2	36-16	12-4	32-9	26-15	7-3	2	0	114	108	6	f	t	t
+570	20	2019	53	29	0.646	\N	3	29-23	6-10	32-9	21-20	8-2	4	1	115	110	4	f	f	t
+571	18	2019	51	31	0.622	\N	3	31-21	8-8	31-10	20-21	4-6	9	7	115	112	3	f	f	t
+572	8	2019	53	29	0.646	\N	4	32-20	10-6	31-10	22-19	8-2	4	0	114	109	5	f	t	t
+573	1	2019	49	33	0.598	\N	4	35-17	10-6	28-13	21-20	6-4	11	9	112	108	4	f	f	t
+574	17	2019	48	34	0.585	\N	5	33-19	11-5	29-12	19-22	4-6	12	12	108	105	3	f	f	t
+575	25	2019	50	32	0.61	\N	5	30-22	8-8	29-12	21-20	8-2	7	4	112	106	5	f	f	t
+576	14	2019	42	40	0.512	\N	6	29-23	8-8	23-18	19-22	6-4	18	16	112	112	0	f	f	t
+577	23	2019	49	33	0.598	\N	6	28-24	9-7	27-14	22-19	7-3	8	5	114	111	3	f	f	t
+578	22	2019	48	34	0.585	\N	7	30-22	10-6	32-9	16-25	6-4	9	5	112	110	2	f	f	t
+579	16	2019	42	40	0.512	\N	7	30-22	10-6	25-16	17-24	8-2	18	0	107	107	1	f	t	t
+580	28	2019	41	41	0.5	\N	8	27-25	8-8	26-15	15-26	4-6	19	19	107	107	0	f	f	t
+581	9	2019	48	34	0.585	\N	8	28-24	11-5	26-15	22-19	6-4	9	9	115	114	1	f	f	t
+582	29	2019	39	43	0.476	\N	9	29-23	10-6	25-16	14-27	6-4	21	3	111	112	-1	f	f	f
+583	21	2019	39	43	0.476	\N	9	21-31	4-12	24-17	15-26	3-7	18	18	114	115	-1	f	f	f
+584	11	2019	39	43	0.476	\N	10	23-29	7-9	19-22	20-21	4-6	21	3	106	106	0	f	f	f
+585	10	2019	37	45	0.451	\N	10	25-27	9-7	22-19	15-26	6-4	20	20	112	113	-2	f	f	f
+586	27	2019	32	50	0.39	\N	11	19-33	7-9	22-19	10-31	2-8	28	10	114	117	-3	f	f	f
+587	13	2019	36	46	0.439	\N	11	22-30	5-11	25-16	11-30	4-6	21	18	112	114	-2	f	f	f
+588	0	2019	29	53	0.354	\N	12	16-36	6-10	17-24	12-29	5-5	31	13	113	119	-6	f	f	f
+589	26	2019	33	49	0.402	\N	12	24-28	8-8	21-20	12-29	4-6	24	20	104	106	-3	f	f	f
+590	3	2019	33	49	0.402	\N	13	23-29	8-8	19-22	14-27	3-7	24	20	115	117	-1	f	f	f
+591	4	2019	22	60	0.268	\N	13	16-36	3-13	9-32	13-28	2-8	38	38	105	113	-8	f	f	f
+592	5	2019	33	49	0.402	\N	14	18-34	4-12	24-17	9-32	5-5	24	20	109	110	-1	f	f	f
+593	2	2019	19	63	0.232	\N	14	15-37	4-12	13-28	6-35	0-10	41	41	104	114	-10	f	f	f
+594	19	2019	19	63	0.232	\N	15	11-41	3-13	12-29	7-34	2-8	38	38	108	117	-9	f	f	f
+595	15	2019	17	65	0.207	\N	15	11-41	2-14	9-32	8-33	3-7	43	41	105	114	-9	f	f	f
+596	10	2020	52	19	0.732	\N	1	36-10	10-3	25-10	27-9	4-6	0	0	113	108	6	t	t	t
+597	12	2020	56	17	0.767	\N	1	37-7	13-1	30-5	26-12	3-7	0	0	119	109	10	t	t	t
+598	24	2020	53	19	0.736	\N	2	34-11	9-5	26-10	27-9	9-1	2.5	0	113	107	6	f	t	t
+599	9	2020	49	23	0.681	\N	2	32-16	8-6	27-9	22-14	6-4	3.5	3.5	116	110	6	f	f	t
+600	1	2020	48	24	0.667	\N	3	30-13	9-6	26-10	22-14	6-4	7.5	5	114	107	6	f	f	t
+601	6	2020	46	27	0.63	\N	3	29-16	12-2	26-11	20-16	4-6	7	0	111	109	2	f	t	t
+602	17	2020	45	28	0.616	\N	4	28-19	8-7	25-11	20-17	7-3	11	11	109	107	2	f	f	t
+603	8	2020	44	28	0.611	\N	4	28-19	8-5	24-12	20-16	5-5	8.5	0	118	115	3	f	t	t
+604	11	2020	44	29	0.603	\N	5	30-13	10-4	29-7	15-22	4-6	12	0	112	109	3	f	t	t
+605	23	2020	44	28	0.611	\N	5	27-19	8-5	23-14	21-14	6-4	8.5	1.5	110	108	2	f	f	t
+606	18	2020	43	30	0.589	\N	6	28-18	11-5	31-4	12-26	5-5	13	10.5	111	108	2	f	f	t
+607	25	2020	44	28	0.611	\N	6	24-21	5-7	23-12	21-16	4-6	8.5	1.5	111	109	2	f	f	t
+608	14	2020	35	37	0.486	\N	7	23-23	6-10	20-16	15-21	7-3	20.5	18	112	112	-1	f	f	t
+609	5	2020	43	32	0.573	\N	7	27-20	10-4	20-18	23-14	4-6	11	2.5	117	112	5	f	f	t
+610	20	2020	35	39	0.473	\N	8	20-27	5-8	21-15	14-24	7-3	18.5	11.5	115	116	-1	f	f	t
+611	16	2020	33	40	0.452	\N	8	20-23	9-5	18-17	15-23	5-5	23	11	107	108	-1	f	f	t
+612	27	2020	25	47	0.347	\N	9	18-27	5-9	16-20	9-27	2-8	30.5	18.5	114	119	-5	f	f	f
+613	26	2020	34	39	0.466	\N	9	20-26	4-9	20-17	14-22	3-7	19	10.5	113	114	-1	f	f	f
+614	29	2020	23	42	0.354	\N	10	16-24	2-7	10-21	13-21	4-6	29	17	103	110	-7	f	f	f
+615	19	2020	34	39	0.466	\N	10	19-27	6-9	17-22	17-17	9-1	19	19	114	113	0	f	f	f
+616	4	2020	22	43	0.338	\N	11	15-28	7-9	14-20	8-23	3-7	30	30	107	110	-3	f	f	f
+617	22	2020	32	39	0.451	\N	11	20-23	7-6	19-15	13-24	6-4	20	11.5	114	115	-1	f	f	f
+618	21	2020	31	41	0.431	\N	12	23-23	8-5	16-19	15-22	4-6	21.5	21.5	110	112	-2	f	f	f
+619	15	2020	21	45	0.318	\N	12	15-28	2-11	11-22	10-23	4-6	31.5	29	106	112	-6	f	f	f
+620	28	2020	20	46	0.303	\N	13	12-31	5-10	11-22	9-24	1-9	32.5	32.5	107	111	-4	f	f	f
+621	3	2020	30	42	0.417	\N	13	18-30	4-9	15-21	15-21	4-6	22.5	14	116	117	-1	f	f	f
+622	13	2020	19	45	0.297	\N	14	9-30	2-10	8-24	11-21	3-7	29.5	22.5	113	118	-4	f	f	f
+623	0	2020	20	47	0.299	\N	14	11-32	6-7	14-20	6-27	4-6	33	21	112	120	-8	f	f	f
+624	2	2020	19	46	0.292	\N	15	12-32	4-10	11-25	8-21	4-6	33	33	107	115	-8	f	f	f
+625	7	2020	15	50	0.231	\N	15	9-34	2-11	8-26	7-24	3-7	34	34	106	115	-9	f	f	f
+626	18	2021	49	23	0.681	\N	1	31-11	10-2	29-7	20-16	8-2	0	0	114	108	6	t	t	t
+627	25	2021	52	20	0.722	\N	1	28-14	7-5	31-5	21-15	7-3	0	0	116	107	9	t	t	t
+628	14	2021	48	24	0.667	\N	2	26-16	8-4	28-8	20-16	6-4	1	1	119	114	5	f	f	t
+629	19	2021	51	21	0.708	\N	2	30-12	7-5	27-9	24-12	7-3	1	0	115	109	6	f	t	t
+630	6	2021	47	25	0.653	\N	3	26-16	9-3	25-11	22-14	6-4	5	5	115	110	5	f	f	t
+631	12	2021	46	26	0.639	\N	3	30-12	11-1	26-10	20-16	8-2	3	0	120	114	6	f	t	t
+632	15	2021	41	31	0.569	\N	4	25-17	4-8	25-11	16-20	7-3	8	8	107	105	2	f	f	t
+633	9	2021	47	25	0.653	\N	4	27-15	9-3	26-10	21-15	4-6	5	4	114	108	6	f	f	t
+634	0	2021	41	31	0.569	\N	5	24-18	9-3	25-11	16-20	7-3	8	0	114	111	2	f	t	t
+635	5	2021	42	30	0.583	\N	5	21-21	7-5	21-15	21-15	7-3	10	0	112	110	2	f	t	t
+636	20	2021	42	30	0.583	\N	6	23-19	6-6	20-16	22-14	8-2	10	10	116	114	2	f	f	t
+637	11	2021	40	32	0.556	\N	6	24-18	6-6	21-15	19-17	8-2	9	1	108	108	0	f	f	t
+638	1	2021	36	36	0.5	\N	7	20-22	4-8	21-15	15-21	4-6	13	13	113	111	1	f	f	t
+639	10	2021	42	30	0.583	\N	7	25-17	4-8	21-15	21-15	6-4	10	9	110	107	3	f	f	t
+640	26	2021	38	34	0.528	\N	8	19-23	6-6	18-18	20-16	6-4	14	4	113	112	1	f	f	t
+641	27	2021	34	38	0.472	\N	8	16-26	3-9	19-17	15-21	6-4	15	7	117	118	-2	f	f	t
+642	7	2021	39	33	0.542	\N	9	25-17	5-7	25-11	14-22	8-2	13	12	114	113	1	f	f	f
+643	17	2021	34	38	0.472	\N	9	20-22	7-5	13-23	21-15	5-5	15	12	115	115	0	f	f	f
+644	22	2021	33	39	0.458	\N	10	17-25	6-6	14-22	19-17	2-8	19	9	111	113	-2	f	f	f
+645	29	2021	33	39	0.458	\N	10	20-22	8-4	18-18	15-21	3-7	16	8	109	111	-2	f	f	f
+646	3	2021	31	41	0.431	\N	11	18-24	6-6	18-18	13-23	4-6	21	11	115	115	0	f	f	f
+647	4	2021	31	41	0.431	\N	11	21-21	7-5	15-21	16-20	5-5	18	15	111	112	-1	f	f	f
+648	21	2021	31	41	0.431	\N	12	18-24	5-7	16-20	15-21	6-4	21	20	114	117	-4	f	f	f
+649	24	2021	27	45	0.375	\N	12	17-25	4-8	16-20	11-25	1-9	22	22	111	112	0	f	f	f
+650	13	2021	23	49	0.319	\N	13	15-27	5-7	13-23	10-26	5-5	29	29	112	118	-6	f	f	f
+651	2	2021	22	50	0.306	\N	13	16-26	4-8	13-23	9-27	1-9	27	24	104	112	-8	f	f	f
+652	16	2021	21	51	0.292	\N	14	13-29	4-8	11-25	10-26	2-8	28	20	104	113	-9	f	f	f
+653	23	2021	22	50	0.306	\N	14	12-30	3-9	10-26	12-24	1-9	30	30	105	116	-11	f	f	f
+654	28	2021	20	52	0.278	\N	15	12-30	1-11	13-23	7-29	1-9	29	26	107	111	-4	f	f	f
+655	8	2021	17	55	0.236	\N	15	11-31	5-7	9-27	8-28	2-8	35	25	109	117	-8	f	f	f
+656	11	2022	53	29	0.646	\N	1	35-17	13-3	29-12	24-17	6-4	0	0	110	106	4	t	t	t
+657	19	2022	64	18	0.78	\N	1	39-13	10-6	32-9	32-9	6-4	0	0	115	107	8	t	t	t
+658	1	2022	51	31	0.622	\N	2	33-19	9-7	28-13	23-18	7-3	2	0	112	104	7	f	t	t
+659	26	2022	56	26	0.683	\N	2	36-16	11-5	30-11	26-15	7-3	8	0	116	110	6	f	t	t
+660	12	2022	51	31	0.622	\N	3	33-19	12-4	27-14	24-17	6-4	2	0	115	112	3	f	t	t
+661	7	2022	53	29	0.646	\N	3	33-19	12-4	31-10	22-19	6-4	11	11	111	105	6	f	f	t
+662	18	2022	51	31	0.622	\N	4	32-20	6-10	24-17	27-14	6-4	2	0	110	107	3	f	f	t
+663	5	2022	52	30	0.634	\N	4	36-16	14-2	29-12	23-18	8-2	12	4	108	105	3	f	f	t
+664	25	2022	49	33	0.598	\N	5	33-19	15-1	29-12	20-21	4-6	15	0	114	108	6	f	t	t
+665	24	2022	48	34	0.585	\N	5	30-22	10-6	24-17	24-17	8-2	5	3	109	107	2	f	f	t
+666	4	2022	46	36	0.561	\N	6	29-23	10-6	27-14	19-22	4-6	7	5	112	112	0	f	f	t
+667	6	2022	48	34	0.585	\N	6	29-23	6-10	23-18	25-16	6-4	16	1	113	110	2	f	f	t
+668	13	2022	46	36	0.561	\N	7	32-20	12-4	26-15	20-21	4-6	18	3	116	113	3	f	f	f
+669	14	2022	44	38	0.537	\N	7	31-21	10-6	20-21	24-17	6-4	9	7	113	112	1	f	f	f
+670	2	2022	44	38	0.537	\N	8	27-25	10-6	25-16	19-22	3-7	9	7	108	106	2	f	f	f
+671	9	2022	42	40	0.512	\N	8	26-26	9-7	25-16	17-24	6-4	22	22	108	108	0	f	f	f
+672	0	2022	43	39	0.524	\N	9	26-26	9-7	27-14	16-25	7-3	10	10	114	112	2	f	f	f
+673	3	2022	36	46	0.439	\N	9	25-27	6-10	19-22	17-24	6-4	28	20	109	110	-1	f	f	f
+674	22	2022	34	48	0.415	\N	10	24-28	6-10	16-25	18-23	6-4	30	22	113	113	0	f	f	f
+675	29	2022	43	39	0.524	\N	10	27-25	8-8	22-19	21-20	6-4	10	10	115	115	0	f	f	f
+676	15	2022	37	45	0.451	\N	11	22-30	5-11	17-24	20-21	7-3	16	14	106	107	0	f	f	f
+677	10	2022	33	49	0.402	\N	11	18-34	3-13	21-20	12-29	2-8	31	31	112	115	-3	f	f	f
+678	21	2022	30	52	0.366	\N	12	20-32	6-10	16-25	14-27	5-5	34	34	110	116	-5	f	f	f
+679	27	2022	35	47	0.427	\N	12	24-28	7-9	21-20	14-27	5-5	18	18	109	112	-3	f	f	f
+680	17	2022	25	57	0.305	\N	13	11-41	2-14	16-25	9-32	0-10	28	26	111	115	-3	f	f	f
+681	20	2022	27	55	0.329	\N	13	11-41	1-15	17-24	10-31	0-10	37	22	106	115	-9	f	f	f
+682	28	2022	23	59	0.28	\N	14	18-34	6-10	13-28	10-31	4-6	30	28	105	113	-8	f	f	f
+683	23	2022	24	58	0.293	\N	14	17-35	6-10	12-29	12-29	4-6	40	25	104	112	-8	f	f	f
+684	8	2022	20	62	0.244	\N	15	11-41	3-13	11-30	9-32	2-8	44	36	110	118	-8	f	f	f
+685	16	2022	22	60	0.268	\N	15	12-40	3-13	12-29	10-31	3-7	31	31	104	112	-8	f	f	f
+686	12	2023	58	24	0.707	\N	1	35-17	11-5	32-9	26-15	6-4	0	0	117	113	4	t	t	t
+687	6	2023	53	29	0.646	\N	1	34-18	10-6	34-7	19-22	5-5	0	0	116	112	3	t	t	t
+688	1	2023	57	25	0.695	\N	2	34-18	11-5	32-9	25-16	8-2	1	0	118	111	7	f	t	t
+689	26	2023	51	31	0.622	\N	2	30-22	13-3	35-6	16-25	6-4	2	0	117	113	4	f	t	t
+690	18	2023	54	28	0.659	\N	3	34-18	10-6	29-12	25-16	5-5	4	3	115	111	4	f	f	t
+691	21	2023	48	34	0.585	\N	3	32-20	9-7	23-18	25-16	5-5	5	0	121	118	3	f	t	t
+692	19	2023	45	37	0.549	\N	4	30-22	9-7	28-13	17-24	7-3	8	3	114	112	2	f	f	t
+693	2	2023	51	31	0.622	\N	4	34-18	13-3	31-10	20-21	7-3	7	7	112	107	5	f	f	t
+694	9	2023	44	38	0.537	\N	5	27-25	9-7	23-18	21-20	6-4	9	4	114	113	1	f	f	t
+695	15	2023	47	35	0.573	\N	5	32-20	8-8	23-18	24-17	5-5	11	10	116	113	3	f	f	t
+696	7	2023	44	38	0.537	\N	6	30-22	7-9	33-8	11-30	8-2	9	4	119	117	2	f	f	t
+697	14	2023	45	37	0.549	\N	6	30-22	7-9	23-18	22-19	6-4	13	12	113	113	1	f	f	t
+698	11	2023	44	38	0.537	\N	7	24-28	10-6	27-14	17-24	6-4	14	0	109	110	0	f	t	f
+699	10	2023	43	39	0.524	\N	7	27-25	6-10	23-18	20-21	8-2	10	5	117	117	1	f	f	f
+700	0	2023	41	41	0.5	\N	8	26-26	8-8	24-17	17-24	5-5	17	3	118	118	0	f	f	f
+701	13	2023	42	40	0.512	\N	8	29-23	8-8	22-19	20-21	7-3	11	11	116	116	0	f	f	f
+702	3	2023	42	40	0.512	\N	9	29-23	11-5	27-14	15-26	7-3	11	9	114	112	2	f	f	f
+703	24	2023	41	41	0.5	\N	9	26-26	4-12	27-14	14-27	6-4	17	16	113	111	1	f	f	f
+704	4	2023	40	42	0.488	\N	10	27-25	7-9	22-19	18-23	6-4	18	18	113	112	1	f	f	f
+705	23	2023	40	42	0.488	\N	10	25-27	9-7	24-17	16-25	4-6	13	13	117	116	1	f	f	f
+706	17	2023	35	47	0.427	\N	11	24-28	7-9	20-21	15-26	3-7	23	23	116	119	-3	f	f	f
+707	5	2023	38	44	0.463	\N	11	28-24	9-7	23-18	15-26	2-8	15	13	114	114	0	f	f	f
+708	25	2023	37	45	0.451	\N	12	24-28	6-10	23-18	14-27	2-8	16	16	117	118	-1	f	f	f
+709	27	2023	35	47	0.427	\N	12	21-31	8-8	19-22	16-25	3-7	23	9	113	114	-1	f	f	f
+710	20	2023	33	49	0.402	\N	13	23-29	7-9	17-24	16-25	1-9	20	20	113	117	-4	f	f	f
+711	16	2023	34	48	0.415	\N	13	20-32	7-9	20-21	14-27	5-5	24	10	111	114	-3	f	f	f
+712	29	2023	27	55	0.329	\N	14	15-37	7-9	13-28	14-27	5-5	31	17	111	117	-6	f	f	f
+713	8	2023	22	60	0.268	\N	14	12-40	4-12	14-27	8-33	4-6	31	29	111	119	-8	f	f	f
+714	22	2023	22	60	0.268	\N	15	10-42	3-13	14-27	8-33	3-7	31	29	113	123	-10	f	f	f
+715	28	2023	17	65	0.207	\N	15	8-44	2-14	9-32	8-33	1-9	41	41	110	119	-8	f	f	f
+716	1	2024	64	18	0.78	3	1	41-11	15-2	37-4	27-14	7-3	0	0	121	109	11	t	t	t
+717	23	2024	57	25	0.695	\N	1	36-16	12-4	33-8	24-17	7-3	0	0	120	113	7	t	t	t
+718	6	2024	57	25	0.695	\N	2	33-19	10-6	33-8	24-17	6-4	0	0	115	110	5	f	f	t
+719	15	2024	50	32	0.61	4	2	35-17	12-5	27-14	23-18	6-4	14	14	113	108	5	f	f	t
+720	12	2024	49	33	0.598	1	3	34-18	10-7	31-11	18-22	3-7	15	0	119	116	3	f	t	t
+721	13	2024	56	26	0.683	\N	3	37-15	12-4	30-11	26-15	6-4	1	1	113	107	6	f	f	t
+722	2	2024	48	34	0.585	\N	4	31-21	11-5	26-15	22-19	4-6	16	1	113	110	2	f	f	t
+723	9	2024	51	31	0.622	\N	4	30-22	9-7	25-16	26-15	6-4	6	0	116	112	3	f	t	t
+724	5	2024	50	32	0.61	\N	5	31-21	11-5	25-16	25-16	7-3	7	0	118	116	2	f	t	t
+725	16	2024	47	35	0.573	\N	5	32-20	9-7	29-12	18-23	5-5	17	0	110	108	2	f	t	t
+726	17	2024	47	35	0.573	2	6	32-20	11-6	26-15	21-20	7-3	17	2	123	120	3	f	f	t
+727	19	2024	49	33	0.598	4	6	29-23	9-9	25-16	24-17	7-3	8	2	116	113	3	f	f	t
+728	3	2024	49	33	0.598	3	7	30-22	9-7	21-19	28-14	5-5	8	1	115	111	4	f	f	f
+729	18	2024	47	35	0.573	\N	7	31-21	8-8	25-16	22-19	8-2	17	17	115	112	3	f	f	f
+730	10	2024	47	35	0.573	1	8	27-25	7-10	28-14	19-21	7-3	10	4	118	117	1	f	f	f
+731	11	2024	46	36	0.561	\N	8	32-20	13-3	22-19	24-17	7-3	18	1	110	108	2	f	f	f
+732	4	2024	39	43	0.476	\N	9	22-29	7-9	20-21	19-22	5-5	25	10	112	114	-1	f	f	f
+733	21	2024	46	36	0.561	2	9	30-22	10-7	24-17	22-19	4-6	11	5	117	115	2	f	f	f
+734	0	2024	36	46	0.439	\N	10	22-30	8-8	21-20	15-26	3-7	28	11	118	121	-2	f	f	f
+735	7	2024	46	36	0.561	\N	10	26-26	7-9	21-20	25-16	8-2	11	5	118	115	3	f	f	f
+736	8	2024	41	41	0.5	\N	11	28-24	9-7	27-14	14-27	4-6	16	9	114	113	1	f	f	f
+737	14	2024	32	50	0.39	\N	11	24-28	5-11	20-21	12-29	5-5	32	32	110	113	-3	f	f	f
+738	24	2024	25	57	0.305	\N	12	18-34	1-15	14-27	11-30	2-8	39	39	112	119	-6	f	f	f
+739	25	2024	31	51	0.378	\N	12	16-36	5-11	21-20	10-31	2-8	26	26	116	121	-5	f	f	f
+740	26	2024	27	55	0.329	\N	13	14-37	8-8	9-32	18-23	3-7	30	23	106	113	-7	f	f	f
+741	29	2024	21	61	0.256	\N	13	14-38	6-10	11-30	10-31	3-7	43	26	107	117	-10	f	f	f
+742	22	2024	22	60	0.268	\N	14	14-37	3-13	12-29	10-31	6-4	35	28	112	119	-6	f	f	f
+743	27	2024	15	67	0.183	\N	14	11-41	4-12	7-34	8-33	1-9	49	32	114	123	-9	f	f	f
+744	20	2024	21	61	0.256	\N	15	8-44	1-15	11-30	10-31	2-8	36	36	106	115	-9	f	f	f
+745	28	2024	14	68	0.171	\N	15	10-41	2-14	7-33	7-35	2-8	50	35	110	119	-9	f	f	f
+746	2	2025	64	18	0.78	\N	1	41-11	12-4	34-7	30-11	6-4	0	0	122	112	10	t	t	t
+747	23	2025	68	14	0.829	1	1	39-13	12-4	35-6	32-8	8-2	0	0	121	108	13	t	t	t
+748	1	2025	61	21	0.744	\N	2	39-13	14-2	28-13	33-8	8-2	3	0	116	107	9	f	t	t
+749	8	2025	52	30	0.634	2	2	31-21	13-3	29-12	23-17	6-4	16	0	114	110	5	f	t	t
+750	10	2025	50	32	0.61	\N	3	36-16	12-4	31-10	19-22	6-4	18	0	113	112	1	f	t	t
+751	15	2025	51	31	0.622	2	3	34-18	12-4	27-14	24-17	6-4	13	10	116	112	4	f	f	t
+752	17	2025	50	32	0.61	\N	4	29-22	10-6	29-11	20-20	8-2	14	14	117	115	2	f	f	t
+753	6	2025	50	32	0.61	\N	4	32-20	8-8	26-15	24-17	5-5	18	18	121	117	4	f	f	t
+754	9	2025	50	32	0.61	\N	5	29-23	9-7	30-11	20-21	9-1	18	0	113	108	5	f	f	t
+755	12	2025	48	34	0.585	1	5	31-21	9-7	27-14	20-20	8-2	16	16	116	113	2	f	f	t
+756	28	2025	44	38	0.537	\N	6	29-23	5-11	22-19	22-19	4-6	20	20	116	114	2	f	f	t
+757	13	2025	49	33	0.598	\N	6	33-19	11-5	25-16	24-17	8-2	19	19	114	109	5	f	f	t
+758	16	2025	41	41	0.5	4	7	31-21	12-4	22-19	19-22	7-3	23	0	105	106	0	f	t	f
+759	7	2025	48	34	0.585	3	7	29-23	5-11	24-17	24-17	7-3	20	2	114	110	3	f	f	f
+760	26	2025	48	34	0.585	\N	8	27-24	11-5	26-15	22-19	4-6	20	4	122	117	5	f	f	f
+761	0	2025	40	42	0.488	3	8	30-22	10-6	21-19	19-22	5-5	24	1	118	119	-1	f	f	f
+762	4	2025	39	43	0.476	\N	9	28-24	4-12	18-23	21-20	7-3	25	25	118	119	-2	f	f	f
+763	21	2025	40	42	0.488	\N	9	26-26	5-11	20-21	20-21	5-5	28	10	116	115	0	f	f	f
+764	5	2025	39	43	0.476	4	10	23-29	8-8	22-18	17-25	4-6	29	13	114	115	-1	f	f	f
+765	11	2025	37	45	0.451	\N	10	24-28	10-6	19-22	17-23	6-4	27	4	111	110	1	f	f	f
+766	19	2025	36	46	0.439	\N	11	22-30	9-7	24-17	12-29	1-9	32	14	114	117	-3	f	f	f
+767	24	2025	30	52	0.366	\N	11	21-31	8-8	18-23	12-29	5-5	34	31	111	115	-4	f	f	f
+768	20	2025	36	46	0.439	\N	12	19-33	6-10	22-19	14-27	4-6	32	32	111	114	-3	f	f	f
+769	14	2025	26	56	0.317	\N	12	14-37	3-13	12-29	14-27	3-7	38	35	105	112	-7	f	f	f
+770	18	2025	24	58	0.293	\N	13	15-37	3-13	12-29	12-29	1-9	40	37	110	116	-6	f	f	f
+771	22	2025	34	48	0.415	\N	13	22-30	5-11	20-20	13-27	3-7	34	18	114	117	-3	f	f	f
+772	29	2025	19	63	0.232	\N	14	10-42	1-15	12-29	7-34	1-9	45	22	105	114	-9	f	f	f
+773	3	2025	21	61	0.256	\N	14	13-38	3-13	14-27	7-34	2-8	47	31	110	119	-9	f	f	f
+774	25	2025	17	65	0.207	\N	15	8-44	3-13	10-31	7-34	1-9	51	51	112	121	-9	f	f	f
+775	27	2025	18	64	0.22	\N	15	13-39	7-9	8-32	10-31	2-8	46	23	108	120	-12	f	f	f
+\.
+
+
+--
 -- Data for Name: teams; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -34655,10 +36808,17 @@ SELECT pg_catalog.setval('public.contracts_id_seq', 7755, true);
 
 
 --
+-- Name: draft_picks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.draft_picks_id_seq', 1, false);
+
+
+--
 -- Name: draft_prospects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.draft_prospects_id_seq', 260, true);
+SELECT pg_catalog.setval('public.draft_prospects_id_seq', 1414, true);
 
 
 --
@@ -34704,6 +36864,27 @@ SELECT pg_catalog.setval('public.team_player_salaries_id_seq', 7788, true);
 
 
 --
+-- Name: team_season_finances_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.team_season_finances_id_seq', 1, false);
+
+
+--
+-- Name: team_season_playoff_rounds_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.team_season_playoff_rounds_id_seq', 1, false);
+
+
+--
+-- Name: team_seasons_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.team_seasons_id_seq', 775, true);
+
+
+--
 -- Name: teams_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -34732,6 +36913,14 @@ ALTER TABLE ONLY public.awards
 
 ALTER TABLE ONLY public.contracts
     ADD CONSTRAINT pk_contracts PRIMARY KEY (id);
+
+
+--
+-- Name: draft_picks pk_draft_picks; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_picks
+    ADD CONSTRAINT pk_draft_picks PRIMARY KEY (id);
 
 
 --
@@ -34791,6 +36980,30 @@ ALTER TABLE ONLY public.team_player_salaries
 
 
 --
+-- Name: team_season_finances pk_team_season_finances; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_finances
+    ADD CONSTRAINT pk_team_season_finances PRIMARY KEY (id);
+
+
+--
+-- Name: team_season_playoff_rounds pk_team_season_playoff_rounds; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_playoff_rounds
+    ADD CONSTRAINT pk_team_season_playoff_rounds PRIMARY KEY (id);
+
+
+--
+-- Name: team_seasons pk_team_seasons; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_seasons
+    ADD CONSTRAINT pk_team_seasons PRIMARY KEY (id);
+
+
+--
 -- Name: teams pk_teams; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -34804,6 +37017,30 @@ ALTER TABLE ONLY public.teams
 
 ALTER TABLE ONLY public.draft_prospects
     ADD CONSTRAINT uq_draft_prospect_name_uploaded UNIQUE (name, uploaded);
+
+
+--
+-- Name: team_seasons uq_team_season; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_seasons
+    ADD CONSTRAINT uq_team_season UNIQUE (team_id, season);
+
+
+--
+-- Name: team_season_finances uq_team_season_finances_team_season_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_finances
+    ADD CONSTRAINT uq_team_season_finances_team_season_id UNIQUE (team_season_id);
+
+
+--
+-- Name: team_season_playoff_rounds uq_team_season_playoff_round; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_playoff_rounds
+    ADD CONSTRAINT uq_team_season_playoff_round UNIQUE (team_season_id, round);
 
 
 --
@@ -34860,6 +37097,13 @@ CREATE INDEX ix_contracts_player_id ON public.contracts USING btree (player_id);
 --
 
 CREATE INDEX ix_contracts_start_year ON public.contracts USING btree (start_year);
+
+
+--
+-- Name: ix_draft_picks_team_season_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_draft_picks_team_season_id ON public.draft_picks USING btree (team_season_id);
 
 
 --
@@ -35080,6 +37324,20 @@ CREATE INDEX ix_team_player_salaries_year ON public.team_player_salaries USING b
 
 
 --
+-- Name: ix_team_season_playoff_rounds_team_season_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_team_season_playoff_rounds_team_season_id ON public.team_season_playoff_rounds USING btree (team_season_id);
+
+
+--
+-- Name: ix_team_seasons_team_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_team_seasons_team_id ON public.team_seasons USING btree (team_id);
+
+
+--
 -- Name: ix_teams_abbreviation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -35136,6 +37394,14 @@ ALTER TABLE ONLY public.contracts
 
 ALTER TABLE ONLY public.contracts
     ADD CONSTRAINT fk_contracts_team_id_teams FOREIGN KEY (team_id) REFERENCES public.teams(id);
+
+
+--
+-- Name: draft_picks fk_draft_picks_team_season_id_team_seasons; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.draft_picks
+    ADD CONSTRAINT fk_draft_picks_team_season_id_team_seasons FOREIGN KEY (team_season_id) REFERENCES public.team_seasons(id);
 
 
 --
@@ -35235,8 +37501,40 @@ ALTER TABLE ONLY public.team_player_salaries
 
 
 --
+-- Name: team_season_finances fk_team_season_finances_team_season_id_team_seasons; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_finances
+    ADD CONSTRAINT fk_team_season_finances_team_season_id_team_seasons FOREIGN KEY (team_season_id) REFERENCES public.team_seasons(id);
+
+
+--
+-- Name: team_season_playoff_rounds fk_team_season_playoff_rounds_eliminated_by_team_id_teams; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_playoff_rounds
+    ADD CONSTRAINT fk_team_season_playoff_rounds_eliminated_by_team_id_teams FOREIGN KEY (eliminated_by_team_id) REFERENCES public.teams(id);
+
+
+--
+-- Name: team_season_playoff_rounds fk_team_season_playoff_rounds_team_season_id_team_seasons; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_season_playoff_rounds
+    ADD CONSTRAINT fk_team_season_playoff_rounds_team_season_id_team_seasons FOREIGN KEY (team_season_id) REFERENCES public.team_seasons(id);
+
+
+--
+-- Name: team_seasons fk_team_seasons_team_id_teams; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.team_seasons
+    ADD CONSTRAINT fk_team_seasons_team_id_teams FOREIGN KEY (team_id) REFERENCES public.teams(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5uKkVMD67FI9wbKRWN7f3nGRKXTRgJnyFtAm7K89hnOZd3qEa39R5RPIywvdfrX
+\unrestrict EiWpYZXdRJdMi1rn7X2RfB4m2606Bc2rIql9fsYh2EZUIPvNfItJEvpkdfFTEQC
 
