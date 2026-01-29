@@ -9,15 +9,45 @@ Unlike a company, a player's career is strictly bound by time, meaning that a st
 Before a user is able to interface with the app in a meaninful way, each player needs to have a market cap, probably estimated via ML forecasting methods.
 There are two main types of estimates needed: mid-career and pre-draft.
 
-### Mid-career
+### Initial Setup
+
+#### Upload Seasons
+
+Salary cap, aggregate stuff like that
+
+#### Upload Team Seasons
+
+I've started on this by getting team season stats like win-loss records but there remains work to be done with Draft Picks and Playoff Rounds
+
+#### Upload Games / Player Games
+
+this will require an absurd amount of calls to the `nba_api` and will make our db much, much bigger. So let's hold off on it! It's more of a nice-to-have, anyway. Until we add these, we can easily just upload and download copies of the db to github
+
+#### Upload Player Career Statistics
+
+this could be appended to the player table, I should have taken care of that earlier. Whoops.
+
+### CRUD
+
+#### Read
+
+We need a way to read a player's total earnings relative to the cap for their entire career. It also would be nice to get their earnings relative to the rest of their career. This is all for analysis, of course, and we need summary stats and visualizatins too.
+
+#### Update
+
+We need to add the projections, whenever those are ready. They should be stored by date and model name so that we can track their previous projections.
+
+### Forecasting
+
+#### Mid-career
 
 Rookie contracts and extensions/free agency signings should be handled differently.
 
-#### Rookie contract
+##### Rookie contract
 
 use season statistics to estimate whether or not the player will be cut before their 4th year is over. It's pretty rare that they are cut. If, however, they are likely to be cut, assume that their career will be all but over after they are.
 
-#### Free agency / extensions
+##### Free agency / extensions
 
 If a player's career is not projected to outlive their rookie contract, skip this. Otherwise, predict whether or not they will be a "max" player. The maximum salary is fixed by season but can be made convoluted by all-star selections, awards, or non-garunteed incentives. I don't have a clue on how to figure out what the max is yet but a binary classification model could be used to figure out if a player is a "max" player and the rest of the players would have to use a regression model.
 
@@ -25,7 +55,7 @@ The tricky part, from there, is figuring out how long the player's career will b
 
 Even if we can assume that a player's career will continue 14 more years, it's not safe to assume that their salary will not have to decrease. There has to be some type of way to figure that out.
 
-### Pre-draft
+#### Pre-draft
 
 Making a pre-draft estimate of how well a player is going to do is initially simple enough, following these steps:
 
@@ -38,26 +68,17 @@ The above method does have some fatal flaws, though. There are years where the #
 
 Another concern is the obvious limitations of a player's body compared with their stats. For example, Zion Williamson was the best college player and rookie I've ever seen, but it was clear even in college that his body was going to be in so many collisions and high-impact falls that he may not see a long career of max contracts. Compare that to Cooper Flagg, who has a prototypical all-star build and frame and doesn't seem to put his body in compromising positions when finishing at the rim or defending the paint. Given that players like Zion, Flagg, or even Wemby will likely be seeing a lot of attention in the stock market, this does seem important.
 
-## Initial Setup
-
-### Upload Team Seasons
-
-Each team should have a season's associated data, including the win-loss record, money spent (including luxury tax and apron features), their playoff record, and upcoming draft picks for that year.
-
-### Upload Games / Player Games
-
-this will require an absurd amount of calls to the `nba_api` and will make our db much, much bigger. So let's hold off on it! It's more of a nice-to-have, anyway. Until we add these, we can easily just upload and download copies of the db to github
-
-### Upload Player Career Statistics
-
-this could be appended to the player table, I should have taken care of that earlier. Whoops.
-
-## Research
+### Research
 
 I don't know much about how the stock market works and how purchasing it works as well as the way the stock's price should adjust given that someone wants to sell or buy. I heard something about AMM being a good method from ChatGPT? I'll probably ask my brother if he's interested in figuring this out and helping.
 
-## Data Sources
+For draft evaluation, I know two things: 
+1. BPM (an all-in-one stat) has consistently outperformed NBA teams at evaluating talent.
+2. DO NOT USE BPM in a model - it has major covariability and messes up the analysis. Leave it out.
+
+### Data Sources
 
 - Basketball Reference: only for awards, they make it very difficult to scrape the website
-- Spotrac: by downloading CSV's with a premium subscription, including minor automations
+- Tankathon: for getting draft prospects, easier to scrape than BBall Reference but they don't have an API
+- Spotrac: by downloading CSV's with a premium subscription, including minor automations that require more fine-tuned interactions
 - NBA API: via the `nba_api` python package
