@@ -19,6 +19,7 @@ dependencies = [
     "psycopg2-binary>=2.9.11",
     "psycopg[binary]>=3.3.2",
     "pydantic>=2.12.5",
+    "pytest>=9.0.2",
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.21",
     "sqlalchemy>=2.0.45",
@@ -36,5 +37,4 @@ dev = [
     "ty>=0.0.14",
     "ipykernel>=7.1.0",
     "playwright>=1.57.0",
-    "pytest>=9.0.2",
 ]
