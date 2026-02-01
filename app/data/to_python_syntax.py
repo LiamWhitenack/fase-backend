@@ -126,6 +126,7 @@ def get_player_syntax(
     session: Session,
     player_ids: list[int],
     *,
+    include_teams: bool = True,
     include_contracts: bool = True,
     include_salaries: bool = True,
     include_seasons: bool = True,
@@ -133,6 +134,16 @@ def get_player_syntax(
     res: list[str] = []
     for player_id in player_ids:
         player = session.query(Player).where(Player.id == player_id).one()
+        if include_teams:
+            teams: set[int] = set()
+            for season in player.seasons:
+                if season.team not in teams:
+                    res.extend(sqlalchemy_to_syntax([season.team]))
+                    teams.add(season.team)
+            for contract in player.contracts:
+                if contract.team not in teams:
+                    res.extend(sqlalchemy_to_syntax([contract.team]))
+                    teams.add(contract.team)
         res.extend(sqlalchemy_to_syntax([player]))
         if include_contracts:
             res.extend(sqlalchemy_to_syntax(player.contracts))
@@ -140,14 +151,34 @@ def get_player_syntax(
             res.extend(sqlalchemy_to_syntax(player.salaries))
         if include_seasons:
             res.extend(sqlalchemy_to_syntax(player.seasons))
+
     return res
 
 
-if __name__ == "__main__":
+def save_as_python(player_ids: list[int], path: str = "test.py") -> None:
     with get_session() as session:
-        # with open("test.py", "w") as f:
-        #     f.write(export_rows_as_orm_code(session, Player))
-
-        with open("test.py", "w") as f:
+        with open(path, "w") as f:
             f.write("from app.data.league import *\n\n")
-            f.write(sqlalchemy_syntax_to_list(get_player_syntax(session, [203999])))
+            f.write(sqlalchemy_syntax_to_list(get_player_syntax(session, player_ids)))
+
+
+if __name__ == "__main__":
+    save_as_python(
+        [
+            78326,
+            101159,
+            1630679,
+            78327,
+            203138,
+            201574,
+            78328,
+            78329,
+            202691,
+            78,
+            78331,
+            202814,
+            78332,
+            78333,
+            202684,
+        ]
+    )
