@@ -131,19 +131,19 @@ def get_player_syntax(
     include_salaries: bool = True,
     include_seasons: bool = True,
 ) -> list[str]:
+    teams: set[int] = set()
     res: list[str] = []
     for player_id in player_ids:
         player = session.query(Player).where(Player.id == player_id).one()
         if include_teams:
-            teams: set[int] = set()
             for season in player.seasons:
-                if season.team not in teams:
+                if season.team.id not in teams:
                     res.extend(sqlalchemy_to_syntax([season.team]))
-                    teams.add(season.team)
+                    teams.add(season.team.id)
             for contract in player.contracts:
-                if contract.team not in teams:
+                if contract.team.id not in teams:
                     res.extend(sqlalchemy_to_syntax([contract.team]))
-                    teams.add(contract.team)
+                    teams.add(contract.team.id)
         res.extend(sqlalchemy_to_syntax([player]))
         if include_contracts:
             res.extend(sqlalchemy_to_syntax(player.contracts))
@@ -180,5 +180,11 @@ if __name__ == "__main__":
             78332,
             78333,
             202684,
+            1641708,
+            1641709,
+            78323,
+            1631,
+            240,
+            78325,
         ]
     )

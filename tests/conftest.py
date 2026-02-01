@@ -1,14 +1,17 @@
 # test_utils.py
 import inspect
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
+from typing import Any
 
 import pytest
 from sqlalchemy.orm.session import Session
 from starlette.testclient import TestClient
 
+from app.base import Base
 from tests.connection import get_test_session
+from tests.dataclasses import TestCase
 
 
 @pytest.fixture
@@ -23,12 +26,7 @@ def session() -> Session:
         return session
 
 
-@dataclass
-class TestCase:
-    name: str
-
-
-def parametrize(cases: Iterable[TestCase] = ()):
+def parametrize(cases: Iterable[TestCase] = ()) -> Callable[..., Any]:
     cases = list(cases)
 
     def decorator(func):
