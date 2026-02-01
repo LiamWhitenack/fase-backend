@@ -1,9 +1,6 @@
 version: "3.9"
 
 services:
-  # ------------------------
-  # Postgres for tests
-  # ------------------------
   test_db:
     image: postgres:16
     container_name: athlete_market_test_db
@@ -17,9 +14,6 @@ services:
     ports:
       - "6544:5432"
 
-  # ------------------------
-  # Backend for tests
-  # ------------------------
   test_app:
     build:
       context: ./app
