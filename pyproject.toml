@@ -38,3 +38,11 @@ dev = [
     "ipykernel>=7.1.0",
     "playwright>=1.57.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+filterwarnings = ["ignore::Warning"]
+
+[tool.coverage.run]
+omit = ["__init__.py"]
