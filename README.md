@@ -7,8 +7,8 @@
 #### Fedora
 
 ```
-sudo dnf install python3.13
-python3.13 -m venv .venv
+sudo dnf install python3.14
+python3.14 -m venv .venv
 source .venv/bin/activate
 pip install uv
 uv sync
@@ -16,10 +16,10 @@ uv sync
 
 #### Windows
 
-Install Python 3.13 with the Windows store
+Install Python 3.14 with the Windows store
 
 ```
-python3.13 -m venv .venv
+python3.14 -m venv .venv
 .venv/Scripts/python -m pip install uv
 .venv/Scripts/python -m uv sync
 ```
@@ -28,7 +28,7 @@ python3.13 -m venv .venv
 
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-python3.13 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 pip install uv
 uv sync
