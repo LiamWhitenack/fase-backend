@@ -41,7 +41,12 @@ class NameMatchFinder:
     def get_team(self, name: str) -> int:
         if len(name) == 3:
             return self.team_abbr_map[name.replace("NOH", "NOP").replace("NJN", "BKN")]
-        return self.team_map[name.replace("-", " ").title().replace("76Ers", "76ers")]
+        return self.team_map[
+            name.replace("-", " ")
+            .title()
+            .replace("76Ers", "76ers")
+            .replace("La Clippers", "Los Angeles Clippers")
+        ]
 
     def get_player_id(
         self,

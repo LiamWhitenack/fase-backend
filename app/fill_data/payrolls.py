@@ -41,7 +41,10 @@ def get_salary_object(
         team_id=team_id,
         player_id=player_id,
         cap_hit_percent=parse_percent(
-            row["Cap Hit Pct                         League Cap"]
+            row.get(
+                "Cap Hit Pct                         League Cap",
+                row.get("Cap Hit Pct                 League Cap"),
+            )
         ),
         salary=parse_dollars(row["Cap Hit"]),
         apron_salary=parse_dollars(row.get("Apron Salary")),
@@ -74,17 +77,17 @@ def get_all_salary_objects() -> Iterable[TeamPlayerSalary | TeamPlayerBuyout]:
 
     def get_player_id(year: int, player_col: str, row: Series) -> int | None:
         if (
-            row["\xa0"] == "Incomplete Roster Charge"
+            row[player_col] == "Incomplete Roster Charge"
             or row[player_col] != row[player_col]
             or "Round" in row[player_col]
         ):
             return None
-        name = row[player_col].split("   ")[-1]
+        name = row[player_col].split("   ")[-1].strip()
         if not (
             player_id := name_finder.get_player_id(
                 name,
                 year,
-                int(row["Age"]) if row["Age"] == row["Age"] else None,
+                int(row["Age"]) if row.get("Age", 0) == row.get("Age", 1) else None,
             )
         ):
             return None
