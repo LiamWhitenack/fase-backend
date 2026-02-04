@@ -172,5 +172,5 @@ if __name__ == "__main__":
     save_as_python(
         [1641708, 1641709, 78326, 202691, 202684],
         path="tests/data/thompson_contract_data.py",
-        variable_name="THOMSPON_CONTRACT_DATA",
+        variable_name="THOMPSON_CONTRACT_DATA",
     )

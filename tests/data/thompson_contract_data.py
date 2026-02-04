@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-THOMSPON_CONTRACT_DATA = [
+THOMPSON_CONTRACT_DATA = [
     {
         "model": "Team",
         "values": {
