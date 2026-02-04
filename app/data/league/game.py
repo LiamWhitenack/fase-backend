@@ -14,7 +14,7 @@ class Game(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # ---- core game info ----
-    date: Mapped[date] = mapped_column(Date, index=True)
+    date: Mapped[date] = mapped_column(Date, index=True)  # ty:ignore[invalid-type-form]
     season: Mapped[int] = mapped_column(Integer, index=True)
 
     home_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)

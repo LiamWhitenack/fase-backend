@@ -108,14 +108,14 @@ def normalize_latin_letters(text: str) -> str:
     return stripped.lower()
 
 
-def get_slugs(soup) -> list[str]:
+def get_slugs(soup: BeautifulSoup) -> list[str]:
     draft: set[str] = set()
 
     # Each player seems to be inside a div with text like "Cooper Flagg SF/PF | Duke"
     for player_div in soup.find_all("a", class_="primary-hover"):
         if "players/" not in player_div["href"]:
             continue
-        text = player_div["href"].split("/")[-1]
+        text = player_div["href"].split("/")[-1]  # ty:ignore[possibly-missing-attribute]
         # Keep only the player name before the position
         draft.add(text)
     return list(draft)
@@ -222,7 +222,7 @@ def add_missing_player_ids() -> None:
 
 
 if __name__ == "__main__":
-    add_missing_player_ids()
+    # add_missing_player_ids()
     # for year in range(2020, 2026):
     #     upload_previous_draft(year, collect_only_missing=True)
-    # upload_current_big_board()
+    upload_current_big_board()

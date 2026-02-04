@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 # test_utils.py
 import inspect
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any
+from typing import Any, NoReturn
 
 import pytest
 from sqlalchemy.orm.session import Session
@@ -15,13 +17,12 @@ from tests.dataclasses import TestCase
 
 
 @pytest.fixture
-def client() -> TestClient:
-    """TODO: Update when ready to use API"""
-    return None  # type: ignore
+def client() -> TestClient:  # @IgnoreException
+    pytest.skip("API client not implemented yet")
 
 
 @pytest.fixture
-def session() -> Session:
+def session() -> Session:  # @IgnoreException
     with get_test_session() as session:
         return session
 
@@ -35,7 +36,7 @@ def parametrize(cases: Iterable[TestCase] = ()) -> Callable[..., Any]:
 
         # CASE 1: With cases → use pytest.mark.parametrize
         if cases and wants_case:
-            return pytest.mark.parametrize("case", cases, ids=[c.name for c in cases])(
+            return pytest.mark.parametrize("case", cases, ids=[c.id for c in cases])(
                 func
             )
 

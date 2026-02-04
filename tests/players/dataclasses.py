@@ -1,7 +1,16 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 from tests.dataclasses import SeededTestCase
 
 
 @dataclass
-class GetSalaryDataTestCase(SeededTestCase): ...
+class GetSalaryYearsTestCase(SeededTestCase):
+    name: str
+    expected_seasons: Iterable[int]
+
+
+@dataclass
+class GetAggregateSalaryTestCase(SeededTestCase):
+    name: str
+    expected_aggregate_salary: int

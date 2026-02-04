@@ -10,7 +10,9 @@ import joblib
 import requests
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from requests.packages.urllib3.util.retry import (  # type: ignore[unresolved-import]
+    Retry,
+)
 from sqlalchemy import and_, select
 
 from app.data.connection import get_session
@@ -109,7 +111,9 @@ if __name__ == "__main__":
         # if not (6 < datetime.now().hour < 22):
         #     sleep(12 * 60 * 60)
         dt = datetime(year, 6, 22, 19)
-        soup = get_soup(f"https://www.tankathon.com/past_drafts/{dt.year}")
+        soup = get_soup(
+            f"https://www.tankathon.com/past_drafts/{dt.year}", use_cache=False
+        )
         draft = parse_tankathon_past_draft(soup)
         name_finder = NameMatchFinder()
 

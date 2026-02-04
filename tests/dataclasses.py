@@ -6,7 +6,7 @@ from app.base import Base
 
 @dataclass
 class TestCase:
-    name: str
+    id: str
 
 
 @dataclass
