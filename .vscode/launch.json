@@ -5,6 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Scrape Spotrac",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.save_to_csv.scrape_spotrac"
+    },
+    {
       "name": "Upload Players",
       "type": "debugpy",
       "request": "launch",

@@ -29,7 +29,7 @@ def test_get_active_players(session: Session) -> None:  # @IgnoreException
 @parametrize(GET_SALARY_TEST_DATA_TEST_CASES)
 def test_get_salaries_for_player(  # @IgnoreException
     session: Session, case: GetSalaryYearsTestCase
-):
+) -> None:
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
     salaries = player.salaries

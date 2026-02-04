@@ -31,12 +31,10 @@ def get_salary_data(
     page: Any,
     year: int,
     team_name: str,
-    download_dir: str = os.path.join("data", "by-team"),
+    download_dir: str = "data/payroll-team-year",
 ) -> None:
-    delay_seconds()
-
     team_name = team_name.lower().replace(" ", "-")
-    URL = f"https://www.spotrac.com/nba/{team_name}/overview/_/year/{year}"
+    URL = f"https://www.spotrac.com/nba/{team_name}/cap/_/year/{year}"
     print(f"Visiting {URL}…")
 
     try:
@@ -45,8 +43,6 @@ def get_salary_data(
     except Exception as e:
         print(f"Could not load {URL}: {e}")
         return
-
-    delay_seconds()
 
     # Find all CSV buttons
     csv_buttons = page.locator("text=CSV")
@@ -76,12 +72,13 @@ def get_salary_data(
             continue
 
         # Human-like delay between clicks
-        delay_seconds()
+        delay_seconds(1, 2)
+    delay_seconds(2, 2.5)
 
 
 def get_all_salary_csvs() -> None:
     # Download folder
-    DOWNLOAD_DIR = os.path.join("data", "by-team")
+    DOWNLOAD_DIR = "data/payroll-team-year"
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
     # Path to save login/session info
@@ -93,6 +90,7 @@ def get_all_salary_csvs() -> None:
 
         # Manual login if no session saved
         if not os.path.exists(AUTH_FILE):
+            page.goto("https://www.spotrac.com", timeout=30000)
             print("Please log in manually in the browser window.")
             time.sleep(60)
             context.storage_state(path=AUTH_FILE)
@@ -101,9 +99,13 @@ def get_all_salary_csvs() -> None:
             )
 
         # Iterate over years and teams
-        for year in range(2011, 2032):
+        for year in range(2027, 2032):
             for _, row in teams.iterrows():
                 get_salary_data(page, year, row["team_name"], DOWNLOAD_DIR)
 
         print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")
         browser.close()
+
+
+if __name__ == "__main__":
+    get_all_salary_csvs()
