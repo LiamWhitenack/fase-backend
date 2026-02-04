@@ -53,6 +53,12 @@
       "module": "app.fill_data.prospects"
     },
     {
+      "name": "Upload Seasons",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.seasons"
+    },
+    {
       "name": "Upload Team Seasons",
       "type": "debugpy",
       "request": "launch",

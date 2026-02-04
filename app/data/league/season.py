@@ -1,0 +1,22 @@
+from sqlalchemy import Column, Float, Integer
+from sqlalchemy.orm import declarative_base
+
+from app.base import Base
+
+
+class Season(Base):
+    __tablename__ = "seasons"
+
+    # Financial attributes (all nullable)
+    max_salary_cap = Column(Float, nullable=True)
+    inflation_adjusted_cap = Column(Float, nullable=True)
+    luxury_tax_threshold = Column(Float, nullable=True)
+    first_apron = Column(Float, nullable=True)
+    second_apron = Column(Float, nullable=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"<Season(year={self.id}, max_salary_cap={self.max_salary_cap}, "
+            f"luxury_tax_threshold={self.luxury_tax_threshold}, "
+            f"first_apron={self.first_apron}, second_apron={self.second_apron})>"
+        )
