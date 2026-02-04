@@ -1,7 +1,7 @@
-" ","Player (5)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Johnson                     Jalen Johnson","SF","27","$30,000,000","16.39%","$30,000,000","$30,000,000","$30,000,000","$30,000,000","2030"
-"2","Daniels                     Dyson Daniels","PG","25","$25,000,000","13.66%","$25,000,000","$25,000,000","$25,000,000","$25,000,000","2030"
-"3","Alexander-Walker                     Nickeil Alexander-Walker","SG","30","$15,919,890","8.70%","$15,919,890","$15,919,890","$15,919,890","$15,919,890","2029"
-"4","Kispert                     Corey Kispert","SF","29","$13,025,000","7.12%","$13,025,000","$13,025,000","$13,025,000","'-","2029"
-"5","Newell                     Asa Newell","PF","23","$6,042,814","3.30%","$6,042,814","$6,042,814","$6,042,814","'-","2029"
+"Player (5 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Johnson                   Jalen Johnson","SF","27","RK-EXT","$30,000,000","16.39%","$30,000,000","'-","'-","'-","$30,000,000"
+"Daniels                   Dyson Daniels","PG","25","RK-EXT","$25,000,000","13.66%","$25,000,000","'-","'-","'-","$25,000,000"
+"Alexander-Walker                   Nickeil Alexander-Walker","SG","30","S&T","$15,919,890","8.70%","$15,919,890","'-","'-","'-","$15,919,890"
+"Kispert                   Corey Kispert","SF","29","RK-EXT","$13,025,000","7.12%","$13,025,000","'-","'-","'-","'-"
+"Newell                   Asa Newell","PF","23","RK-1ST","$6,042,814","3.30%","$6,042,814","'-","'-","'-","'-"
 

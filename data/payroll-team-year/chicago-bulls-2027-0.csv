@@ -1,7 +1,7 @@
-" ","Player (5)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Giddey                     Josh Giddey","SG","25","$25,000,000","14.34%","$25,000,000","$25,000,000","$25,000,000","$25,000,000","2029"
-"2","Williams                     Patrick Williams","PF","26","$18,000,000","10.33%","$18,000,000","$18,000,000","$18,000,000","$18,000,000","2029"
-"3","Jones                     Tre Jones","PG","28","$8,000,000","4.59%","$8,000,000","$8,000,000","$8,000,000","'-","2028"
-"4","Buzelis                     Matas Buzelis","SF","23","$7,584,283","4.35%","$7,584,283","$7,584,283","$7,584,283","'-","2028"
-"5","Essengue                     Noa Essengue","PF","21","$5,972,760","3.43%","$5,972,760","$5,972,760","$5,972,760","'-","2029"
+"Player (5 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Giddey                   Josh Giddey","SG","25","FA","$25,000,000","14.34%","$25,000,000","'-","'-","'-","$25,000,000"
+"Williams                   Patrick Williams","PF","26","FA","$18,000,000","10.33%","$18,000,000","'-","'-","'-","$18,000,000"
+"Jones                   Tre Jones","PG","28","FA","$8,000,000","4.59%","$8,000,000","'-","'-","'-","'-"
+"Buzelis                   Matas Buzelis","SF","23","RK-1ST","$7,584,283","4.35%","$7,584,283","'-","'-","'-","'-"
+"Essengue                   Noa Essengue","PF","21","RK-1ST","$5,972,760","3.43%","$5,972,760","'-","'-","'-","'-"
 

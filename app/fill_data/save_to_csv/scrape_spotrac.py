@@ -99,11 +99,11 @@ def get_all_salary_csvs() -> None:
             )
 
         # Iterate over years and teams
-        for year in range(2027, 2032):
+        for year in range(2011, 2032):
             for _, row in teams.iterrows():
                 team_name: str = row["team_name"]
-                if team_name == "los-angeles-clippers":
-                    team_name = "la-clippers"
+                if team_name == "Los Angeles Clippers":
+                    team_name = "LA Clippers"
                 get_salary_data(page, year, team_name, DOWNLOAD_DIR)
 
         print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")

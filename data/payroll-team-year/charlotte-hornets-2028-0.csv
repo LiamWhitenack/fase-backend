@@ -1,7 +1,7 @@
-" ","Player (5)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Ball                     LaMelo Ball","PG","27","$46,394,040","25.35%","$46,394,040","$46,394,040","$46,394,040","$46,394,040","2029"
-"2","Knueppel                     Kon Knueppel","SF","23","$13,937,214","7.62%","$13,937,214","$13,937,214","$13,937,214","'-","2029"
-"3","McNeeley                     Liam McNeeley","SF","23","$5,487,778","3.00%","$5,487,778","$5,487,778","$5,487,778","'-","2029"
-"4","Kalkbrenner                     Ryan Kalkbrenner","C","27","$2,735,698","1.49%","$2,735,698","$2,735,698","$2,735,698","'-","2029"
-"5","James                     Sion James","SF","26","$2,735,698","1.49%","$2,735,698","$2,735,698","$2,735,698","'-","2029"
+"Player (5 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Ball                   LaMelo Ball","PG","27","DRK-EXT","$46,394,040","25.35%","$46,394,040","'-","'-","'-","$46,394,040"
+"Knueppel                   Kon Knueppel","SF","23","RK-1ST","$13,937,214","7.62%","$13,937,214","'-","'-","'-","'-"
+"McNeeley                   Liam McNeeley","SF","23","RK-1ST","$5,487,778","3.00%","$5,487,778","'-","'-","'-","'-"
+"Kalkbrenner                   Ryan Kalkbrenner","C","27","RK-2ND","$2,735,698","1.49%","$2,735,698","'-","'-","'-","'-"
+"James                   Sion James","SF","26","RK-2ND","$2,735,698","1.49%","$2,735,698","'-","'-","'-","'-"
 

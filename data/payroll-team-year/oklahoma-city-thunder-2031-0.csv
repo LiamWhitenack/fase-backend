@@ -1,5 +1,5 @@
-" ","Player (3)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap"," "," "," "," "," "
-"1","Gilgeous-Alexander                     Shai Gilgeous-Alexander","PG","33","$74,152,050","35.00%","","","","","Bird"
-"2","Holmgren                     Chet Holmgren","C","29","$63,558,900","30.00%","","","","",""
-"3","Williams                     Jalen Williams","SF","30","$63,558,900","30.00%","","","","","Bird"
+"Player (3)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Qualifying Offer"," "," "," "," "
+"Gilgeous-Alexander                   Shai Gilgeous-Alexander","PG","33","DVET-EXT","$74,152,050","35.00%","'-","","","Bird",""
+"Williams                   Jalen Williams","SF","30","DRK-EXT","$63,558,900","30.00%","'-","","","Bird",""
+"Holmgren                   Chet Holmgren","C","29","rookie-maximum-extension","$63,558,900","30.00%","'-","","","",""
 

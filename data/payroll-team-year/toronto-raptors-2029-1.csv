@@ -1,7 +1,7 @@
-" ","Player (4)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap"," "," "," "," "," "
-"1","Quickley                     Immanuel Quickley","PG","30","$52,500,000","27.32%","","","","","Bird"
-"2","Murray-Boyles                     Collin Murray-Boyles","PF","24","$26,624,052","13.85%","","","","","Restricted Bird"
-"3","Nwora                     Jordan Nwora","SF","31","$5,700,000","2.97%","","","","",""
-"4","Barton                     Will Barton","SG","39","$2,853,371","1.48%","","","","","Non-Bird"
-"Incomplete Roster Charge","","","","                                                   $15,816,800"," "," "," "," "," "," "
+"Player (4)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Qualifying Offer"," "," "," "," "
+"Quickley                   Immanuel Quickley","PG","30","FA","$52,500,000","27.32%","'-","","","Bird",""
+"Murray-Boyles                   Collin Murray-Boyles","PF","24","RK-1ST","$26,624,052","13.85%","$12,912,666","","","Restricted Bird",""
+"Nwora                   Jordan Nwora","SF","31","FA","$5,700,000","2.97%","'-","","","",""
+"Barton                   Will Barton","SG","39","ROS","$2,853,371","1.48%","'-","","","Non-Bird",""
+"Incomplete Roster Charge"," "," "," ","                                   $15,816,800"," "," "," "," "," "," "
 

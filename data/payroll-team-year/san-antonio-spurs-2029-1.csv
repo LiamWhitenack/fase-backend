@@ -1,7 +1,7 @@
-" ","Player (4)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap"," "," "," "," "," "
-"1","Harper                     Dylan Harper","PG","23","$42,932,485","22.34%","","","","","Restricted Bird"
-"2","Vassell                     Devin Vassell","SG","29","$40,500,000","21.08%","","","","","Bird"
-"3","Bryant                     Carter Bryant","PF","24","$23,950,617","12.46%","","","","","Restricted Early Bird"
-"4","Kornet                     Luke Kornet","C","34","$17,765,000","9.24%","","","","","Bird"
-"Incomplete Roster Charge","","","","                                                   $17,398,480"," "," "," "," "," "," "
+"Player (4)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Qualifying Offer"," "," "," "," "
+"Harper                   Dylan Harper","PG","23","RK-1ST","$42,932,485","22.34%","$24,128,057","","","Restricted Bird",""
+"Vassell                   Devin Vassell","SG","29","RK-EXT","$40,500,000","21.08%","'-","","","Bird",""
+"Bryant                   Carter Bryant","PF","24","RK-1ST","$23,950,617","12.46%","$11,903,456","","","Restricted Early Bird",""
+"Kornet                   Luke Kornet","C","34","FA","$17,765,000","9.24%","'-","","","Bird",""
+"Incomplete Roster Charge"," "," "," ","                                   $17,398,480"," "," "," "," "," "," "
 

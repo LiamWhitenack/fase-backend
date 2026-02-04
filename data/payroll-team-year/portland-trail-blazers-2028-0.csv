@@ -1,5 +1,5 @@
-" ","Player (3)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Sharpe                     Shaedon Sharpe","SG","25","$23,303,571","12.73%","$23,303,571","$23,303,571","$23,303,571","$23,303,571","2030"
-"2","Camara                     Toumani Camara","PF","28","$20,973,214","11.46%","$20,973,214","$20,973,214","$20,973,214","$20,973,214","2030"
-"3","Hansen                     Yang Hansen","C","23","$7,462,788","4.08%","$7,462,788","$7,462,788","$7,462,788","$7,462,788","2029"
+"Player (3 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Sharpe                   Shaedon Sharpe","SG","25","RK-EXT","$23,303,571","12.73%","$23,303,571","'-","'-","'-","$23,303,571"
+"Camara                   Toumani Camara","PF","28","VET-EXT","$20,973,214","11.46%","$20,973,214","'-","'-","'-","$20,973,214"
+"Hansen                   Yang Hansen","C","23","RK-1ST","$7,462,788","4.08%","$7,462,788","'-","'-","'-","$7,462,788"
 

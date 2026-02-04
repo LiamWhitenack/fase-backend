@@ -1,5 +1,5 @@
-" ","Player (3)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Gilgeous-Alexander                     Shai Gilgeous-Alexander","PG","31","$70,765,800","36.83%","$70,765,800","$70,765,800","$70,765,800","$70,765,800","2031"
-"2","Holmgren                     Chet Holmgren","C","27","$51,460,000","26.78%","$51,460,000","$51,460,000","$51,460,000","$51,460,000","2031"
-"3","Williams                     Jalen Williams","SF","28","$51,460,000","26.78%","$51,460,000","$51,460,000","$51,460,000","$51,460,000","2031"
+"Player (3 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Gilgeous-Alexander                   Shai Gilgeous-Alexander","PG","31","DVET-EXT","$70,765,800","36.83%","$70,765,800","'-","'-","'-","$70,765,800"
+"Williams                   Jalen Williams","SF","28","DRK-EXT","$51,460,000","26.78%","$51,460,000","'-","'-","'-","$51,460,000"
+"Holmgren                   Chet Holmgren","C","27","rookie-maximum-extension","$51,460,000","26.78%","$51,460,000","'-","'-","'-","$51,460,000"
 

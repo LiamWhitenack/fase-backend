@@ -1,6 +1,6 @@
-" ","Player (3)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap"," "," "," "," "," "
-"1","Mann                     Tre Mann","PG","27","$15,200,000","8.31%","","","","","Bird"
-"2","Salaun                     Tidjane Salaun","PF","23","$10,445,633","5.71%","","","","","Restricted Bird"
-"3","Gibson                     Taj Gibson","C","43","$2,717,496","1.48%","","","","","Non-Bird"
-"Incomplete Roster Charge","","","","                                                   $10,544,534"," "," "," "," "," "," "
+"Player (3)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Qualifying Offer"," "," "," "," "
+"Mann                   Tre Mann","PG","27","FA","$15,200,000","8.31%","'-","","","Bird",""
+"Salaun                   Tidjane Salaun","PF","23","RK-1ST","$10,445,633","5.71%","$14,979,038","","","Restricted Bird",""
+"Gibson                   Taj Gibson","C","43","FA","$2,717,496","1.48%","'-","","","Non-Bird",""
+"Incomplete Roster Charge"," "," "," ","                                   $10,544,534"," "," "," "," "," "," "
 

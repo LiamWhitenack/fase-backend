@@ -1,6 +1,6 @@
-" ","Player (4)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Edwards                     Anthony Edwards","SG","27","$55,672,848","30.42%","$55,672,848","$55,672,848","$55,672,848","$55,672,848","2029"
-"2","McDaniels                     Jaden McDaniels","PF","28","$29,813,790","16.29%","$30,951,720","$29,813,790","$29,813,790","$29,813,793","2029"
-"3","Reid                     Naz Reid","C","29","$26,724,138","14.60%","$26,724,138","$26,724,138","$26,724,138","$26,724,138","2030"
-"4","Beringer                     Joan Beringer","C","22","$7,098,163","3.88%","$7,098,163","$7,098,163","$7,098,163","'-","2029"
+"Player (4 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Edwards                   Anthony Edwards","SG","27","DRK-EXT","$55,672,848","30.42%","$55,672,848","'-","'-","'-","$55,672,848"
+"McDaniels                   Jaden McDaniels","PF","28","RK-EXT","$29,813,790","16.29%","$29,813,790","'-","$1,137,930","'-","$29,813,793"
+"Reid                   Naz Reid","C","29","FA","$26,724,138","14.60%","$26,724,138","'-","'-","'-","$26,724,138"
+"Beringer                   Joan Beringer","C","22","RK-1ST","$7,098,163","3.88%","$7,098,163","'-","'-","'-","'-"
 

@@ -1,7 +1,7 @@
-" ","Player (5)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Fox                     De'Aaron Fox","PG","31","$57,768,000","31.56%","$57,768,000","$57,768,000","$57,768,000","$57,768,000","2030"
-"2","Vassell                     Devin Vassell","SG","28","$27,000,000","14.75%","$29,200,000","$27,000,000","$27,000,000","$27,000,000","2029"
-"3","Harper                     Dylan Harper","PG","22","$17,172,994","9.38%","$17,172,994","$17,172,994","$17,172,994","'-","2029"
-"4","Kornet                     Luke Kornet","C","33","$9,350,000","5.11%","$9,350,000","$9,350,000","$9,350,000","'-","2029"
-"5","Bryant                     Carter Bryant","PF","23","$7,983,539","4.36%","$7,983,539","$7,983,539","$7,983,539","'-","2029"
+"Player (5 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Fox                   De'Aaron Fox","PG","31","VET-EXT","$57,768,000","31.56%","$57,768,000","'-","'-","'-","$57,768,000"
+"Vassell                   Devin Vassell","SG","28","RK-EXT","$27,000,000","14.75%","$27,000,000","'-","$2,200,000","'-","$27,000,000"
+"Harper                   Dylan Harper","PG","22","RK-1ST","$17,172,994","9.38%","$17,172,994","'-","'-","'-","'-"
+"Kornet                   Luke Kornet","C","33","FA","$9,350,000","5.11%","$9,350,000","'-","'-","'-","'-"
+"Bryant                   Carter Bryant","PF","23","RK-1ST","$7,983,539","4.36%","$7,983,539","'-","'-","'-","'-"
 

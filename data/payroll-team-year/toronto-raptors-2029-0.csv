@@ -1,4 +1,4 @@
-" ","Player (2)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap","Apron Salary","Luxury Tax","Cash                         Total","Cash                         Guaranteed","Free Agent                         Year"
-"1","Barnes                     Scottie Barnes","PF","28","$51,033,510","26.56%","$51,033,510","$51,033,510","$51,033,510","$51,033,510","2030"
-"2","Poeltl                     Jakob Poeltl","C","34","$27,300,000","14.21%","$27,300,000","$27,300,000","$27,300,000","$5,000,000","2030"
+"Player (2 of 15 + 0 of 3 TW)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Base Salary","Incentives                 Likely","Incentives                 Unlikely","Trade Bonus                 Proration","Guaranteed"
+"Barnes                   Scottie Barnes","PF","28","DRK-EXT","$51,033,510","26.56%","$51,033,510","'-","'-","'-","$51,033,510"
+"Poeltl                   Jakob Poeltl","C","34","VET-EXT","$27,300,000","14.21%","$27,300,000","'-","'-","'-","$5,000,000"
 
