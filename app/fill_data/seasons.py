@@ -1,4 +1,5 @@
 from pandas import read_csv
+from sqlalchemy import and_, select
 
 from app.data.connection import get_session
 from app.data.league.season import Season
@@ -13,6 +14,13 @@ if __name__ == "__main__":
         for year, cap, inflation_adjusted in read_csv(
             filepath_or_buffer="data/cap-by-year.csv", index_col=0
         ).itertuples():
+            if (
+                session.execute(
+                    select(Season).where(Season.id == year)
+                ).scalar_one_or_none()
+                is not None
+            ):
+                continue
             session.add(
                 Season(
                     id=year,
@@ -20,9 +28,17 @@ if __name__ == "__main__":
                     inflation_adjusted_cap=parse_dollars(inflation_adjusted)
                     if inflation_adjusted == inflation_adjusted
                     else None,
-                    luxury_tax_threshold=None,
-                    first_apron=None,
-                    second_apron=None,
                 )
             )
+            session.commit()
+
+        for year in range(1950, 2099):
+            if (
+                session.execute(
+                    select(Season).where(Season.id == year)
+                ).scalar_one_or_none()
+                is not None
+            ):
+                continue
+            session.add(Season(id=year))
             session.commit()
