@@ -6,13 +6,13 @@ GET_SALARY_TEST_DATA_TEST_CASES = [
     GetSalaryYearsTestCase(
         id="Active Veteran",
         name="Klay Thompson",
-        expected_seasons=range(2011, 2028),
+        expected_seasons=range(2012, 2028),
         seed_data=THOMPSON_CONTRACT_DATA,
     ),
     GetSalaryYearsTestCase(
-        id="Active Veteran",
-        name="Klay Thompson",
-        expected_seasons=range(2011, 2028),
+        id="Potential Superstar",
+        name="Patrick Williams",
+        expected_seasons=range(2012, 2028),
         seed_data=THOMPSON_CONTRACT_DATA,
     ),
 ]
