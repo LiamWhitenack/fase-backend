@@ -30,14 +30,14 @@ def get_salary_object(
 
     if buyout:
         return TeamPlayerBuyout(
-            year=year,
+            year=year + 1,
             team_id=team_id,
             player_id=player_id,
             salary=parse_dollars(row["Cap Hit"]),
         )
 
     return TeamPlayerSalary(
-        year=year,
+        year=year + 1,
         team_id=team_id,
         player_id=player_id,
         cap_hit_percent=parse_percent(

@@ -76,10 +76,11 @@ def get_all_contract_objects() -> Iterable[Contract]:
 
     name_finder = NameMatchFinder()
     options = get_options()
-    for year, df in enumerate(map(read_csv, listpathdir("data/contracts")), start=2011):
+    for df in map(read_csv, listpathdir("data/contracts")):
         for _, row in df.iterrows():
             if row["Yrs"] != row["Yrs"]:
                 continue
+            year = int(row["Start"])
             age = row["Age                     At Signing"]
             player_id = name_finder.get_player_id(
                 row["Player"], year, age=int(age) if age == age else None
@@ -103,7 +104,7 @@ def get_all_contract_objects() -> Iterable[Contract]:
                 value=parse_dollars(row["Value"])
                 if row["Value"] == row["Value"]
                 else None,
-                start_year=year,
+                start_year=year + 1,
                 duration=int(row["Yrs"]),
                 option_1=option_1,
                 option_2=option_2,
