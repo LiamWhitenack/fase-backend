@@ -120,7 +120,7 @@ def salary_exists(session: Session, obj: TeamPlayerSalary) -> bool:
             and_(
                 TeamPlayerSalary.team_id == obj.team_id,
                 TeamPlayerSalary.player_id == obj.player_id,
-                TeamPlayerSalary.year == obj.year,
+                TeamPlayerSalary.season == obj.season,
             )
         )
     ).all()
@@ -133,7 +133,7 @@ def buyout_exists(session: Session, obj: TeamPlayerBuyout) -> bool:
             and_(
                 TeamPlayerBuyout.team_id == obj.team_id,
                 TeamPlayerBuyout.player_id == obj.player_id,
-                TeamPlayerBuyout.year == obj.year,
+                TeamPlayerBuyout.season == obj.season,
             )
         )
     ).all()

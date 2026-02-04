@@ -20,7 +20,7 @@ class TeamPlayerSalary(Base):
     )
 
     # ---- core fields ----
-    year: Mapped[int] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(Integer, index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     cap_hit_percent: Mapped[int | None] = mapped_column(Float)
@@ -35,7 +35,7 @@ class TeamPlayerSalary(Base):
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
-        Index("ix_salary_unique", "year", "team_id", "player_id", unique=True),
+        Index("ix_salary_unique", "season", "team_id", "player_id", unique=True),
     )
 
 
@@ -46,12 +46,12 @@ class TeamPlayerBuyout(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # ---- core fields ----
-    year: Mapped[int] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(Integer, index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     salary: Mapped[int | None] = mapped_column(Integer)
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
-        Index("ix_buyout_unique", "year", "team_id", "player_id", unique=True),
+        Index("ix_buyout_unique", "season", "team_id", "player_id", unique=True),
     )
