@@ -155,10 +155,14 @@ def get_player_syntax(
     return res
 
 
-def save_as_python(player_ids: list[int], path: str = "test.py") -> None:
+def save_as_python(
+    player_ids: list[int], path: str = "test.py", variable_name: str | None = None
+) -> None:
     with get_session() as session:
         with open(path, "w") as f:
             f.write("from app.data.league import *\n\n")
+            if variable_name is not None:
+                f.write(variable_name + " = ")
             f.write(sqlalchemy_syntax_to_list(get_player_syntax(session, player_ids)))
 
 
@@ -186,5 +190,7 @@ if __name__ == "__main__":
             1631,
             240,
             78325,
-        ]
+        ],
+        path="tests/data/player_contract_data.py",
+        variable_name="THOMPSON_CONTRACT_DATA",
     )
