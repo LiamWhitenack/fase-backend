@@ -26,6 +26,17 @@ dependencies = [
     "uvicorn[standard]>=0.40.0",
 ]
 
+[tool.ruff.lint]
+select = [
+  "ANN001", # missing type annotation for function argument
+  "ANN002", # missing type annotation for *args
+  "ANN003", # missing type annotation for **kwargs
+  "ANN201", # missing return type annotation (public function)
+  "ANN202", # missing return type annotation (private function)
+  "ANN204", # missing return type annotation (special method)
+]
+
+
 [dependency-groups]
 dev = [
     "black>=26.1.0",

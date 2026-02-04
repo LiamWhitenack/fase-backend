@@ -12,7 +12,6 @@
   "ty.disableLanguageServices": true,
   "ty.inlayHints.variableTypes": false,
   "ty.inlayHints.callArgumentNames": false,
-  "ruff.lint.enable": false,
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "none",
