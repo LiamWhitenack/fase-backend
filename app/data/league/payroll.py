@@ -20,7 +20,12 @@ class TeamPlayerSalary(Base):
     )
 
     # ---- core fields ----
-    season: Mapped[int] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        index=True,
+        nullable=False,  # or True if some games might not have a season
+    )
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     cap_hit_percent: Mapped[int | None] = mapped_column(Float)
@@ -46,7 +51,12 @@ class TeamPlayerBuyout(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # ---- core fields ----
-    season: Mapped[int] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        index=True,
+        nullable=False,  # or True if some games might not have a season
+    )
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     salary: Mapped[int | None] = mapped_column(Integer)

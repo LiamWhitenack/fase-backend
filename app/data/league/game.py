@@ -3,8 +3,8 @@ from datetime import date
 from sqlalchemy import Boolean, Date, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ...base import Base
-from .team import Team
+from app.base import Base
+from app.data.league.team import Team
 
 
 class Game(Base):
@@ -15,7 +15,13 @@ class Game(Base):
 
     # ---- core game info ----
     date: Mapped[date] = mapped_column(Date, index=True)  # ty:ignore[invalid-type-form]
-    season: Mapped[int] = mapped_column(Integer, index=True)
+
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # <-- foreign key
+        index=True,
+        nullable=False,  # or True if some games may have no season
+    )
 
     home_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     away_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
@@ -33,7 +39,7 @@ class Game(Base):
     neutral_site: Mapped[bool] = mapped_column(Boolean, default=False)
     game_type: Mapped[str] = mapped_column(String, default="Regular")
 
-    winning_team: Mapped[Team] = relationship("Team", foreign_keys=[winning_team_id])
+    winning_team: Mapped["Team"] = relationship("Team", foreign_keys=[winning_team_id])
     player_games = relationship(
         "PlayerGame",
         back_populates="game",

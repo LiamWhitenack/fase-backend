@@ -26,7 +26,13 @@ class PlayerGame(Base):
     team_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("teams.id"), index=True, nullable=False
     )
-    season: Mapped[str] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        index=True,
+        nullable=False,  # or True if some games might not have a season
+    )
+
     game_date: Mapped[Date] = mapped_column(Date, index=True)
     is_home_game: Mapped[bool] = mapped_column(Boolean)
 

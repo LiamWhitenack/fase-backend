@@ -75,7 +75,12 @@ class PlayerSeason(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
 
-    season: Mapped[int] = mapped_column(Integer, index=True)
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        index=True,
+        nullable=False,  # or True if some games might not have a season
+    )
 
     # ---- basic context ----
     age: Mapped[float | None] = mapped_column(Float)

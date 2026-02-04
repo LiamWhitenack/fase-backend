@@ -31,7 +31,12 @@ class TeamSeason(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
 
-    season: Mapped[int] = mapped_column(Integer)
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        index=True,
+        nullable=False,  # or True if some games might not have a season
+    )
 
     # Core record
     wins: Mapped[int] = mapped_column(Integer)

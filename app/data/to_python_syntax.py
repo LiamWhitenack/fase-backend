@@ -21,7 +21,7 @@ def sqlalchemy_to_syntax(objects: Iterable[Base]) -> list[str]:
     Convert an iterable of SQLAlchemy model instances into Python constructor syntax.
     """
 
-    def serialize_value(value):
+    def serialize_value(value: object) -> str:
         if isinstance(value, Enum):
             return repr(value.value)
 

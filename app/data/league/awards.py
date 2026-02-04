@@ -15,7 +15,14 @@ class Award(Base):
 
     # ---- award identity ----
     name: Mapped[str] = mapped_column(String, index=True)
-    season: Mapped[int] = mapped_column(Integer, index=True)
+
+    # Make season a foreign key
+    season: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("seasons.id", ondelete="CASCADE"),  # <-- foreign key
+        index=True,
+        nullable=False,  # or True if some awards can have no season
+    )
 
     # ---- recipient (one of these will be non-null) ----
     player_id: Mapped[int | None] = mapped_column(
