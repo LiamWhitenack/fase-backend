@@ -12,7 +12,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import DeclarativeMeta, Session
 
 from app.base import Base
-from app.data.connection import get_session
+from app.data.connection import Season, get_session
 from app.data.league.player import Player
 
 
@@ -166,6 +166,13 @@ def save_as_python(
             f.write(sqlalchemy_syntax_to_list(get_player_syntax(session, player_ids)))
 
 
+def save_seasons() -> None:
+    with get_session() as session:
+        with open("tests/data/seasons.py", "w") as f:
+            f.write("from app.data.connection import Season\n\n")
+            f.write(export_rows_as_orm_code(session, Season))
+
+
 if __name__ == "__main__":
     save_as_python(
         [
@@ -191,6 +198,6 @@ if __name__ == "__main__":
             240,
             78325,
         ],
-        path="tests/data/player_contract_data.py",
+        path="tests/data/thompson_contract_data.py",
         variable_name="THOMPSON_CONTRACT_DATA",
     )

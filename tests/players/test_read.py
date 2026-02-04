@@ -9,7 +9,7 @@ from app.crud.read.player import get_player_by_name
 from app.data.league import TeamPlayerSalary
 from app.data.league.player import Player
 from tests.conftest import parametrize
-from tests.data.player_contract_data import THOMPSON_CONTRACT_DATA
+from tests.data.thompson_contract_data import THOMPSON_CONTRACT_DATA
 from tests.players.cases import GET_SALARY_TEST_DATA_TEST_CASES
 from tests.players.dataclasses import GetAggregateSalaryTestCase, GetSalaryYearsTestCase
 from tests.utils import seed_test_data
@@ -33,7 +33,7 @@ def test_get_salaries_for_player(  # @IgnoreException
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
     salaries = player.salaries
-    assert {s.year for s in salaries} == set(case.expected_seasons)
+    assert {s.season for s in salaries} == set(case.expected_seasons)
 
 
 @parametrize(GET_SALARY_TEST_DATA_TEST_CASES)

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.base import Base
 from app.data.league import *
+from tests.data.seasons import SEASON_DATA
 
 DATABASE_URL = "postgresql+psycopg://athlete_user:athlete_password@localhost:6544/athlete_market_test"
 
@@ -24,6 +25,8 @@ Base.metadata.create_all(bind=engine)
 @contextmanager
 def get_test_session() -> Generator[Session, None, None]:
     session = SessionLocal()
+    session.add_all(SEASON_DATA)
+    session.commit()
     try:
         yield session
         session.commit()
