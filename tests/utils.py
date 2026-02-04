@@ -18,7 +18,17 @@ def get_model_class(model_name: str) -> type[Base]:
     return model  # ty:ignore[invalid-return-type]
 
 
+def delete_all_tables(session: Session) -> None:
+    # Get all table names in order of dependencies
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name == "seasons":
+            continue
+        session.execute(table.delete())
+    session.commit()
+
+
 def seed_test_data(session: Session, data: Iterable[dict[str, Any]], /) -> None:
+    delete_all_tables(session)
     for row in data:
         model_class = get_model_class(row["model"])
         session.add(model_class(**row["values"]))

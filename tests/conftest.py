@@ -2,12 +2,13 @@ from __future__ import annotations
 
 # test_utils.py
 import inspect
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from dataclasses import dataclass
 from functools import wraps
 from typing import Any, NoReturn
 
 import pytest
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.session import Session
 from starlette.testclient import TestClient
 
@@ -22,9 +23,11 @@ def client() -> TestClient:  # @IgnoreException
 
 
 @pytest.fixture
-def session() -> Session:  # @IgnoreException
+def session() -> Generator[Session, None, None]:  # @IgnoreException
+    """Provide a clean session for each test."""
     with get_test_session() as session:
-        return session
+        # yield the session for the test
+        yield session
 
 
 def parametrize(cases: Iterable[TestCase] = ()) -> Callable[..., Any]:

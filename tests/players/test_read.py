@@ -10,7 +10,10 @@ from app.data.league import TeamPlayerSalary
 from app.data.league.player import Player
 from tests.conftest import parametrize
 from tests.data.thompson_contract_data import THOMPSON_CONTRACT_DATA
-from tests.players.cases import GET_SALARY_TEST_DATA_TEST_CASES
+from tests.players.cases import (
+    GET_AGGREGATE_SALARY_TEST_CASES,
+    GET_SALARY_YEARS_TEST_CASES,
+)
 from tests.players.dataclasses import GetAggregateSalaryTestCase, GetSalaryYearsTestCase
 from tests.utils import seed_test_data
 
@@ -26,7 +29,7 @@ def test_get_active_players(session: Session) -> None:  # @IgnoreException
     assert "Amen Thompson" in active_players
 
 
-@parametrize(GET_SALARY_TEST_DATA_TEST_CASES)
+@parametrize(GET_SALARY_YEARS_TEST_CASES)
 def test_get_salaries_for_player(  # @IgnoreException
     session: Session, case: GetSalaryYearsTestCase
 ) -> None:
@@ -36,11 +39,11 @@ def test_get_salaries_for_player(  # @IgnoreException
     assert {s.season for s in salaries} == set(case.expected_seasons)
 
 
-@parametrize(GET_SALARY_TEST_DATA_TEST_CASES)
+@parametrize(GET_AGGREGATE_SALARY_TEST_CASES)
 def test_get_aggregate_earnings_for_player(  # @IgnoreException
     session: Session, case: GetAggregateSalaryTestCase
 ) -> None:
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
     salaries: Iterable[TeamPlayerSalary] = player.salaries
-    assert case.expected_aggregate_salary == sum(s.cash_total for s in salaries)
+    assert case.expected_aggregate_salary == sum(s.salary for s in salaries)

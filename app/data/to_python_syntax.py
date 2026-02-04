@@ -170,7 +170,7 @@ def save_seasons() -> None:
 
 if __name__ == "__main__":
     save_as_python(
-        [1641708, 1641709, 78326, 202691, 202684],
-        path="tests/data/thompson_contract_data.py",
-        variable_name="THOMPSON_CONTRACT_DATA",
+        [1630172, 101150, 42, 1630533],
+        path="tests/data/williams_contract_data.py",
+        variable_name="WILLIAMS_CONTRACT_DATA",
     )
