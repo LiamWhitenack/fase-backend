@@ -1,7 +1,7 @@
 from datetime import datetime
-from sqlalchemy import MetaData, DateTime
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from sqlalchemy import DateTime, MetaData
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 metadata = MetaData(
     naming_convention={
@@ -15,5 +15,3 @@ metadata = MetaData(
 
 class Base(DeclarativeBase):
     metadata = metadata
-
-    id: Mapped[int] = mapped_column(primary_key=True)
