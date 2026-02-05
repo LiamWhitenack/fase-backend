@@ -12,9 +12,14 @@ from tests.conftest import parametrize
 from tests.data.thompson_contract_data import THOMPSON_CONTRACT_DATA
 from tests.players.cases import (
     GET_AGGREGATE_SALARY_TEST_CASES,
+    GET_RELATIVE_SALARY_TEST_CASES,
     GET_SALARY_YEARS_TEST_CASES,
 )
-from tests.players.dataclasses import GetAggregateSalaryTestCase, GetSalaryYearsTestCase
+from tests.players.dataclasses import (
+    GetAggregateSalaryTestCase,
+    GetRelativeEarningsTestCase,
+    GetSalaryYearsTestCase,
+)
 from tests.utils import seed_test_data
 
 
@@ -46,6 +51,19 @@ def test_get_aggregate_earnings_for_player(  # @IgnoreException
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
     salaries: Iterable[TeamPlayerSalary] = player.salaries
-    assert case.expected_aggregate_salary == sum(
-        s.salary / s.season.max_salary_cap for s in salaries
+    assert sum(s.salary for s in salaries) == case.expected_aggregate_salary
+
+
+@parametrize(GET_RELATIVE_SALARY_TEST_CASES)
+def test_get_relative_earnings_for_player(  # @IgnoreException
+    session: Session, case: GetRelativeEarningsTestCase
+) -> None:
+    seed_test_data(session, case.seed_data)
+    player = get_player_by_name(session, case.name)
+    salaries: Iterable[TeamPlayerSalary] = [
+        s for s in player.salaries if s.season.id < 2027
+    ]
+    assert (
+        round(sum(s.salary / s.season.max_salary_cap for s in salaries), 2)
+        == case.expected_relative_earnings
     )
