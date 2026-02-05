@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.data.league.awards import Award
 from app.data.league.contract import Contract
 from app.data.league.game import Game

@@ -1,10 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
 
-from .player import Player
-from .team import Team
+if TYPE_CHECKING:
+    from app.data.league.season import Season
 
 
 class Award(Base):
@@ -17,7 +21,7 @@ class Award(Base):
     name: Mapped[str] = mapped_column(String, index=True)
 
     # Make season a foreign key
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # <-- foreign key
         index=True,
@@ -25,6 +29,7 @@ class Award(Base):
     )
 
     # ---- recipient (one of these will be non-null) ----
+    season: Mapped[Season] = relationship("Season")
     player_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id"), index=True, nullable=True
     )
@@ -34,7 +39,7 @@ class Award(Base):
         Index(
             "ix_award_unique_player",
             "name",
-            "season",
+            "season_id",
             "player_id",
             unique=True,
         ),

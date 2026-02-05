@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     Boolean,
     Float,
@@ -10,6 +15,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
 from app.data.league.team import Team
+
+if TYPE_CHECKING:
+    from app.data.connection import TeamPlayerSalary
+    from app.data.league.season import Season
 
 
 class Player(Base):
@@ -75,7 +84,7 @@ class PlayerSeason(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
 
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
         index=True,
@@ -130,6 +139,7 @@ class PlayerSeason(Base):
     field_goals_attempted_pg: Mapped[float] = mapped_column(Float)
 
     # ---- relationships ----
+    season: Mapped[Season] = relationship("Season")
     player: Mapped["Player"] = relationship(back_populates="seasons")
     team: Mapped["Team"] = relationship(back_populates="player_seasons")
 
@@ -138,7 +148,7 @@ class PlayerSeason(Base):
             "ix_player_season_unique",
             "player_id",
             "team_id",
-            "season",
+            "season_id",
             unique=True,
         ),
     )

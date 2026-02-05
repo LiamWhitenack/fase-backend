@@ -1,9 +1,17 @@
+from __future__ import annotations
+
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
+
+if TYPE_CHECKING:
+    from app.data.league.season import Season
+
+
 from app.data.league.team import Team
 
 
@@ -16,7 +24,7 @@ class Game(Base):
     # ---- core game info ----
     date: Mapped[date] = mapped_column(Date, index=True)  # ty:ignore[invalid-type-form]
 
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # <-- foreign key
         index=True,
@@ -39,6 +47,7 @@ class Game(Base):
     neutral_site: Mapped[bool] = mapped_column(Boolean, default=False)
     game_type: Mapped[str] = mapped_column(String, default="Regular")
 
+    season: Mapped[Season] = relationship("Season")
     winning_team: Mapped["Team"] = relationship("Team", foreign_keys=[winning_team_id])
     player_games = relationship(
         "PlayerGame",

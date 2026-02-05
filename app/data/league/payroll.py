@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, Index, Integer, Sequence, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...base import Base
+
+if TYPE_CHECKING:
+    from app.data.league.season import Season
 
 if TYPE_CHECKING:
     from .player import Player
@@ -20,7 +25,7 @@ class TeamPlayerSalary(Base):
     )
 
     # ---- core fields ----
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
         index=True,
@@ -36,11 +41,12 @@ class TeamPlayerSalary(Base):
     cash_garunteed: Mapped[int | None] = mapped_column(Integer)
 
     # ---- relationships ----
+    season: Mapped[Season] = relationship("Season")
     player: Mapped["Player"] = relationship("Player", back_populates="salaries")
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
-        Index("ix_salary_unique", "season", "team_id", "player_id", unique=True),
+        Index("ix_salary_unique", "season_id", "team_id", "player_id", unique=True),
     )
 
 
@@ -51,17 +57,18 @@ class TeamPlayerBuyout(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # ---- core fields ----
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
         index=True,
         nullable=False,  # or True if some games might not have a season
     )
+    season: Mapped[Season] = relationship("Season")
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     salary: Mapped[int | None] = mapped_column(Integer)
 
     __table_args__ = (
         # Ensure uniqueness per player per team per year
-        Index("ix_buyout_unique", "season", "team_id", "player_id", unique=True),
+        Index("ix_buyout_unique", "season_id", "team_id", "player_id", unique=True),
     )

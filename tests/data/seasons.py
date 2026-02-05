@@ -1,4 +1,4 @@
-from app.data.connection import Season
+from app.data.league import Season
 
 SEASON_DATA = [
     Season(

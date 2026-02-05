@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     Boolean,
     Date,
@@ -10,6 +14,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
+
+if TYPE_CHECKING:
+    from app.data.league.season import Season
 
 
 class PlayerGame(Base):
@@ -26,7 +33,7 @@ class PlayerGame(Base):
     team_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("teams.id"), index=True, nullable=False
     )
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
         index=True,
@@ -92,6 +99,7 @@ class PlayerGame(Base):
     pie: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # ---- relationships ----
+    season: Mapped[Season] = relationship("Season")
     game = relationship("Game", back_populates="player_games")
     # foreign key linking to PlayerSeason
     player_season_id: Mapped[int] = mapped_column(

@@ -58,7 +58,7 @@ def player_season_ids(session: Session) -> set[tuple[int, int]]:
         session.execute(
             select(
                 PlayerSeason.player_id,
-                PlayerSeason.season,
+                PlayerSeason.season_id,
             )
         ).all()
     )

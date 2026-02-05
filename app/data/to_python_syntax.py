@@ -9,7 +9,8 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import DeclarativeMeta, Session
 
 from app.base import Base
-from app.data.connection import Season, get_session
+from app.data.connection import get_session
+from app.data.league import Season
 from app.data.league.player import Player
 
 

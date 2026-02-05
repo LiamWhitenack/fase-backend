@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import enum
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from nba_api.stats.endpoints import teamgamelog
 from sqlalchemy import (
@@ -79,7 +82,7 @@ class TeamSeasonPlayoffRound(Base):
     ) -> list["TeamSeasonPlayoffRound"]:
         games = teamgamelog.TeamGameLog(
             team_id=nba_team_id,
-            season=team_season.season,
+            season=team_season.season_id,
             season_type_all_star="Playoffs",
         ).get_data_frames()[0]
 

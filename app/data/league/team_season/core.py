@@ -19,6 +19,9 @@ from app.base import Base
 from app.data.league.team import Team
 
 if TYPE_CHECKING:
+    from app.data.league.season import Season
+
+if TYPE_CHECKING:
     from app.data.league.team_season.draft_picks import DraftPick
     from app.data.league.team_season.finances import TeamSeasonFinance
     from app.data.league.team_season.playoffs import TeamSeasonPlayoffRound
@@ -26,12 +29,12 @@ if TYPE_CHECKING:
 
 class TeamSeason(Base):
     __tablename__ = "team_seasons"
-    __table_args__ = (UniqueConstraint("team_id", "season", name="uq_team_season"),)
+    __table_args__ = (UniqueConstraint("team_id", "season_id", name="uq_team_season"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
 
-    season: Mapped[int] = mapped_column(
+    season_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
         index=True,
@@ -67,6 +70,8 @@ class TeamSeason(Base):
     )
     clinched_division_title: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     clinched_playoff_birth: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    season: Mapped[Season] = relationship("Season")
 
     team: Mapped[Team] = relationship(back_populates="seasons")
 
