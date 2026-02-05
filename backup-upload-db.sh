@@ -20,13 +20,18 @@ fi
 
 echo "Dropping and recreating database: ${DB_NAME}"
 
-# Must connect to a *different* database to drop this one
 psql \
   --host="${DB_HOST}" \
   --port="${DB_PORT}" \
   --username="${DB_USER}" \
   --dbname="postgres" \
   <<EOF
+-- Kick everyone else off the DB
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = '${DB_NAME}'
+  AND pid <> pg_backend_pid();
+
 DROP DATABASE IF EXISTS ${DB_NAME};
 CREATE DATABASE ${DB_NAME};
 EOF
