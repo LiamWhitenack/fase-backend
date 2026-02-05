@@ -10,11 +10,12 @@ class Season(Base):
     # Financial attributes (all nullable)
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    max_salary_cap = Column(Float, nullable=True)
-    inflation_adjusted_cap = Column(Float, nullable=True)
-    luxury_tax_threshold = Column(Float, nullable=True)
-    first_apron = Column(Float, nullable=True)
-    second_apron = Column(Float, nullable=True)
+    max_salary_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    inflation_adjusted_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    luxury_tax_threshold: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    first_apron: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    second_apron: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    expected_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
 
     def __repr__(self) -> str:
         return (
