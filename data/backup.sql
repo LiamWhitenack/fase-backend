@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qIMBANcjnqK6aZblfroiP1gMlL21xIFm28pa8rGmkgmtIvJfssLLGMVv5kQa7Jx
+\restrict JcrzP4CMWljCMv23C68oBNKvBwOETlsNd1ZzKVdVowfY5fehQArnJQi16K3ih36
 
 -- Dumped from database version 16.10 (Debian 16.10-1.pgdg13+1)
 -- Dumped by pg_dump version 16.10 (Homebrew)
@@ -60,7 +60,7 @@ CREATE TABLE public.alembic_version (
 CREATE TABLE public.awards (
     id integer NOT NULL,
     name character varying NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     player_id integer
 );
 
@@ -257,7 +257,7 @@ ALTER SEQUENCE public.draft_prospects_id_seq OWNED BY public.draft_prospects.id;
 CREATE TABLE public.games (
     id integer NOT NULL,
     date date NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     home_team_id integer NOT NULL,
     away_team_id integer NOT NULL,
     home_team_score integer NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE public.player_games (
     game_id integer NOT NULL,
     player_season_id integer NOT NULL,
     team_id integer NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     game_date date NOT NULL,
     is_home_game boolean NOT NULL,
     minutes_played double precision NOT NULL,
@@ -366,7 +366,7 @@ CREATE TABLE public.player_seasons (
     id integer NOT NULL,
     player_id integer NOT NULL,
     team_id integer NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     age double precision,
     games_played integer NOT NULL,
     wins integer NOT NULL,
@@ -475,7 +475,8 @@ CREATE TABLE public.seasons (
     luxury_tax_threshold double precision,
     first_apron double precision,
     second_apron double precision,
-    id integer NOT NULL
+    id integer NOT NULL,
+    expected_cap integer
 );
 
 
@@ -505,7 +506,7 @@ ALTER SEQUENCE public.seasons_id_seq OWNED BY public.seasons.id;
 
 CREATE TABLE public.team_player_buyouts (
     id integer NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     team_id integer NOT NULL,
     player_id integer NOT NULL,
     salary integer
@@ -538,7 +539,7 @@ ALTER SEQUENCE public.team_player_buyouts_id_seq OWNED BY public.team_player_buy
 
 CREATE TABLE public.team_player_salaries (
     id integer NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     team_id integer NOT NULL,
     player_id integer NOT NULL,
     cap_hit_percent double precision,
@@ -638,7 +639,7 @@ ALTER SEQUENCE public.team_season_playoff_rounds_id_seq OWNED BY public.team_sea
 CREATE TABLE public.team_seasons (
     id integer NOT NULL,
     team_id integer NOT NULL,
-    season integer NOT NULL,
+    season_id integer NOT NULL,
     wins integer NOT NULL,
     losses integer NOT NULL,
     win_pct double precision NOT NULL,
@@ -818,7 +819,7 @@ ALTER TABLE ONLY public.teams ALTER COLUMN id SET DEFAULT nextval('public.teams_
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-fk_season_all_tables
+2653826c8950
 \.
 
 
@@ -826,7 +827,7 @@ fk_season_all_tables
 -- Data for Name: awards; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.awards (id, name, season, player_id) FROM stdin;
+COPY public.awards (id, name, season_id, player_id) FROM stdin;
 1	Most Valuable Player	2025	1628983
 2	Most Valuable Player	2024	203999
 3	Most Valuable Player	2023	203954
@@ -10880,6 +10881,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 14	2026-01-05 20:23:00	Milan Momcilovic	milan-momcilovic	SF	PF	80	\N	225	Iowa State	Pewaukee, WI	2004-09-22	54	51	3	21.74	19	28.7	6.2	11.3	0.544	3.9	7.3	0.54	1.9	2.2	0.881	3.1	0.8	0.9	0.3	0.8	1.5	18.2	7.7	14.2	4.9	9.2	2.4	2.8	3.9	1	1.2	0.3	1	1.9	22.8	0.736	0.719	0.647	0.195	0.428	22.4	0.22	1	24.7	0.176	0.095	0.264	147.5	97.9	10.3	2.8	13.1	\N
 16	2026-01-05 20:23:00	Zvonimir Ivisic	zvonimir-ivisic	C	\N	86	\N	250	Illinois	Vitez, Bosnia and Herzegovina	2003-09-19	58	\N	3	22.75	18	17.1	2.8	5.1	0.56	1.2	3.2	0.368	1.2	1.7	0.677	5.2	0.3	0.4	2.4	0.7	1.3	8	6	10.7	2.5	6.7	2.5	3.6	11	0.7	0.8	5	1.4	2.7	16.9	0.681	0.676	0.626	0.341	0.357	18.9	0.19	0.5	27.9	0.13	0.117	0.261	137.9	90.1	7.4	7.2	14.6	\N
 17	2026-01-05 20:23:00	Darius Acuff	darius-acuff	PG	\N	75	\N	190	Arkansas	Detroit, MI	2006-11-16	24	7	1	19.59	19	33.1	6.9	14.3	0.487	2.3	5.5	0.41	3.5	4.3	0.805	2.9	6.2	0.9	0.4	2.2	1.7	19.6	7.6	15.5	2.5	6	3.8	4.7	3.2	6.8	1	0.5	2.3	1.8	21.3	0.602	0.566	0.387	0.303	0.376	26.3	1.25	2.88	22.5	0.153	0.045	0.191	127.7	111.9	8.2	1.1	9.2	\N
+1033	2018-06-22 19:00:00	Anfernee Simons	anfernee-simons	SG	PG	75.25	81.25	183	G League	Altamonte, FL	1999-06-08	\N	\N	\N	19.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629014
 18	2026-01-05 20:23:00	Bennett Stirtz	bennett-stirtz	PG	\N	76	\N	190	Iowa	Liberty, MO	2003-10-03	17	\N	4	22.71	19	35.8	6.1	12.7	0.475	2.2	6	0.368	4	4.8	0.826	2.5	5	1.4	0.2	2	2.2	18.3	6.1	12.8	2.2	6	4	4.9	2.5	5	1.4	0.2	2	2.2	18.4	0.609	0.562	0.471	0.38	0.374	26	1.05	2.5	21.4	0.141	0.082	0.224	126.5	100.9	6.5	2.8	9.2	\N
 19	2026-01-05 20:23:00	KJ Lewis	kj-lewis	SG	\N	76	\N	210	Georgetown	El Paso, TX	2004-08-03	75	\N	3	21.88	18	30.1	4.7	11.8	0.401	0.9	3	0.315	4.4	5.9	0.755	5.5	2.9	2.1	0.6	2.1	2.9	14.8	5.6	14.1	1.1	3.6	5.3	7	6.6	3.5	2.5	0.7	2.5	3.5	17.7	0.509	0.441	0.255	0.5	0.344	27.9	0.72	1.37	19.3	0.052	0.074	0.125	107.3	103.7	2.4	2.4	4.8	\N
 20	2026-01-05 20:23:00	JT Toppin	jt-toppin	PF	\N	81	\N	230	Texas Tech	Dallas, TX	2005-06-14	31	\N	3	21.02	18	34.2	9.4	16.7	0.567	0.6	1.9	0.286	2.2	4.4	0.494	10.8	2.1	1.2	1.8	2.6	3.1	21.6	10	17.6	0.6	2	2.3	4.6	11.4	2.2	1.2	1.9	2.8	3.3	22.8	0.576	0.583	0.117	0.263	0.298	30.4	0.42	0.79	27.2	0.117	0.085	0.195	117.1	101.1	5.6	2.9	8.5	\N
@@ -10973,6 +10975,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 109	2025-06-25 20:00:00	Asa Newell	asa-newell	PF	\N	82.25	83.25	224	Georgia	Destin, FL	2005-10-05	\N	12	1	19.71	33	29	5.8	10.7	0.543	0.8	2.7	0.292	3.1	4.1	0.748	6.9	0.9	1	1	1.1	2.4	15.4	7.2	13.2	1	3.3	3.8	5.1	8.5	1.1	1.2	1.2	1.4	3	19.1	0.612	0.58	0.253	0.384	0.339	23.5	0.29	0.78	26.1	0.159	0.058	0.217	131.5	104.2	7.6	2	9.6	1642854
 110	2025-06-25 20:00:00	Yanic Konan Niederhauser	yanic-konan-niederhauser	C	\N	84.5	87.25	243	Penn State	Fraschels, Switzerland	2003-03-14	\N	\N	3	22.27	29	25.1	4.9	8.1	0.611	0	0.4	0.091	3	4.5	0.664	6.3	0.8	0.7	2.3	1.7	2.5	12.9	7.1	11.6	0	0.5	4.3	6.5	9.1	1.1	0.9	3.3	2.4	3.6	18.5	0.631	0.613	0.047	0.56	0.313	23.5	0.26	0.46	24.3	0.104	0.077	0.181	118.9	100.2	2.9	3.1	6.1	1642949
 111	2025-06-25 20:00:00	Lachlan Olbrich	lachlan-olbrich	PF	\N	82	83.25	230	Illawarra (NBL)	Adelaide, Australia	2003-12-30	\N	\N	\N	21.47	40	16.9	3.7	6	0.619	0.1	0.4	0.2	1.5	2.7	0.546	3.9	1.8	0.5	0.5	1	2.4	9	7.9	12.8	0.2	0.8	3.2	5.8	8.2	3.7	1	1	2.1	5	19.1	0.617	0.626	0.063	0.452	0.299	19.9	0.73	1.75	20.2	\N	\N	\N	125.5	112.5	\N	\N	\N	1642950
+550	2006-06-22 19:00:00	Bobby Jones	bobby-jones	SF	\N	78.75	81.5	211	Washington	Compton, CA	1984-01-09	\N	\N	4	22.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	9.8	1.2	3.6	3.6	4.9	6.7	1.8	1.6	0.7	2.7	4.3	14.1	0.581	0.533	0.368	0.494	0.344	19.1	0.43	0.65	\N	0.082	0.096	0.178	\N	\N	\N	\N	\N	77193
 112	2025-06-25 20:00:00	Micah Peavy	micah-peavy	SG	SF	79.5	79.25	212	Georgetown	Cibolo, TX	2001-07-16	\N	36	4	23.93	32	37	6.8	14.2	0.481	1.6	4.1	0.4	1.9	2.8	0.659	5.8	3.6	2.3	0.5	2.6	2.9	17.2	6.7	13.8	1.6	4	1.8	2.8	5.6	3.5	2.3	0.5	2.5	2.9	16.7	0.552	0.538	0.286	0.2	0.342	24.7	0.81	1.37	19.7	0.071	0.071	0.142	109.8	101.1	3.1	3.2	6.3	1642877
 113	2025-06-25 20:00:00	Noah Penda	noah-penda	SF	\N	79	\N	225	Le Mans Sarthe (France)	\N	2005-01-07	\N	\N	\N	20.45	37	27.3	3.5	7.9	0.447	1	3.1	0.322	2.2	3.3	0.667	5.5	2.7	1.2	0.9	1.6	2	10.2	4.6	10.4	1.3	4.1	2.9	4.4	7.3	3.5	1.6	1.2	2.2	2.7	13.5	0.542	0.51	0.395	0.423	0.335	18.4	0.83	1.62	16.2	\N	\N	\N	115.9	110	\N	\N	\N	1642869
 114	2025-06-25 20:00:00	Taelon Peter	taelon-peter	SG	\N	76	\N	210	Liberty	Russellville, AR	2002-02-27	\N	\N	4	23.31	35	22.7	4.8	8.3	0.578	2.2	4.9	0.453	1.9	2.5	0.773	4	1	0.9	0.1	0.6	2	13.7	7.6	13.1	3.5	7.7	3.1	4	6.4	1.6	1.5	0.2	1	3.2	21.7	0.724	0.711	0.588	0.304	0.389	24.1	0.4	1.71	27.2	0.166	0.101	0.267	136.6	93.6	6.8	2.2	9	1643007
@@ -10989,6 +10992,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 124	2025-06-25 20:00:00	Max Shulga	max-shulga	PG	SG	77.5	77.75	206	VCU	Kyiv, Ukraine	2002-06-25	\N	\N	4	22.99	35	32.8	4.4	10.1	0.435	2.1	5.3	0.387	4.2	5.4	0.783	5.9	4	1.8	0.1	1.7	2	15	4.8	11	2.3	5.8	4.6	5.9	6.4	4.4	1.9	0.1	1.9	2.2	16.5	0.595	0.537	0.528	0.537	0.369	21.9	1.05	2.36	23.2	0.15	0.094	0.244	130.4	94.8	5.8	3.6	9.4	1642917
 125	2025-06-25 20:00:00	Javon Small	javon-small	PG	\N	74.25	76.75	190	West Virginia	South Bend, IN	2002-12-19	\N	\N	4	22.5	32	36.1	5.7	13.7	0.418	2.6	7.3	0.353	4.6	5.2	0.88	4.1	5.6	1.5	0.3	2.7	1.5	18.6	5.7	13.6	2.6	7.3	4.5	5.2	4.1	5.6	1.5	0.3	2.7	1.5	18.5	0.576	0.513	0.537	0.379	0.387	28.2	1.24	2.07	22.3	0.114	0.076	0.187	115.4	100.4	7	3.6	10.6	1642914
 126	2025-06-25 20:00:00	Thomas Sorber	thomas-sorber	PF	C	82.5	90	263	Georgetown	Trenton, NJ	2005-12-25	\N	56	1	19.48	24	31.3	5.5	10.4	0.532	0.3	1.5	0.162	3.2	4.4	0.724	8.5	2.4	1.5	2	2.3	2.2	14.5	6.4	12	0.3	1.8	3.6	5	9.7	2.8	1.7	2.3	2.6	2.5	16.7	0.58	0.544	0.148	0.42	0.318	23.6	0.66	1.07	24.7	0.09	0.09	0.181	114.7	96.7	4.1	4.4	8.5	1642850
+551	2006-06-22 19:00:00	Rudy Gay	rudy-gay	SF	\N	80	87	222	UConn	Baltimore, MD	1986-08-17	\N	\N	2	19.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	14.4	1	3.1	3.6	4.9	7.4	2.4	2.1	1.8	2.9	2.7	17.8	0.533	0.495	0.217	0.34	0.339	25.2	0.5	0.83	\N	0.067	0.138	0.205	\N	\N	\N	\N	\N	200752
 127	2025-06-25 20:00:00	Adou Thiero	adou-thiero	SF	PF	79.5	84	218	Arkansas	Pittsburgh, PA	2004-05-08	\N	\N	3	21.12	27	27.5	5.1	9.4	0.545	0.4	1.6	0.256	4.4	6.5	0.686	5.8	1.9	1.6	0.7	1.7	2.6	15.1	6.7	12.3	0.5	2.1	5.8	8.5	7.6	2.5	2.1	1	2.2	3.3	19.7	0.605	0.567	0.17	0.692	0.322	25.8	0.54	1.11	25.1	0.124	0.081	0.205	120.6	99.2	5.9	4.7	10.6	1642876
 129	2025-06-25 20:00:00	Alex Toohey	alex-toohey	SF	\N	81	82.75	223	Sydney (NBL)	Canberra, Australia	2004-05-04	\N	\N	\N	21.13	32	23.5	4	8.6	0.465	1	2.9	0.34	2.4	3.2	0.738	3.8	1.3	1.4	0.8	1.1	1.7	11.4	6.1	13.2	1.5	4.5	3.6	4.9	5.8	2.1	2.2	1.2	1.7	2.6	17.4	0.562	0.524	0.342	0.375	0.349	20.4	0.46	1.23	17.7	\N	\N	\N	114.9	109.2	\N	\N	\N	1642893
 130	2025-06-25 20:00:00	Nolan Traore	nolan-traore	PG	\N	75	\N	175	Saint-Quentin (France)	Chennevières-sur-Marne, France	2006-05-28	\N	\N	\N	19.06	44	22.7	4.3	10.5	0.41	1.3	4	0.314	2.4	3.4	0.711	1.9	4.7	0.7	0	2.5	2.3	12.3	6.8	16.6	2	6.3	3.8	5.4	3	7.4	1.1	0.1	3.9	3.7	19.4	0.507	0.47	0.38	0.323	0.353	30.4	1.41	1.91	15.4	\N	\N	\N	105.7	114.5	\N	\N	\N	1642849
@@ -11157,6 +11161,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 382	2017-06-22 19:00:00	Frank Jackson	frank-jackson	PG	\N	75.5	79.5	202	Duke	Alpine, UT	1998-05-04	\N	\N	1	19.12	36	24.9	3.7	7.8	0.473	1.4	3.6	0.395	2.1	2.8	0.755	2.5	1.7	0.6	0.1	1.4	2.4	10.9	5.3	11.3	2.1	5.2	3.1	4.1	3.6	2.5	0.8	0.1	2	3.4	15.8	0.598	0.564	0.459	0.363	0.362	21.1	0.6	1.24	17	0.107	0.04	0.147	119	106.4	3.7	1.4	5.1	1628402
 383	2017-06-22 19:00:00	Monte Morris	monte-morris	PG	\N	74.5	76	175	Iowa State	Flint, MI	1995-06-27	\N	\N	4	21.98	35	35.3	6.2	13.3	0.465	1.5	4.1	0.378	2.5	3.2	0.802	4.8	6.2	1.5	0.3	1.2	1.5	16.4	6.3	13.5	1.6	4.2	2.6	3.2	4.9	6.3	1.5	0.3	1.2	1.5	16.7	0.555	0.523	0.308	0.239	0.36	22.8	1.4	5.17	24.7	0.155	0.055	0.21	126.1	103	7.5	3	10.5	1628420
 384	2017-06-22 19:00:00	Cameron Oliver	cameron-oliver	PF	\N	80.25	85.25	239	Nevada	Oakland, CA	1996-07-11	\N	\N	2	20.94	35	31.9	5.8	12.4	0.465	1.9	4.9	0.384	2.6	3.7	0.692	8.7	1.8	0.8	2.6	2.4	2.9	16	6.5	14	2.1	5.6	2.9	4.2	9.8	2.1	0.9	2.9	2.7	3.3	18.1	0.565	0.541	0.396	0.3	0.354	25.4	0.47	0.77	22.6	0.075	0.086	0.161	108	94.7	3.1	2.9	6.1	1628419
+552	2006-06-22 19:00:00	Mardy Collins	mardy-collins	SG	\N	77.5	82	224	Temple	Philadelphia, PA	1984-08-04	\N	\N	4	21.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	13.9	1.2	4.1	2.7	4.5	4.5	3.8	2.6	0.2	1.9	2.1	15.9	0.497	0.476	0.293	0.323	0.324	27.6	0.99	1.95	\N	0.04	0.119	0.158	\N	\N	\N	\N	\N	200776
 385	2017-06-22 19:00:00	Ivan Rabb	ivan-rabb	PF	\N	82	85.5	220	California	Oakland, CA	1997-02-04	\N	\N	2	20.37	31	32.6	4.9	10.1	0.484	0.3	0.6	0.4	4	6	0.663	10.5	1.5	0.7	1	2.2	3.1	14	5.4	11.1	0.3	0.7	4.4	6.7	11.5	1.7	0.7	1.1	2.4	3.4	15.4	0.541	0.497	0.064	0.599	0.321	23.8	0.46	0.72	21.7	0.083	0.099	0.182	109.9	91.6	3	3.4	6.4	1628397
 386	2017-06-22 19:00:00	Terrance Ferguson	terrance-ferguson	SG	\N	79	80.75	184	Adelaide (Australia)	Tulsa, OK	1998-05-17	\N	\N	\N	19.09	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628390
 387	2017-06-22 19:00:00	Derrick White	derrick-white	PG	SG	76.5	79.5	190	Colorado	Parker, CO	1994-07-02	\N	\N	4	22.96	34	32.8	6	11.9	0.507	1.7	4.2	0.396	4.4	5.4	0.813	4.1	4.4	1.2	1.4	2.4	2.1	18.1	6.6	13	1.8	4.6	4.8	5.9	4.5	4.8	1.4	1.6	2.6	2.3	19.8	0.627	0.578	0.356	0.45	0.366	25.3	1.13	1.83	27.3	0.161	0.05	0.211	124.9	104	9	3.4	12.4	1628401
@@ -11188,6 +11193,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 413	2017-06-22 19:00:00	Josh Jackson	josh-jackson	SF	\N	80	82	205	Kansas	Detroit, MI	1997-02-10	\N	\N	1	20.35	35	30.8	6.3	12.3	0.513	1	2.6	0.378	2.8	4.9	0.566	7.4	3	1.7	1.1	2.8	3	16.3	7.4	14.3	1.1	3	3.3	5.8	8.6	3.5	2	1.2	3.2	3.5	19.1	0.559	0.552	0.21	0.403	0.321	27.2	0.67	1.07	24.2	0.1	0.082	0.182	110.9	96.1	5.7	4.2	9.9	1628367
 414	2017-06-22 19:00:00	Jordan Bell	jordan-bell	PF	\N	80.5	83.75	224	Oregon	Long Beach, CA	1995-01-07	\N	\N	3	22.44	39	28.8	4.4	6.9	0.636	0.1	0.4	0.214	2.1	3	0.701	8.8	1.8	1.3	2.3	1.9	1.7	10.9	5.5	8.6	0.1	0.4	2.6	3.7	11	2.2	1.6	2.8	2.4	2.2	13.7	0.658	0.641	0.052	0.435	0.319	18	0.63	0.93	26.4	0.114	0.107	0.221	123.8	89.1	5.3	5.5	10.8	1628395
 415	2017-06-22 19:00:00	Frank Ntilikina	frank-ntilikina	PG	\N	78	\N	190	SIG Strasbourg	Strasbourg, France	1998-07-28	\N	\N	\N	18.89	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628373
+553	2006-06-22 19:00:00	Rajon Rondo	rajon-rondo	PG	\N	73	\N	171	Kentucky	Louisville, KY	1986-02-22	\N	\N	2	20.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	10.4	0.6	2.3	2.3	4.1	7.1	5.7	2.4	0.2	2.7	2.4	13	0.526	0.511	0.216	0.39	0.308	21.1	1.48	2.11	\N	0.053	0.099	0.152	\N	\N	\N	\N	\N	200765
 416	2017-06-22 19:00:00	Thomas Bryant	thomas-bryant	C	\N	82.75	90	248	Indiana	Rochester, NY	1997-07-31	\N	\N	2	19.88	34	28.1	4.4	8.4	0.519	0.7	1.8	0.383	3.2	4.4	0.73	6.6	1.5	0.8	1.5	2.3	3.1	12.6	5.6	10.8	0.9	2.3	4.1	5.6	8.5	1.9	1	2	2.9	3.9	16.1	0.601	0.56	0.211	0.519	0.339	22.2	0.44	0.64	21.6	0.101	0.059	0.159	115.4	101.9	3.8	2.4	6.2	1628418
 417	2017-06-22 19:00:00	Jonah Bolden	jonah-bolden	PF	\N	82	\N	220	Maccabi Tel Aviv	Melbourne, Australia	1996-01-02	\N	\N	\N	21.46	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1628413
 418	2017-06-22 19:00:00	Tyler Lydon	tyler-lydon	SF	PF	81.5	84	215	Syracuse	Elizaville, NY	1996-04-09	\N	\N	2	21.19	34	36.1	4.4	9.4	0.473	1.4	3.6	0.395	2.9	3.4	0.836	8.6	2.1	1	1.4	1.7	2.5	13.2	4.4	9.4	1.4	3.6	2.8	3.4	8.6	2.1	1	1.4	1.7	2.5	13.1	0.599	0.55	0.389	0.364	0.363	18	0.6	1.19	20.3	0.101	0.055	0.156	121.5	102.8	4.8	2.2	7	1628399
@@ -11310,10 +11316,6 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 547	2006-06-22 19:00:00	Dee Brown	dee-brown	PG	\N	72	\N	185	Illinois	Maywood, IL	1984-08-17	\N	\N	4	21.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.8	13.3	2.4	7.4	2.4	3.1	3.1	5.8	1.6	0	2.9	1.9	14.3	0.484	0.449	0.556	0.236	0.366	25.5	1.24	2.03	\N	0.024	0.091	0.115	\N	\N	\N	\N	\N	244
 548	2006-06-22 19:00:00	Renaldo Balkman	renaldo-balkman	SF	PF	78.5	85	206	South Carolina	Staten Island, NY	1984-07-14	\N	\N	3	21.92	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.6	9.2	0.1	0.5	2.1	3.8	8.8	2.7	2.4	1.8	2.4	3.1	13.4	0.608	0.616	0.052	0.416	0.297	20.4	0.77	1.12	\N	0.106	0.123	0.229	\N	\N	\N	\N	\N	200764
 549	2006-06-22 19:00:00	Shelden Williams	shelden-williams	PF	\N	80.5	88.25	258	Duke	Midwest City, OK	1983-10-21	\N	\N	4	22.65	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.1	12.3	0.1	0.2	6	8.1	11.5	1.2	1.8	4.1	2.7	3.4	20.3	0.629	0.58	0.015	0.659	0.324	25.8	0.26	0.44	\N	0.154	0.15	0.304	\N	\N	\N	\N	\N	200749
-550	2006-06-22 19:00:00	Bobby Jones	bobby-jones	SF	\N	78.75	81.5	211	Washington	Compton, CA	1984-01-09	\N	\N	4	22.43	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	4.7	9.8	1.2	3.6	3.6	4.9	6.7	1.8	1.6	0.7	2.7	4.3	14.1	0.581	0.533	0.368	0.494	0.344	19.1	0.43	0.65	\N	0.082	0.096	0.178	\N	\N	\N	\N	\N	77193
-551	2006-06-22 19:00:00	Rudy Gay	rudy-gay	SF	\N	80	87	222	UConn	Baltimore, MD	1986-08-17	\N	\N	2	19.83	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6.6	14.4	1	3.1	3.6	4.9	7.4	2.4	2.1	1.8	2.9	2.7	17.8	0.533	0.495	0.217	0.34	0.339	25.2	0.5	0.83	\N	0.067	0.138	0.205	\N	\N	\N	\N	\N	200752
-552	2006-06-22 19:00:00	Mardy Collins	mardy-collins	SG	\N	77.5	82	224	Temple	Philadelphia, PA	1984-08-04	\N	\N	4	21.86	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	6	13.9	1.2	4.1	2.7	4.5	4.5	3.8	2.6	0.2	1.9	2.1	15.9	0.497	0.476	0.293	0.323	0.324	27.6	0.99	1.95	\N	0.04	0.119	0.158	\N	\N	\N	\N	\N	200776
-553	2006-06-22 19:00:00	Rajon Rondo	rajon-rondo	PG	\N	73	\N	171	Kentucky	Louisville, KY	1986-02-22	\N	\N	2	20.31	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5	10.4	0.6	2.3	2.3	4.1	7.1	5.7	2.4	0.2	2.7	2.4	13	0.526	0.511	0.216	0.39	0.308	21.1	1.48	2.11	\N	0.053	0.099	0.152	\N	\N	\N	\N	\N	200765
 554	2006-06-22 19:00:00	Brandon Roy	brandon-roy	SG	\N	78.25	80	207	Washington	Seattle, WA	1984-07-23	\N	\N	4	21.9	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	7.8	15.5	1.3	3.3	5.9	7.3	6.4	4.6	1.6	0.9	2.6	2.8	22.9	0.606	0.551	0.216	0.47	0.358	27.5	0.91	1.8	\N	0.157	0.111	0.268	\N	\N	\N	\N	\N	200750
 555	2006-06-22 19:00:00	Kosta Perović	kosta-perovic	C	\N	86	\N	240	Partizan Belgrade (Serbia)	Osijek, Croatia	1985-02-19	\N	\N	\N	21.32	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	5.1	10	0	0	4.1	6.1	6	0.5	2.4	0.8	2.3	4.2	14.2	0.551	0.505	0	0.611	0.313	\N	\N	0.23	\N	\N	\N	\N	\N	\N	\N	\N	\N	200785
 556	2006-06-22 19:00:00	Marcus Vinicius	marcus-vinicius	SF	PF	80	\N	225	Objetivo São Carlos (Brazil)	Rio de Janeiro, Brazil	1984-05-31	\N	\N	\N	22.04	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	200790
@@ -11792,7 +11794,6 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 1030	2018-06-22 19:00:00	Aaron Holiday	aaron-holiday	PG	\N	72.75	79.5	187	UCLA	Chatsworth, CA	1996-09-30	\N	\N	3	21.72	33	37.7	6.4	13.9	0.461	2.7	6.2	0.429	4.8	5.8	0.828	3.7	5.8	1.3	0.2	3.8	2.6	20.3	6.1	13.3	2.5	5.9	4.6	5.6	3.5	5.6	1.2	0.2	3.6	2.5	19.4	0.609	0.557	0.446	0.417	0.381	26.7	1.12	1.54	21.1	0.119	0.039	0.158	115.4	108.1	5.3	0.6	5.9	1628988
 1031	2018-06-22 19:00:00	Zhaire Smith	zhaire-smith	SG	\N	76	81.75	199	Texas Tech	Garland, TX	1999-06-04	\N	\N	1	19.04	37	28.4	4.2	7.5	0.556	0.5	1.1	0.45	2.5	3.4	0.717	5	1.8	1.1	1.1	1.1	1.8	11.3	5.3	9.5	0.6	1.4	3.1	4.4	6.3	2.3	1.4	1.4	1.4	2.3	14.3	0.618	0.588	0.144	0.458	0.336	18.3	0.69	1.61	23	0.126	0.084	0.213	128.7	95.1	6.1	4.7	10.8	1629015
 1032	2018-06-22 19:00:00	Jarred Vanderbilt	jarred-vanderbilt	PF	\N	81	85	218	Kentucky	Houston, TX	1999-04-03	\N	\N	1	19.21	14	17	2.1	4.9	0.426	0	0.1	0	1.7	2.7	0.632	7.9	1	0.4	0.8	1.1	2.6	5.9	4.4	10.3	0	0.2	3.6	5.7	16.6	2.1	0.9	1.7	2.3	5.6	12.4	0.476	0.426	0.015	0.559	0.308	20.8	0.51	0.93	21.6	0.084	0.084	0.168	111	93.7	3.5	2.9	6.4	1629020
-1033	2018-06-22 19:00:00	Anfernee Simons	anfernee-simons	SG	PG	75.25	81.25	183	G League	Altamonte, FL	1999-06-08	\N	\N	\N	19.03	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629014
 1034	2018-06-22 19:00:00	Shake Milton	shake-milton	SG	PG	77.5	84.75	207	SMU	Owasso, OK	1996-09-26	\N	\N	3	21.73	22	36.4	5.6	12.5	0.449	2.5	5.9	0.434	4.3	5	0.847	4.7	4.4	1.4	0.6	2.3	1.7	18	5.5	12.3	2.5	5.8	4.2	5	4.6	4.3	1.4	0.6	2.3	1.7	17.8	0.606	0.551	0.471	0.405	0.383	25	1.04	1.92	24.2	0.14	0.065	0.21	122.8	100.4	6.8	2	8.7	1629003
 1035	2018-06-22 19:00:00	Isaac Bonga	isaac-bonga	SF	\N	81	\N	200	Frankfurt	Neuwied, Germany	1999-11-08	\N	\N	\N	18.61	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	1629067
 1036	2018-06-22 19:00:00	George King	george-king	SF	\N	78	83.5	219	Colorado	Fayetteville, NC	1994-01-15	\N	\N	4	24.42	32	28.5	4.4	10	0.445	1.9	4.9	0.395	2.1	2.7	0.782	7.8	1.1	0.5	0.7	2	2.4	12.9	5.6	12.6	2.4	6.2	2.7	3.4	9.9	1.4	0.7	0.8	2.5	3.1	16.3	0.574	0.542	0.492	0.273	0.372	23.3	0.35	0.55	18.8	0.074	0.057	0.131	109.3	102.3	3.2	1.6	4.7	77268
@@ -12267,7 +12268,7 @@ COPY public.draft_prospects (id, uploaded, name, tankathon_slug, primary_positio
 -- Data for Name: games; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.games (id, date, season, home_team_id, away_team_id, home_team_score, away_team_score, winning_team_id, attendance, overtime_periods, neutral_site, game_type) FROM stdin;
+COPY public.games (id, date, season_id, home_team_id, away_team_id, home_team_score, away_team_score, winning_team_id, attendance, overtime_periods, neutral_site, game_type) FROM stdin;
 \.
 
 
@@ -12275,7 +12276,7 @@ COPY public.games (id, date, season, home_team_id, away_team_id, home_team_score
 -- Data for Name: player_games; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.player_games (id, game_id, player_season_id, team_id, season, game_date, is_home_game, minutes_played, points, field_goals_made, field_goals_attempted, three_pointers_made, three_pointers_attempted, free_throws_made, free_throws_attempted, offensive_rebounds, defensive_rebounds, total_rebounds, assists, steals, blocks, turnovers, personal_fouls, plus_minus, starting_position, started, offensive_rating, defensive_rating, net_rating, assist_ratio, assist_to_turnover, assist_percentage, offensive_rebound_percentage, defensive_rebound_percentage, total_rebound_percentage, effective_field_goal_percentage, true_shooting_percentage, usage_percentage, pace, pie) FROM stdin;
+COPY public.player_games (id, game_id, player_season_id, team_id, season_id, game_date, is_home_game, minutes_played, points, field_goals_made, field_goals_attempted, three_pointers_made, three_pointers_attempted, free_throws_made, free_throws_attempted, offensive_rebounds, defensive_rebounds, total_rebounds, assists, steals, blocks, turnovers, personal_fouls, plus_minus, starting_position, started, offensive_rating, defensive_rating, net_rating, assist_ratio, assist_to_turnover, assist_percentage, offensive_rebound_percentage, defensive_rebound_percentage, total_rebound_percentage, effective_field_goal_percentage, true_shooting_percentage, usage_percentage, pace, pie) FROM stdin;
 \.
 
 
@@ -12283,7 +12284,7 @@ COPY public.player_games (id, game_id, player_season_id, team_id, season, game_d
 -- Data for Name: player_seasons; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.player_seasons (id, player_id, team_id, season, age, games_played, wins, losses, win_pct, minutes_per_game, offensive_rating, defensive_rating, net_rating, estimated_offensive_rating, estimated_defensive_rating, estimated_net_rating, assist_percentage, assist_to_turnover, assist_ratio, offensive_rebound_pct, defensive_rebound_pct, rebound_pct, turnover_pct, effective_fg_pct, true_shooting_pct, usage_pct, pace, pace_per_40, estimated_pace, possessions, pie, field_goals_made, field_goals_attempted, field_goal_pct, field_goals_made_pg, field_goals_attempted_pg) FROM stdin;
+COPY public.player_seasons (id, player_id, team_id, season_id, age, games_played, wins, losses, win_pct, minutes_per_game, offensive_rating, defensive_rating, net_rating, estimated_offensive_rating, estimated_defensive_rating, estimated_net_rating, assist_percentage, assist_to_turnover, assist_ratio, offensive_rebound_pct, defensive_rebound_pct, rebound_pct, turnover_pct, effective_fg_pct, true_shooting_pct, usage_pct, pace, pace_per_40, estimated_pace, possessions, pie, field_goals_made, field_goals_attempted, field_goal_pct, field_goals_made_pg, field_goals_attempted_pg) FROM stdin;
 1	2048	13	2011	34	34	9	25	0.265	11	102.4	97	5.4	102.9	96.4	6.5	0.023	0.27	7.1	0.076	0.238	0.162	25.9	0.378	0.36	0.1	89.98	74.98	90.07	698	0.02	17	45	0.378	0.5	1.3
 2	2052	2	2011	31	51	20	31	0.392	18.8	95.4	103	-7.6	95.8	101.9	-6.2	0.068	2.16	17.2	0.007	0.098	0.052	8	0.404	0.413	0.093	92.09	76.74	92.38	1830	0.033	49	172	0.285	1	3.4
 3	202775	14	2011	25	4	1	3	0.25	13	85.4	104.2	-18.8	85.8	104.7	-18.9	0.036	1	4.8	0.036	0.157	0.093	4.8	0.306	0.362	0.179	88.62	73.85	88.21	96	0.089	5	18	0.278	1.3	4.5
@@ -24941,159 +24942,159 @@ COPY public.players (id, name, first_name, last_name, height_inches, weight_poun
 -- Data for Name: seasons; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshold, first_apron, second_apron, id) FROM stdin;
-3600000	9793069	\N	\N	\N	1985
-4233000	11298280	\N	\N	\N	1986
-4945000	12734751	\N	\N	\N	1987
-6164000	15248702	\N	\N	\N	1988
-7232000	17069461	\N	\N	\N	1989
-9802000	21950887	\N	\N	\N	1990
-11871000	25499592	\N	\N	\N	1991
-12500000	26061180	\N	\N	\N	1992
-14000000	28354756	\N	\N	\N	1993
-15175000	29954782	\N	\N	\N	1994
-15964000	30651995	\N	\N	\N	1995
-23000000	42906004	\N	\N	\N	1996
-24363000	44402880	\N	\N	\N	1997
-26900000	48285994	\N	\N	\N	1998
-30000000	52688773	\N	\N	\N	1999
-34000000	57763864	\N	\N	\N	1900
-35500000	58657395	\N	\N	\N	2001
-42500000	69132284	\N	\N	\N	2002
-40271000	64048956	\N	\N	\N	2003
-43840000	67907202	\N	\N	\N	2004
-43870000	65719039	\N	\N	\N	2005
-49500000	71839551	\N	\N	\N	2006
-53135000	74973988	\N	\N	\N	2007
-55630000	75594893	\N	\N	\N	2008
-58680000	80023973	\N	\N	\N	2009
-57700000	77414680	\N	\N	\N	2010
-58044000	75491545	\N	\N	\N	2011
-58044000	73970553	\N	\N	\N	2012
-58044000	72903264	\N	\N	\N	2013
-58679000	72519787	\N	\N	\N	2014
-63065000	77841847	\N	\N	\N	2015
-70000000	85323721	\N	\N	\N	2016
-94143000	112368348	\N	\N	\N	2017
-99093000	115455294	\N	\N	\N	2018
-101869000	116573245	\N	\N	\N	2019
-109140000	123384194	\N	\N	\N	2020
-109140000	117838496	\N	\N	\N	2021
-112414000	112414000	\N	\N	\N	2022
-123655000	\N	\N	\N	\N	2023
-136021000	\N	\N	\N	\N	2024
-140588000	\N	\N	\N	\N	2025
-154647000	\N	\N	\N	\N	2026
-\N	\N	\N	\N	\N	1950
-\N	\N	\N	\N	\N	1955
-\N	\N	\N	\N	\N	1957
-\N	\N	\N	\N	\N	1954
-\N	\N	\N	\N	\N	1959
-\N	\N	\N	\N	\N	1964
-\N	\N	\N	\N	\N	1969
-\N	\N	\N	\N	\N	1974
-\N	\N	\N	\N	\N	1971
-\N	\N	\N	\N	\N	1977
-\N	\N	\N	\N	\N	1956
-\N	\N	\N	\N	\N	1983
-\N	\N	\N	\N	\N	1984
-\N	\N	\N	\N	\N	1958
-\N	\N	\N	\N	\N	1973
-\N	\N	\N	\N	\N	1953
-\N	\N	\N	\N	\N	1979
-\N	\N	\N	\N	\N	1980
-\N	\N	\N	\N	\N	1970
-\N	\N	\N	\N	\N	1975
-\N	\N	\N	\N	\N	1982
-\N	\N	\N	\N	\N	1963
-\N	\N	\N	\N	\N	1967
-\N	\N	\N	\N	\N	2000
-\N	\N	\N	\N	\N	1948
-\N	\N	\N	\N	\N	1965
-\N	\N	\N	\N	\N	1949
-\N	\N	\N	\N	\N	1960
-\N	\N	\N	\N	\N	1951
-\N	\N	\N	\N	\N	1972
-\N	\N	\N	\N	\N	1976
-\N	\N	\N	\N	\N	1966
-\N	\N	\N	\N	\N	1981
-\N	\N	\N	\N	\N	1978
-\N	\N	\N	\N	\N	1968
-\N	\N	\N	\N	\N	1961
-\N	\N	\N	\N	\N	1952
-\N	\N	\N	\N	\N	1962
-\N	\N	\N	\N	\N	2029
-\N	\N	\N	\N	\N	2027
-\N	\N	\N	\N	\N	2030
-\N	\N	\N	\N	\N	2028
-\N	\N	\N	\N	\N	2031
-\N	\N	\N	\N	\N	2032
-\N	\N	\N	\N	\N	2033
-\N	\N	\N	\N	\N	2034
-\N	\N	\N	\N	\N	2035
-\N	\N	\N	\N	\N	2036
-\N	\N	\N	\N	\N	2037
-\N	\N	\N	\N	\N	2038
-\N	\N	\N	\N	\N	2039
-\N	\N	\N	\N	\N	2040
-\N	\N	\N	\N	\N	2041
-\N	\N	\N	\N	\N	2042
-\N	\N	\N	\N	\N	2043
-\N	\N	\N	\N	\N	2044
-\N	\N	\N	\N	\N	2045
-\N	\N	\N	\N	\N	2046
-\N	\N	\N	\N	\N	2047
-\N	\N	\N	\N	\N	2048
-\N	\N	\N	\N	\N	2049
-\N	\N	\N	\N	\N	2050
-\N	\N	\N	\N	\N	2051
-\N	\N	\N	\N	\N	2052
-\N	\N	\N	\N	\N	2053
-\N	\N	\N	\N	\N	2054
-\N	\N	\N	\N	\N	2055
-\N	\N	\N	\N	\N	2056
-\N	\N	\N	\N	\N	2057
-\N	\N	\N	\N	\N	2058
-\N	\N	\N	\N	\N	2059
-\N	\N	\N	\N	\N	2060
-\N	\N	\N	\N	\N	2061
-\N	\N	\N	\N	\N	2062
-\N	\N	\N	\N	\N	2063
-\N	\N	\N	\N	\N	2064
-\N	\N	\N	\N	\N	2065
-\N	\N	\N	\N	\N	2066
-\N	\N	\N	\N	\N	2067
-\N	\N	\N	\N	\N	2068
-\N	\N	\N	\N	\N	2069
-\N	\N	\N	\N	\N	2070
-\N	\N	\N	\N	\N	2071
-\N	\N	\N	\N	\N	2072
-\N	\N	\N	\N	\N	2073
-\N	\N	\N	\N	\N	2074
-\N	\N	\N	\N	\N	2075
-\N	\N	\N	\N	\N	2076
-\N	\N	\N	\N	\N	2077
-\N	\N	\N	\N	\N	2078
-\N	\N	\N	\N	\N	2079
-\N	\N	\N	\N	\N	2080
-\N	\N	\N	\N	\N	2081
-\N	\N	\N	\N	\N	2082
-\N	\N	\N	\N	\N	2083
-\N	\N	\N	\N	\N	2084
-\N	\N	\N	\N	\N	2085
-\N	\N	\N	\N	\N	2086
-\N	\N	\N	\N	\N	2087
-\N	\N	\N	\N	\N	2088
-\N	\N	\N	\N	\N	2089
-\N	\N	\N	\N	\N	2090
-\N	\N	\N	\N	\N	2091
-\N	\N	\N	\N	\N	2092
-\N	\N	\N	\N	\N	2093
-\N	\N	\N	\N	\N	2094
-\N	\N	\N	\N	\N	2095
-\N	\N	\N	\N	\N	2096
-\N	\N	\N	\N	\N	2097
-\N	\N	\N	\N	\N	2098
+COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshold, first_apron, second_apron, id, expected_cap) FROM stdin;
+3600000	9793069	\N	\N	\N	1985	\N
+4233000	11298280	\N	\N	\N	1986	\N
+4945000	12734751	\N	\N	\N	1987	\N
+6164000	15248702	\N	\N	\N	1988	\N
+7232000	17069461	\N	\N	\N	1989	\N
+9802000	21950887	\N	\N	\N	1990	\N
+11871000	25499592	\N	\N	\N	1991	\N
+12500000	26061180	\N	\N	\N	1992	\N
+14000000	28354756	\N	\N	\N	1993	\N
+15175000	29954782	\N	\N	\N	1994	\N
+15964000	30651995	\N	\N	\N	1995	\N
+23000000	42906004	\N	\N	\N	1996	\N
+24363000	44402880	\N	\N	\N	1997	\N
+26900000	48285994	\N	\N	\N	1998	\N
+30000000	52688773	\N	\N	\N	1999	\N
+34000000	57763864	\N	\N	\N	1900	\N
+35500000	58657395	\N	\N	\N	2001	\N
+42500000	69132284	\N	\N	\N	2002	\N
+40271000	64048956	\N	\N	\N	2003	\N
+43840000	67907202	\N	\N	\N	2004	\N
+43870000	65719039	\N	\N	\N	2005	\N
+49500000	71839551	\N	\N	\N	2006	\N
+53135000	74973988	\N	\N	\N	2007	\N
+55630000	75594893	\N	\N	\N	2008	\N
+58680000	80023973	\N	\N	\N	2009	\N
+57700000	77414680	\N	\N	\N	2010	\N
+58044000	75491545	\N	\N	\N	2011	\N
+58044000	73970553	\N	\N	\N	2012	\N
+58044000	72903264	\N	\N	\N	2013	\N
+58679000	72519787	\N	\N	\N	2014	\N
+63065000	77841847	\N	\N	\N	2015	\N
+70000000	85323721	\N	\N	\N	2016	\N
+94143000	112368348	\N	\N	\N	2017	\N
+99093000	115455294	\N	\N	\N	2018	\N
+101869000	116573245	\N	\N	\N	2019	\N
+109140000	123384194	\N	\N	\N	2020	\N
+109140000	117838496	\N	\N	\N	2021	\N
+112414000	112414000	\N	\N	\N	2022	\N
+123655000	\N	\N	\N	\N	2023	\N
+136021000	\N	\N	\N	\N	2024	\N
+140588000	\N	\N	\N	\N	2025	\N
+154647000	\N	\N	\N	\N	2026	\N
+\N	\N	\N	\N	\N	1950	\N
+\N	\N	\N	\N	\N	1955	\N
+\N	\N	\N	\N	\N	1957	\N
+\N	\N	\N	\N	\N	1954	\N
+\N	\N	\N	\N	\N	1959	\N
+\N	\N	\N	\N	\N	1964	\N
+\N	\N	\N	\N	\N	1969	\N
+\N	\N	\N	\N	\N	1974	\N
+\N	\N	\N	\N	\N	1971	\N
+\N	\N	\N	\N	\N	1977	\N
+\N	\N	\N	\N	\N	1956	\N
+\N	\N	\N	\N	\N	1983	\N
+\N	\N	\N	\N	\N	1984	\N
+\N	\N	\N	\N	\N	1958	\N
+\N	\N	\N	\N	\N	1973	\N
+\N	\N	\N	\N	\N	1953	\N
+\N	\N	\N	\N	\N	1979	\N
+\N	\N	\N	\N	\N	1980	\N
+\N	\N	\N	\N	\N	1970	\N
+\N	\N	\N	\N	\N	1975	\N
+\N	\N	\N	\N	\N	1982	\N
+\N	\N	\N	\N	\N	1963	\N
+\N	\N	\N	\N	\N	1967	\N
+\N	\N	\N	\N	\N	2000	\N
+\N	\N	\N	\N	\N	1948	\N
+\N	\N	\N	\N	\N	1965	\N
+\N	\N	\N	\N	\N	1949	\N
+\N	\N	\N	\N	\N	1960	\N
+\N	\N	\N	\N	\N	1951	\N
+\N	\N	\N	\N	\N	1972	\N
+\N	\N	\N	\N	\N	1976	\N
+\N	\N	\N	\N	\N	1966	\N
+\N	\N	\N	\N	\N	1981	\N
+\N	\N	\N	\N	\N	1978	\N
+\N	\N	\N	\N	\N	1968	\N
+\N	\N	\N	\N	\N	1961	\N
+\N	\N	\N	\N	\N	1952	\N
+\N	\N	\N	\N	\N	1962	\N
+\N	\N	\N	\N	\N	2029	\N
+\N	\N	\N	\N	\N	2027	\N
+\N	\N	\N	\N	\N	2030	\N
+\N	\N	\N	\N	\N	2028	\N
+\N	\N	\N	\N	\N	2031	\N
+\N	\N	\N	\N	\N	2032	\N
+\N	\N	\N	\N	\N	2033	\N
+\N	\N	\N	\N	\N	2034	\N
+\N	\N	\N	\N	\N	2035	\N
+\N	\N	\N	\N	\N	2036	\N
+\N	\N	\N	\N	\N	2037	\N
+\N	\N	\N	\N	\N	2038	\N
+\N	\N	\N	\N	\N	2039	\N
+\N	\N	\N	\N	\N	2040	\N
+\N	\N	\N	\N	\N	2041	\N
+\N	\N	\N	\N	\N	2042	\N
+\N	\N	\N	\N	\N	2043	\N
+\N	\N	\N	\N	\N	2044	\N
+\N	\N	\N	\N	\N	2045	\N
+\N	\N	\N	\N	\N	2046	\N
+\N	\N	\N	\N	\N	2047	\N
+\N	\N	\N	\N	\N	2048	\N
+\N	\N	\N	\N	\N	2049	\N
+\N	\N	\N	\N	\N	2050	\N
+\N	\N	\N	\N	\N	2051	\N
+\N	\N	\N	\N	\N	2052	\N
+\N	\N	\N	\N	\N	2053	\N
+\N	\N	\N	\N	\N	2054	\N
+\N	\N	\N	\N	\N	2055	\N
+\N	\N	\N	\N	\N	2056	\N
+\N	\N	\N	\N	\N	2057	\N
+\N	\N	\N	\N	\N	2058	\N
+\N	\N	\N	\N	\N	2059	\N
+\N	\N	\N	\N	\N	2060	\N
+\N	\N	\N	\N	\N	2061	\N
+\N	\N	\N	\N	\N	2062	\N
+\N	\N	\N	\N	\N	2063	\N
+\N	\N	\N	\N	\N	2064	\N
+\N	\N	\N	\N	\N	2065	\N
+\N	\N	\N	\N	\N	2066	\N
+\N	\N	\N	\N	\N	2067	\N
+\N	\N	\N	\N	\N	2068	\N
+\N	\N	\N	\N	\N	2069	\N
+\N	\N	\N	\N	\N	2070	\N
+\N	\N	\N	\N	\N	2071	\N
+\N	\N	\N	\N	\N	2072	\N
+\N	\N	\N	\N	\N	2073	\N
+\N	\N	\N	\N	\N	2074	\N
+\N	\N	\N	\N	\N	2075	\N
+\N	\N	\N	\N	\N	2076	\N
+\N	\N	\N	\N	\N	2077	\N
+\N	\N	\N	\N	\N	2078	\N
+\N	\N	\N	\N	\N	2079	\N
+\N	\N	\N	\N	\N	2080	\N
+\N	\N	\N	\N	\N	2081	\N
+\N	\N	\N	\N	\N	2082	\N
+\N	\N	\N	\N	\N	2083	\N
+\N	\N	\N	\N	\N	2084	\N
+\N	\N	\N	\N	\N	2085	\N
+\N	\N	\N	\N	\N	2086	\N
+\N	\N	\N	\N	\N	2087	\N
+\N	\N	\N	\N	\N	2088	\N
+\N	\N	\N	\N	\N	2089	\N
+\N	\N	\N	\N	\N	2090	\N
+\N	\N	\N	\N	\N	2091	\N
+\N	\N	\N	\N	\N	2092	\N
+\N	\N	\N	\N	\N	2093	\N
+\N	\N	\N	\N	\N	2094	\N
+\N	\N	\N	\N	\N	2095	\N
+\N	\N	\N	\N	\N	2096	\N
+\N	\N	\N	\N	\N	2097	\N
+\N	\N	\N	\N	\N	2098	\N
 \.
 
 
@@ -25101,7 +25102,7 @@ COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshol
 -- Data for Name: team_player_buyouts; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.team_player_buyouts (id, season, team_id, player_id, salary) FROM stdin;
+COPY public.team_player_buyouts (id, season_id, team_id, player_id, salary) FROM stdin;
 1	2012	0	202388	129168
 2	2012	0	956	50258
 3	2013	0	200770	1500000
@@ -27942,7 +27943,7 @@ COPY public.team_player_buyouts (id, season, team_id, player_id, salary) FROM st
 -- Data for Name: team_player_salaries; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.team_player_salaries (id, season, team_id, player_id, cap_hit_percent, salary, apron_salary, luxury_tax, cash_total, cash_garunteed) FROM stdin;
+COPY public.team_player_salaries (id, season_id, team_id, player_id, cap_hit_percent, salary, apron_salary, luxury_tax, cash_total, cash_garunteed) FROM stdin;
 12364	2012	0	2207	31.08	18038573	18038573	18038573	14518851	14518851
 12365	2012	0	2746	21.36	12400000	12400000	12400000	9980488	\N
 12366	2012	0	201143	20.67	12000000	12000000	12000000	9658537	9658537
@@ -36018,7 +36019,7 @@ COPY public.team_season_playoff_rounds (id, team_season_id, round, wins, losses,
 -- Data for Name: team_seasons; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.team_seasons (id, team_id, season, wins, losses, win_pct, league_rank, playoff_rank, conference_record, division_record, home_record, road_record, last_10_record, conference_games_back, division_games_back, points_per_game, opp_points_per_game, point_diff_per_game, clinched_conference_title, clinched_division_title, clinched_playoff_birth) FROM stdin;
+COPY public.team_seasons (id, team_id, season_id, wins, losses, win_pct, league_rank, playoff_rank, conference_record, division_record, home_record, road_record, last_10_record, conference_games_back, division_games_back, points_per_game, opp_points_per_game, point_diff_per_game, clinched_conference_title, clinched_division_title, clinched_playoff_birth) FROM stdin;
 1	10	2000	67	15	0.817	\N	1	40-12	20-4	36-5	31-10	\N	0	0	101	92	9	\N	\N	\N
 2	17	2000	56	26	0.683	\N	1	36-18	20-8	36-5	20-21	\N	0	0	101	97	5	\N	\N	\N
 3	25	2000	55	27	0.671	\N	2	33-19	14-10	31-10	24-17	\N	12	0	97	92	5	\N	\N	\N
@@ -37081,7 +37082,7 @@ ALTER TABLE ONLY public.draft_prospects
 --
 
 ALTER TABLE ONLY public.team_seasons
-    ADD CONSTRAINT uq_team_season UNIQUE (team_id, season);
+    ADD CONSTRAINT uq_team_season UNIQUE (team_id, season_id);
 
 
 --
@@ -37104,7 +37105,7 @@ ALTER TABLE ONLY public.team_season_playoff_rounds
 -- Name: ix_award_unique_player; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX ix_award_unique_player ON public.awards USING btree (name, season, player_id);
+CREATE UNIQUE INDEX ix_award_unique_player ON public.awards USING btree (name, season_id, player_id);
 
 
 --
@@ -37125,14 +37126,14 @@ CREATE INDEX ix_awards_player_id ON public.awards USING btree (player_id);
 -- Name: ix_awards_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_awards_season ON public.awards USING btree (season);
+CREATE INDEX ix_awards_season ON public.awards USING btree (season_id);
 
 
 --
 -- Name: ix_buyout_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX ix_buyout_unique ON public.team_player_buyouts USING btree (season, team_id, player_id);
+CREATE UNIQUE INDEX ix_buyout_unique ON public.team_player_buyouts USING btree (season_id, team_id, player_id);
 
 
 --
@@ -37216,7 +37217,7 @@ CREATE INDEX ix_games_home_team_id ON public.games USING btree (home_team_id);
 -- Name: ix_games_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_games_season ON public.games USING btree (season);
+CREATE INDEX ix_games_season ON public.games USING btree (season_id);
 
 
 --
@@ -37265,7 +37266,7 @@ CREATE INDEX ix_player_games_player_season_id ON public.player_games USING btree
 -- Name: ix_player_games_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_player_games_season ON public.player_games USING btree (season);
+CREATE INDEX ix_player_games_season ON public.player_games USING btree (season_id);
 
 
 --
@@ -37293,7 +37294,7 @@ CREATE INDEX ix_player_name ON public.players USING btree (name);
 -- Name: ix_player_season_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX ix_player_season_unique ON public.player_seasons USING btree (player_id, team_id, season);
+CREATE UNIQUE INDEX ix_player_season_unique ON public.player_seasons USING btree (player_id, team_id, season_id);
 
 
 --
@@ -37307,7 +37308,7 @@ CREATE INDEX ix_player_seasons_player_id ON public.player_seasons USING btree (p
 -- Name: ix_player_seasons_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_player_seasons_season ON public.player_seasons USING btree (season);
+CREATE INDEX ix_player_seasons_season ON public.player_seasons USING btree (season_id);
 
 
 --
@@ -37328,7 +37329,7 @@ CREATE INDEX ix_players_name ON public.players USING btree (name);
 -- Name: ix_salary_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX ix_salary_unique ON public.team_player_salaries USING btree (season, team_id, player_id);
+CREATE UNIQUE INDEX ix_salary_unique ON public.team_player_salaries USING btree (season_id, team_id, player_id);
 
 
 --
@@ -37349,7 +37350,7 @@ CREATE INDEX ix_team_player_buyouts_player_id ON public.team_player_buyouts USIN
 -- Name: ix_team_player_buyouts_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_team_player_buyouts_season ON public.team_player_buyouts USING btree (season);
+CREATE INDEX ix_team_player_buyouts_season ON public.team_player_buyouts USING btree (season_id);
 
 
 --
@@ -37370,7 +37371,7 @@ CREATE INDEX ix_team_player_salaries_player_id ON public.team_player_salaries US
 -- Name: ix_team_player_salaries_season; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_team_player_salaries_season ON public.team_player_salaries USING btree (season);
+CREATE INDEX ix_team_player_salaries_season ON public.team_player_salaries USING btree (season_id);
 
 
 --
@@ -37438,11 +37439,11 @@ ALTER TABLE ONLY public.awards
 
 
 --
--- Name: awards fk_awards_season; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: awards fk_awards_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.awards
-    ADD CONSTRAINT fk_awards_season FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_awards_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37486,11 +37487,11 @@ ALTER TABLE ONLY public.games
 
 
 --
--- Name: games fk_games_season; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: games fk_games_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games
-    ADD CONSTRAINT fk_games_season FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_games_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37518,11 +37519,11 @@ ALTER TABLE ONLY public.player_games
 
 
 --
--- Name: player_games fk_player_games_season; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: player_games fk_player_games_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.player_games
-    ADD CONSTRAINT fk_player_games_season FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_player_games_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37542,11 +37543,11 @@ ALTER TABLE ONLY public.player_seasons
 
 
 --
--- Name: player_seasons fk_player_seasons_season; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: player_seasons fk_player_seasons_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.player_seasons
-    ADD CONSTRAINT fk_player_seasons_season FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_player_seasons_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37566,11 +37567,11 @@ ALTER TABLE ONLY public.team_player_buyouts
 
 
 --
--- Name: team_player_buyouts fk_team_player_buyouts_season_seasons; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: team_player_buyouts fk_team_player_buyouts_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.team_player_buyouts
-    ADD CONSTRAINT fk_team_player_buyouts_season_seasons FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_team_player_buyouts_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37590,11 +37591,11 @@ ALTER TABLE ONLY public.team_player_salaries
 
 
 --
--- Name: team_player_salaries fk_team_player_salaries_season_seasons; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: team_player_salaries fk_team_player_salaries_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.team_player_salaries
-    ADD CONSTRAINT fk_team_player_salaries_season_seasons FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_team_player_salaries_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37630,11 +37631,11 @@ ALTER TABLE ONLY public.team_season_playoff_rounds
 
 
 --
--- Name: team_seasons fk_team_seasons_season; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: team_seasons fk_team_seasons_season_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.team_seasons
-    ADD CONSTRAINT fk_team_seasons_season FOREIGN KEY (season) REFERENCES public.seasons(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_team_seasons_season_id FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
 
 
 --
@@ -37649,5 +37650,5 @@ ALTER TABLE ONLY public.team_seasons
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qIMBANcjnqK6aZblfroiP1gMlL21xIFm28pa8rGmkgmtIvJfssLLGMVv5kQa7Jx
+\unrestrict JcrzP4CMWljCMv23C68oBNKvBwOETlsNd1ZzKVdVowfY5fehQArnJQi16K3ih36
 
