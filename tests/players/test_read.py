@@ -51,7 +51,7 @@ def test_get_aggregate_earnings_for_player(  # @IgnoreException
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
     salaries: Iterable[TeamPlayerSalary] = player.salaries
-    assert sum(s.salary for s in salaries) == case.expected_aggregate_salary
+    assert sum(s.dollars for s in salaries) == case.expected_aggregate_dollars
 
 
 @parametrize(GET_RELATIVE_SALARY_TEST_CASES)
@@ -60,10 +60,8 @@ def test_get_relative_earnings_for_player(  # @IgnoreException
 ) -> None:
     seed_test_data(session, case.seed_data)
     player = get_player_by_name(session, case.name)
-    salaries: Iterable[TeamPlayerSalary] = [
-        s for s in player.salaries if s.season.id < 2027
-    ]
+    salaries: list[TeamPlayerSalary] = [s for s in player.salaries if s.season.id]
     assert (
-        round(sum(s.salary / s.season.max_salary_cap for s in salaries), 2)
-        == case.expected_relative_earnings
+        round(sum(s.relative_dollars for s in salaries), 2)
+        == case.expected_relative_dollars
     )

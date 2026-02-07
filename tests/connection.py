@@ -22,17 +22,9 @@ Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 
-def seed_seasons(session: Session) -> None:
-    from tests.data.seasons import SEASON_DATA
-
-    session.add_all(SEASON_DATA)
-    session.commit()
-
-
 @contextmanager
 def get_test_session() -> Generator[Session, None, None]:
     session = SessionLocal()
-    seed_seasons(session)
     try:
         yield session
     except:

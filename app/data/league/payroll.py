@@ -10,7 +10,6 @@ from ...base import Base
 if TYPE_CHECKING:
     from app.data.league.season import Season
 
-if TYPE_CHECKING:
     from .player import Player
     from .team import Team
 
@@ -27,9 +26,9 @@ class TeamPlayerSalary(Base):
     # ---- core fields ----
     season_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        ForeignKey("seasons.id", ondelete="CASCADE"),
         index=True,
-        nullable=False,  # or True if some games might not have a season
+        nullable=False,
     )
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
@@ -45,9 +44,32 @@ class TeamPlayerSalary(Base):
     player: Mapped["Player"] = relationship("Player", back_populates="salaries")
 
     __table_args__ = (
-        # Ensure uniqueness per player per team per year
         Index("ix_salary_unique", "season_id", "team_id", "player_id", unique=True),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<TeamPlayerSalary("
+            f"id={self.id}, "
+            f"season_id={self.season_id}, "
+            f"team_id={self.team_id}, "
+            f"player_id={self.player_id}, "
+            f"salary={self.salary}, "
+            f"cap_hit_percent={self.cap_hit_percent}"
+            f")>"
+        )
+
+    @property
+    def dollars(self) -> int:
+        if self.salary is None:
+            return 0
+        return self.salary
+
+    @property
+    def relative_dollars(self) -> float:
+        if self.salary is None:
+            return 0.0
+        return self.salary / self.season.cap
 
 
 class TeamPlayerBuyout(Base):
@@ -59,9 +81,9 @@ class TeamPlayerBuyout(Base):
     # ---- core fields ----
     season_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("seasons.id", ondelete="CASCADE"),  # foreign key
+        ForeignKey("seasons.id", ondelete="CASCADE"),
         index=True,
-        nullable=False,  # or True if some games might not have a season
+        nullable=False,
     )
     season: Mapped[Season] = relationship("Season")
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
@@ -69,6 +91,28 @@ class TeamPlayerBuyout(Base):
     salary: Mapped[int | None] = mapped_column(Integer)
 
     __table_args__ = (
-        # Ensure uniqueness per player per team per year
         Index("ix_buyout_unique", "season_id", "team_id", "player_id", unique=True),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<TeamPlayerBuyout("
+            f"id={self.id}, "
+            f"season_id={self.season_id}, "
+            f"team_id={self.team_id}, "
+            f"player_id={self.player_id}, "
+            f"salary={self.salary}"
+            f")>"
+        )
+
+    @property
+    def dollars(self) -> int:
+        if self.salary is None:
+            return 0
+        return self.salary
+
+    @property
+    def relative_money(self) -> float:
+        if self.salary is None:
+            return 0.0
+        return self.salary / self.season.cap

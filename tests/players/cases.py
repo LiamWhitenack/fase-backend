@@ -25,13 +25,13 @@ GET_AGGREGATE_SALARY_TEST_CASES = [
     GetAggregateSalaryTestCase(
         id="Active Veteran",
         name="Klay Thompson",
-        expected_aggregate_salary=318_625_530,
+        expected_aggregate_dollars=318_625_530,
         seed_data=THOMPSON_CONTRACT_DATA,
     ),
     GetAggregateSalaryTestCase(
         id="Potential Superstar",
         name="Patrick Williams",
-        expected_aggregate_salary=149_101_641,
+        expected_aggregate_dollars=149_101_641,
         seed_data=WILLIAMS_CONTRACT_DATA,
     ),
 ]
@@ -40,12 +40,12 @@ GET_RELATIVE_SALARY_TEST_CASES = [
         id="Active Veteran",
         name="Klay Thompson",
         seed_data=THOMPSON_CONTRACT_DATA,
-        expected_relative_earnings=2.76,
+        expected_relative_dollars=2.86,
     ),
     GetRelativeEarningsTestCase(
         id="Potential Superstar",
         name="Patrick Williams",
         seed_data=WILLIAMS_CONTRACT_DATA,
-        expected_relative_earnings=0.51,
+        expected_relative_dollars=0.92,
     ),
 ]

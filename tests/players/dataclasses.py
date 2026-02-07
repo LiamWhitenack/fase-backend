@@ -13,10 +13,10 @@ class GetSalaryYearsTestCase(SeededTestCase):
 @dataclass
 class GetAggregateSalaryTestCase(SeededTestCase):
     name: str
-    expected_aggregate_salary: int
+    expected_aggregate_dollars: int
 
 
 @dataclass
 class GetRelativeEarningsTestCase(SeededTestCase):
     name: str
-    expected_relative_earnings: float
+    expected_relative_dollars: float

@@ -10,12 +10,12 @@ class Season(Base):
     # Financial attributes (all nullable)
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    max_salary_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
-    inflation_adjusted_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
-    luxury_tax_threshold: Mapped[Float | None] = mapped_column(Float, nullable=True)
-    first_apron: Mapped[Float | None] = mapped_column(Float, nullable=True)
-    second_apron: Mapped[Float | None] = mapped_column(Float, nullable=True)
-    expected_cap: Mapped[Float | None] = mapped_column(Float, nullable=True)
+    max_salary_cap: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    inflation_adjusted_cap: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    luxury_tax_threshold: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    first_apron: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    second_apron: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    expected_cap: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     def __repr__(self) -> str:
         return (
@@ -23,3 +23,11 @@ class Season(Base):
             f"luxury_tax_threshold={self.luxury_tax_threshold}, "
             f"first_apron={self.first_apron}, second_apron={self.second_apron})>"
         )
+
+    @property
+    def cap(self) -> int:
+        if self.max_salary_cap:
+            return self.max_salary_cap
+        elif self.expected_cap:
+            return self.expected_cap
+        raise Exception(f"No cap data for {self.__repr__()}")

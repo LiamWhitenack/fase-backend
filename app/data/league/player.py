@@ -18,6 +18,7 @@ from app.data.league.team import Team
 
 if TYPE_CHECKING:
     from app.data.connection import TeamPlayerSalary
+    from app.data.league import Contract
     from app.data.league.season import Season
 
 
@@ -52,17 +53,19 @@ class Player(Base):
     )  # convert Y/N → True/False
 
     # ---- relationships ----
-    seasons = relationship(
+    seasons: Mapped[list[PlayerSeason]] = relationship(
         "PlayerSeason",
         back_populates="player",
         cascade="all, delete-orphan",
     )
-    salaries = relationship(
+
+    salaries: Mapped[list[TeamPlayerSalary]] = relationship(
         "TeamPlayerSalary",
         back_populates="player",
         cascade="all, delete-orphan",
     )
-    contracts = relationship(
+
+    contracts: Mapped[list[Contract]] = relationship(
         "Contract",
         back_populates="player",
         cascade="all, delete-orphan",
@@ -140,8 +143,8 @@ class PlayerSeason(Base):
 
     # ---- relationships ----
     season: Mapped[Season] = relationship("Season")
-    player: Mapped["Player"] = relationship(back_populates="seasons")
-    team: Mapped["Team"] = relationship(back_populates="player_seasons")
+    player: Mapped[Player] = relationship(back_populates="seasons")
+    team: Mapped[Team] = relationship(back_populates="player_seasons")
 
     __table_args__ = (
         Index(
