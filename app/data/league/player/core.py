@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Sequence
 
 from sqlalchemy import Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
+from app.custom_types import MLSafe
 
 if TYPE_CHECKING:
     from app.data.league import Contract
     from app.data.league.player import PlayerSeason
-    from app.data.league.team.payroll import TeamPlayerSalary
+    from app.data.league.team.payroll import TeamPlayerBuyout, TeamPlayerSalary
 
 
 class Player(Base):
@@ -56,6 +58,12 @@ class Player(Base):
         cascade="all, delete-orphan",
     )
 
+    buyouts: Mapped[list[TeamPlayerBuyout]] = relationship(
+        "TeamPlayerSalary",
+        back_populates="player",
+        cascade="all, delete-orphan",
+    )
+
     contracts: Mapped[list[Contract]] = relationship(
         "Contract",
         back_populates="player",
@@ -67,3 +75,20 @@ class Player(Base):
         Index("ix_player_last_first", "last_name", "first_name"),
         Index("ix_player_draft", "draft_year", "draft_round", "draft_number"),
     )
+
+    def __post_init__(self) -> None:
+        self.stats_dict = {s.season_id: s for s in self.seasons}
+
+    def __getitem__(self, season_id: int) -> PlayerSeason:
+        return self.stats_dict[season_id]
+
+    @property
+    def career_earnings(self) -> Iterable[dict[str, MLSafe]]:
+        years = {s.season_id for s in self.salaries + self.buyouts}
+        salaries = sorted(self.salaries, key=lambda s: s.season_id)
+        buyouts = sorted(self.buyouts, key=lambda s: s.season_id)
+        for year in sorted(years):
+            while salaries[0].season_id == year:
+                salary = salaries.pop(0)
+            while buyouts[0].season_id == year:
+                buyout = buyouts.pop(0)
