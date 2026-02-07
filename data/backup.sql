@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JcrzP4CMWljCMv23C68oBNKvBwOETlsNd1ZzKVdVowfY5fehQArnJQi16K3ih36
+\restrict uogIW6cKzHKTW7f6K33JaQEMBrQndoa61IuZETtQOBDDveyJnLdlcWRDNTYmlaj
 
 -- Dumped from database version 16.10 (Debian 16.10-1.pgdg13+1)
 -- Dumped by pg_dump version 16.10 (Homebrew)
@@ -24958,7 +24958,6 @@ COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshol
 24363000	44402880	\N	\N	\N	1997	\N
 26900000	48285994	\N	\N	\N	1998	\N
 30000000	52688773	\N	\N	\N	1999	\N
-34000000	57763864	\N	\N	\N	1900	\N
 35500000	58657395	\N	\N	\N	2001	\N
 42500000	69132284	\N	\N	\N	2002	\N
 40271000	64048956	\N	\N	\N	2003	\N
@@ -25023,33 +25022,6 @@ COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshol
 \N	\N	\N	\N	\N	1961	\N
 \N	\N	\N	\N	\N	1952	\N
 \N	\N	\N	\N	\N	1962	\N
-\N	\N	\N	\N	\N	2029	\N
-\N	\N	\N	\N	\N	2027	\N
-\N	\N	\N	\N	\N	2030	\N
-\N	\N	\N	\N	\N	2028	\N
-\N	\N	\N	\N	\N	2031	\N
-\N	\N	\N	\N	\N	2032	\N
-\N	\N	\N	\N	\N	2033	\N
-\N	\N	\N	\N	\N	2034	\N
-\N	\N	\N	\N	\N	2035	\N
-\N	\N	\N	\N	\N	2036	\N
-\N	\N	\N	\N	\N	2037	\N
-\N	\N	\N	\N	\N	2038	\N
-\N	\N	\N	\N	\N	2039	\N
-\N	\N	\N	\N	\N	2040	\N
-\N	\N	\N	\N	\N	2041	\N
-\N	\N	\N	\N	\N	2042	\N
-\N	\N	\N	\N	\N	2043	\N
-\N	\N	\N	\N	\N	2044	\N
-\N	\N	\N	\N	\N	2045	\N
-\N	\N	\N	\N	\N	2046	\N
-\N	\N	\N	\N	\N	2047	\N
-\N	\N	\N	\N	\N	2048	\N
-\N	\N	\N	\N	\N	2049	\N
-\N	\N	\N	\N	\N	2050	\N
-\N	\N	\N	\N	\N	2051	\N
-\N	\N	\N	\N	\N	2052	\N
-\N	\N	\N	\N	\N	2053	\N
 \N	\N	\N	\N	\N	2054	\N
 \N	\N	\N	\N	\N	2055	\N
 \N	\N	\N	\N	\N	2056	\N
@@ -25095,6 +25067,33 @@ COPY public.seasons (max_salary_cap, inflation_adjusted_cap, luxury_tax_threshol
 \N	\N	\N	\N	\N	2096	\N
 \N	\N	\N	\N	\N	2097	\N
 \N	\N	\N	\N	\N	2098	\N
+\N	\N	\N	\N	\N	2042	710613355
+\N	\N	\N	\N	\N	2043	781675686
+\N	\N	\N	\N	\N	2044	859844349
+\N	\N	\N	\N	\N	2045	945829987
+\N	\N	\N	\N	\N	2046	1040414309
+\N	\N	\N	\N	\N	2047	1144457195
+\N	\N	\N	\N	\N	2048	1258904515
+\N	\N	\N	\N	\N	2027	170111920
+\N	\N	\N	\N	\N	2028	187123354
+\N	\N	\N	\N	\N	2029	205835955
+\N	\N	\N	\N	\N	2030	226419842
+\N	\N	\N	\N	\N	2031	249062146
+\N	\N	\N	\N	\N	2032	273968712
+\N	\N	\N	\N	\N	2033	301365969
+\N	\N	\N	\N	\N	2034	331502990
+\N	\N	\N	\N	\N	2049	1384796727
+\N	\N	\N	\N	\N	2050	1523278336
+\N	\N	\N	\N	\N	2051	1675608299
+\N	\N	\N	\N	\N	2052	1843171471
+\N	\N	\N	\N	\N	2053	2027491194
+\N	\N	\N	\N	\N	2035	364653755
+\N	\N	\N	\N	\N	2036	401119643
+\N	\N	\N	\N	\N	2037	441232171
+\N	\N	\N	\N	\N	2038	485356008
+\N	\N	\N	\N	\N	2039	533892290
+\N	\N	\N	\N	\N	2040	587282268
+\N	\N	\N	\N	\N	2041	646011318
 \.
 
 
@@ -37650,5 +37649,5 @@ ALTER TABLE ONLY public.team_seasons
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JcrzP4CMWljCMv23C68oBNKvBwOETlsNd1ZzKVdVowfY5fehQArnJQi16K3ih36
+\unrestrict uogIW6cKzHKTW7f6K33JaQEMBrQndoa61IuZETtQOBDDveyJnLdlcWRDNTYmlaj
 
