@@ -21,6 +21,7 @@
     "reportCallIssue": "none",
     "reportReturnType": "none",
     "reportRedeclaration": "none",
+    "reportOperatorIssue": "none",
   },
   "python.testing.pytestArgs": [
     "tests"

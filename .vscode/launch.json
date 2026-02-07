@@ -83,6 +83,12 @@
       "module": "app.fill_data.draft_picks"
     },
     {
+      "name": "Guess Salary Cap",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.estimate_future_season_value"
+    },
+    {
       "name": "Download for Testing",
       "type": "debugpy",
       "request": "launch",
