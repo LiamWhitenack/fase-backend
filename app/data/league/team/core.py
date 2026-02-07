@@ -1,7 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
+
+if TYPE_CHECKING:
+    from app.data.league import Contract, PlayerSeason, Season
 
 
 class Team(Base):
@@ -21,19 +28,19 @@ class Team(Base):
     division: Mapped[str] = mapped_column(String, index=True)
 
     # ---- relationships ----
-    seasons = relationship(
+    seasons: Mapped[list[Season]] = relationship(
         "TeamSeason",
         back_populates="team",
         cascade="all, delete-orphan",
     )
-    player_seasons = relationship(
+    player_seasons: Mapped[list[PlayerSeason]] = relationship(
         lambda: __import__(
             "app.data.league.player", fromlist=["PlayerSeason"]
         ).PlayerSeason,
         back_populates="team",
         cascade="all, delete-orphan",
     )
-    contracts = relationship(
+    contracts: Mapped[list[Contract]] = relationship(
         "Contract",
         back_populates="team",
         cascade="all, delete-orphan",

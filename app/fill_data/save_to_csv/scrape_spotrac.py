@@ -8,8 +8,8 @@ from playwright.sync_api import sync_playwright
 from sqlalchemy import select
 
 from app.data.connection import get_session
-from app.data.league.payroll import TeamPlayerSalary
 from app.data.league.player import Player
+from app.data.league.team.payroll import TeamPlayerSalary
 from app.utils.math_utils import delay_seconds
 
 

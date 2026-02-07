@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.data.connection import get_session
 from app.data.league.contract import Contract
-from app.data.league.payroll import TeamPlayerBuyout, TeamPlayerSalary
+from app.data.league.team.payroll import TeamPlayerBuyout, TeamPlayerSalary
 from app.utils.name_matcher import NameMatchFinder
 
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from app.data.league.season import Season
 
 
-from app.data.league.team import Team
+from app.data.league.team.core import Team
 
 
 class Game(Base):

@@ -16,15 +16,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.schema import ForeignKey, UniqueConstraint
 
 from app.base import Base
-from app.data.league.team import Team
+from app.data.league.team.core import Team
 
 if TYPE_CHECKING:
     from app.data.league.season import Season
-
-if TYPE_CHECKING:
-    from app.data.league.team_season.draft_picks import DraftPick
-    from app.data.league.team_season.finances import TeamSeasonFinance
-    from app.data.league.team_season.playoffs import TeamSeasonPlayoffRound
+    from app.data.league.team.season_draft_picks import DraftPick
+    from app.data.league.team.season_finances import TeamSeasonFinance
+    from app.data.league.team.season_playoffs import TeamSeasonPlayoffRound
 
 
 class TeamSeason(Base):

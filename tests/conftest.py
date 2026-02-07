@@ -33,7 +33,7 @@ def session() -> Generator[Session, None, None]:  # @IgnoreException
 def parametrize(cases: Iterable[TestCase] = ()) -> Callable[..., Any]:
     cases = list(cases)
 
-    def decorator(func):
+    def decorator(func: Any) -> Any:
         sig = inspect.signature(func)
         wants_case = "case" in sig.parameters
 

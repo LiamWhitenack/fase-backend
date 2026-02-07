@@ -1,22 +1,8 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-from sqlalchemy import (
-    Boolean,
-    Date,
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-)
+from sqlalchemy import Boolean, Date, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
-
-if TYPE_CHECKING:
-    from app.data.league.season import Season
+from app.data.league.season import Season
 
 
 class PlayerGame(Base):

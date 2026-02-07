@@ -3,7 +3,7 @@ from enum import Enum as PyEnum
 from sqlalchemy import Enum, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.data.league.team import Team
+from app.data.league.team.core import Team
 
 from ...base import Base
 from .player import Player

@@ -6,9 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
-from app.data.league.payroll import TeamPlayerSalary
 from app.data.league.player import PlayerSeason
-from app.data.league.team import Team
+from app.data.league.team.core import Team
+from app.data.league.team.payroll import TeamPlayerSalary
 from app.fill_data.teams import NBA_TEAM_ID, get_team_id
 from app.utils.team_id_map import TEAM_ID
 

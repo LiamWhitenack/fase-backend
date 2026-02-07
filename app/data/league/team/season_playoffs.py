@@ -14,11 +14,12 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from app.base import Base
-from app.data.league.team import Team
-from app.data.league.team_season.core import TeamSeason
+
+if TYPE_CHECKING:
+    from app.data.league import Team, TeamSeason
 
 
 class PlayoffRound(enum.Enum):
@@ -76,7 +77,7 @@ class TeamSeasonPlayoffRound(Base):
     def from_nba_api(
         cls,
         *,
-        session,
+        session: Session,
         team_season: TeamSeason,
         nba_team_id: int,
     ) -> list["TeamSeasonPlayoffRound"]:

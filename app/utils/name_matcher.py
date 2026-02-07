@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.data.connection import get_session as get_dev_session
 from app.data.league.player import Player
-from app.data.league.team import Team
+from app.data.league.team.core import Team
 
 
 class NameMatchFinder:

@@ -2,7 +2,7 @@ from pandas import Series, read_csv
 from sqlalchemy.orm import Session
 
 from app.data.connection import get_session
-from app.data.league.team import Team
+from app.data.league.team.core import Team
 
 NBA_TEAM_ID = [
     1610612737,  # Atlanta Hawks

@@ -5,13 +5,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Float, ForeignKey, Index, Integer, Sequence, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ...base import Base
+from ....base import Base
 
 if TYPE_CHECKING:
+    from app.data.league.player import Player
     from app.data.league.season import Season
-
-    from .player import Player
-    from .team import Team
 
 
 class TeamPlayerSalary(Base):
@@ -41,7 +39,7 @@ class TeamPlayerSalary(Base):
 
     # ---- relationships ----
     season: Mapped[Season] = relationship("Season")
-    player: Mapped["Player"] = relationship("Player", back_populates="salaries")
+    player: Mapped[Player] = relationship("Player", back_populates="salaries")
 
     __table_args__ = (
         Index("ix_salary_unique", "season_id", "team_id", "player_id", unique=True),

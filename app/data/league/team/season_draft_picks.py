@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
-from app.data.league.team import Team
-from app.data.league.team_season.core import TeamSeason
+
+if TYPE_CHECKING:
+    from app.data.league import TeamSeason
+    from app.data.league.team.core import Team
 
 
 class DraftPick(Base):
