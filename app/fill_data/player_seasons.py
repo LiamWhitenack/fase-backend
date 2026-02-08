@@ -1,6 +1,8 @@
 import time
+from typing import Any, Literal
 
 from nba_api.stats.endpoints import leaguedashplayerstats, playergamelog
+from nba_api.stats.library.http import NBAStatsHTTP
 from nba_api.stats.static import players, teams
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,6 +12,7 @@ from app.data.league.player import PlayerSeason
 from app.data.league.team.core import Team
 from app.data.league.team.payroll import TeamPlayerSalary
 from app.fill_data.teams import NBA_TEAM_ID, get_team_id
+from app.utils.math_utils import delay_seconds
 from app.utils.team_id_map import TEAM_ID
 
 # Constants
@@ -31,15 +34,42 @@ def get_team_id_map(session: Session) -> dict[str, int]:
 def fetch_player_season_stats(season: int) -> dict[int, dict]:
     """Fetch per-season aggregated stats using leaguedashplayerstats endpoint."""
     time.sleep(REQUEST_DELAY)
+    res: dict[int, dict[str, Any]] = {}
 
+    for prefix, stats_type in (
+        (None, "Base"),
+        (None, "Advanced"),
+        (None, "Misc"),
+        (None, "Usage"),
+        # ("opp_", "Opponent"),
+        # (None, "Four Factors"),
+    ):
+        pass
+        for index, data in get_stats(season, stats_type, prefix).items():
+            res[index] = res.get(index, {}) | data
+
+    return res
+
+
+def get_stats(
+    season: int,
+    type: Literal[
+        "Base", "Advanced", "Misc", "Opponent", "Four Factors", "Usage", "All-in-One"
+    ],
+    prefix: str | None = None,
+) -> dict[int, dict[str, Any]]:
     stats = leaguedashplayerstats.LeagueDashPlayerStats(
-        season=f"{season}-{str(season)[-2:]}",
-        measure_type_detailed_defense="Advanced",
+        season=f"{season - 1}-{str(season)[-2:]}",
+        measure_type_detailed_defense=type,
+        timeout=100,
     ).get_dict()["resultSets"][0]
-    headers = stats["headers"]
+    if prefix:
+        headers = [prefix + h for h in stats["headers"]]
+    else:
+        headers = stats["headers"]
     data = stats["rowSet"]
-    readable_data = [dict(zip(headers, d)) for d in data]
-    return {d.pop("PLAYER_ID"): d for d in readable_data}
+    readable = [dict(zip(headers, d)) for d in data]
+    return {d.pop("PLAYER_ID"): d for d in readable}
 
 
 def player_ids_to_get(session: Session) -> list[int]:
@@ -76,46 +106,14 @@ def upload_player_seasons(session: Session) -> None:
 
             # Map NBA API stats to your model fields
 
-            ps = PlayerSeason(
-                player_id=player_id,
-                team_id=get_team_id(data["TEAM_ID"]),
-                season=season,
-                age=data["AGE"],
-                games_played=data["GP"],
-                wins=data["W"],
-                losses=data["L"],
-                win_pct=data["W_PCT"],
-                minutes_per_game=data["MIN"],
-                offensive_rating=data["OFF_RATING"],
-                defensive_rating=data["DEF_RATING"],
-                net_rating=data["NET_RATING"],
-                estimated_offensive_rating=data["E_OFF_RATING"],
-                estimated_defensive_rating=data["E_DEF_RATING"],
-                estimated_net_rating=data["E_NET_RATING"],
-                assist_percentage=data["AST_PCT"],
-                assist_to_turnover=data["AST_TO"],
-                assist_ratio=data["AST_RATIO"],
-                offensive_rebound_pct=data["OREB_PCT"],
-                defensive_rebound_pct=data["DREB_PCT"],
-                rebound_pct=data["REB_PCT"],
-                turnover_pct=data["TM_TOV_PCT"],
-                effective_fg_pct=data["EFG_PCT"],
-                true_shooting_pct=data["TS_PCT"],
-                usage_pct=data["USG_PCT"],
-                pace=data["PACE"],
-                pace_per_40=data["PACE_PER40"],
-                estimated_pace=data["E_PACE"],
-                possessions=data["POSS"],
-                pie=data["PIE"],
-                field_goals_made=data["FGM"],
-                field_goals_attempted=data["FGA"],
-                field_goal_pct=data["FG_PCT"],
-                field_goals_made_pg=data["FGM_PG"],
-                field_goals_attempted_pg=data["FGA_PG"],
+            ps = PlayerSeason.from_nba_api_json(
+                player_id, get_team_id(data["TEAM_ID"]), season, data
             )
 
             session.add(ps)
             session.commit()
+
+        delay_seconds(5, 2)
 
 
 if __name__ == "__main__":

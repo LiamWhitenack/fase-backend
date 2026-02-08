@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Float, ForeignKey, Index, Integer, Sequence, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ....base import Base
+from app.base import Base
 
 if TYPE_CHECKING:
     from app.data.league.player import Player
