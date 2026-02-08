@@ -23,6 +23,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.21",
     "sqlalchemy>=2.0.45",
+    "tqdm>=4.67.3",
     "uvicorn[standard]>=0.40.0",
 ]
 

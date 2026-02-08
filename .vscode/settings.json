@@ -1,5 +1,6 @@
 {
   // Auto-formatting including import sorting
+  "python.defaultInterpreterPath": ".venv/bin/python",
   "emeraldwalk.runonsave": {
     "commands": [
       {
