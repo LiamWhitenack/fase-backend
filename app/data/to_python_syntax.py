@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date, datetime, time
 from enum import Enum
 from typing import Any
@@ -144,19 +145,13 @@ def get_player_dicts(
     return res
 
 
-def save_as_python(
-    player_ids: list[int],
-    path: str = "test.py",
-    variable_name: str | None = None,
-) -> None:
+def save_as_python(player_group: PlayerGroup) -> None:
     with get_session() as session:
-        seed_data = get_player_dicts(session, player_ids)
+        seed_data = get_player_dicts(session, player_group.player_ids)
 
-    with open(path, "w") as f:
+    with open(f"tests/data/{player_group.lower}_contract_data.py", "w") as f:
         f.write("from __future__ import annotations\n\n")
-        if variable_name is None:
-            variable_name = "seed_data"
-        f.write(f"{variable_name} = {repr(seed_data)}\n")
+        f.write(f"{player_group.upper}_CONTRACT_DATA = {repr(seed_data)}\n")
 
 
 def save_seasons() -> None:
@@ -169,9 +164,24 @@ def save_seasons() -> None:
         f.write("\n")
 
 
+@dataclass
+class PlayerGroup:
+    player_ids: list[int]
+    name: str
+
+    @property
+    def lower(self) -> str:
+        return self.name.lower()
+
+    @property
+    def upper(self) -> str:
+        return self.name.upper()
+
+
 if __name__ == "__main__":
-    save_as_python(
-        [1630172, 101150, 42, 1630533],
-        path="tests/data/williams_contract_data.py",
-        variable_name="WILLIAMS_CONTRACT_DATA",
-    )
+    data = [
+        PlayerGroup([1630172, 101150, 42, 1630533], "Williams"),
+        PlayerGroup([1641708, 1641709, 78326, 202691, 202684], "Thompson"),
+    ]
+    for datum in data:
+        save_as_python(datum)
