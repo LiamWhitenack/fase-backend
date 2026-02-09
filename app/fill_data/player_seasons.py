@@ -4,6 +4,7 @@ from typing import Any, Literal
 from nba_api.stats.endpoints import leaguedashplayerstats, playergamelog
 from nba_api.stats.library.http import NBAStatsHTTP
 from nba_api.stats.static import players, teams
+from requests.exceptions import JSONDecodeError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -58,11 +59,14 @@ def get_stats(
     ],
     prefix: str | None = None,
 ) -> dict[int, dict[str, Any]]:
-    stats = leaguedashplayerstats.LeagueDashPlayerStats(
-        season=f"{season - 1}-{str(season)[-2:]}",
-        measure_type_detailed_defense=type,
-        timeout=100,
-    ).get_dict()["resultSets"][0]
+    try:
+        stats = leaguedashplayerstats.LeagueDashPlayerStats(
+            season=f"{season - 1}-{str(season)[-2:]}",
+            measure_type_detailed_defense=type,
+            timeout=100,
+        ).get_dict()["resultSets"][0]
+    except JSONDecodeError:
+        return {}
     if prefix:
         headers = [prefix + h for h in stats["headers"]]
     else:
@@ -97,7 +101,7 @@ def player_season_ids(session: Session) -> set[tuple[int, int]]:
 def upload_player_seasons(session: Session) -> None:
     player_season: set[tuple[int, int]] = player_season_ids(session)
 
-    for season in range(2011, 2026):  # up to 2025-26
+    for season in range(2004, 2027):  # up to 2025-26
         stats = fetch_player_season_stats(season)
         for player_id in set(stats).intersection(player_ids_to_get(session)):
             data = stats[player_id]
@@ -113,7 +117,7 @@ def upload_player_seasons(session: Session) -> None:
             session.add(ps)
             session.commit()
 
-        delay_seconds(5, 2)
+        delay_seconds(5, 5)
 
 
 if __name__ == "__main__":

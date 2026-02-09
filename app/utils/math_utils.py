@@ -13,5 +13,5 @@ def delay_seconds(shape: float = 5.0, scale: float = 1.0) -> None:
     print(f"Delaying {round(seconds, 2)} seconds, mean is {shape * scale}")
 
     # Show progress bar
-    for _ in tqdm(range(int(seconds * 100)), desc="Waiting", ncols=70):
-        sleep(0.01)
+    for _ in tqdm(range(int(seconds * 10)), desc="Waiting", ncols=70):
+        sleep(0.1)
