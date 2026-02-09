@@ -5,88 +5,91 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Scrape Spotrac",
+      "name": "Python: Current File as Module",
       "type": "debugpy",
       "request": "launch",
-      "module": "app.fill_data.save_to_csv.scrape_spotrac"
+      "program": "${workspaceFolder}/run_as_module.py",
+      "args": ["${file}"],
+      "console": "integratedTerminal"
     },
-    {
-      "name": "Upload Players",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.players"
-    },
-    {
-      "name": "Upload Teams",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.teams"
-    },
-    {
-      "name": "Upload Payrolls",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.payrolls"
-    },
-    {
-      "name": "Upload Contracts",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.contracts"
-    },
-    {
-      "name": "Upload Awards",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.awards"
-    },
-    {
-      "name": "Upload Player Seasons",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.player_seasons"
-    },
-    {
-      "name": "Upload Prospects",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.prospects"
-    },
-    {
-      "name": "Upload Seasons",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.seasons"
-    },
-    {
-      "name": "Upload Team Seasons",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.team_seasons"
-    },
-    {
-      "name": "Upload Team Finances",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.team_finances"
-    },
-    {
-      "name": "Upload Team Playoff Rounds",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.team_playoffs"
-    },
+
+    // {
+    //   "name": "Scrape Spotrac",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.save_to_csv.scrape_spotrac"
+    // },
+    // {
+    //   "name": "Upload Players",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.players"
+    // },
+    // {
+    //   "name": "Upload Teams",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.teams"
+    // },
+    // {
+    //   "name": "Upload Payrolls",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.payrolls"
+    // },
+    // {
+    //   "name": "Upload Contracts",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.contracts"
+    // },
+    // {
+    //   "name": "Upload Awards",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.awards"
+    // },
+    // {
+    //   "name": "Upload Player Seasons",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.player_seasons"
+    // },
+    // {
+    //   "name": "Upload Prospects",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.prospects"
+    // },
+    // {
+    //   "name": "Upload Seasons",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.seasons"
+    // },
+    // {
+    //   "name": "Upload Team Seasons",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.team_seasons"
+    // },
+    // {
+    //   "name": "Upload Team Finances",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.team_finances"
+    // },
+    // {
+    //   "name": "Upload Team Playoff Rounds",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.team_playoffs"
+    // },
     {
       "name": "Upload Draft Picks",
       "type": "debugpy",
       "request": "launch",
       "module": "app.fill_data.draft_picks"
-    },
-    {
-      "name": "Guess Salary Cap",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.estimate_future_season_value"
     },
     {
       "name": "Download for Testing",
