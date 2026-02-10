@@ -135,15 +135,15 @@ class PlayerSeason(Base):
     triple_doubles: Mapped[int] = mapped_column(Integer)
 
     # ---- ML-friendly scoring context ----
-    pts_off_tov: Mapped[int] = mapped_column(Integer)
-    pts_2nd_chance: Mapped[int] = mapped_column(Integer)
-    pts_fb: Mapped[int] = mapped_column(Integer)
-    pts_paint: Mapped[int] = mapped_column(Integer)
+    pts_off_tov: Mapped[int | None] = mapped_column(Integer)
+    pts_2nd_chance: Mapped[int | None] = mapped_column(Integer)
+    pts_fb: Mapped[int | None] = mapped_column(Integer)
+    pts_paint: Mapped[int | None] = mapped_column(Integer)
 
-    opp_pts_off_tov: Mapped[int] = mapped_column(Integer)
-    opp_pts_2nd_chance: Mapped[int] = mapped_column(Integer)
-    opp_pts_fb: Mapped[int] = mapped_column(Integer)
-    opp_pts_paint: Mapped[int] = mapped_column(Integer)
+    opp_pts_off_tov: Mapped[int | None] = mapped_column(Integer)
+    opp_pts_2nd_chance: Mapped[int | None] = mapped_column(Integer)
+    opp_pts_fb: Mapped[int | None] = mapped_column(Integer)
+    opp_pts_paint: Mapped[int | None] = mapped_column(Integer)
 
     # ---- % of team contributions ----
     pct_fgm: Mapped[float] = mapped_column(Float)
@@ -275,14 +275,14 @@ class PlayerSeason(Base):
             possessions=data["POSS"],
             pie=data["PIE"],
             # ---- ML-friendly scoring context ----
-            pts_off_tov=data["PTS_OFF_TOV"],
-            pts_2nd_chance=data["PTS_2ND_CHANCE"],
-            pts_fb=data["PTS_FB"],
-            pts_paint=data["PTS_PAINT"],
-            opp_pts_off_tov=data["OPP_PTS_OFF_TOV"],
-            opp_pts_2nd_chance=data["OPP_PTS_2ND_CHANCE"],
-            opp_pts_fb=data["OPP_PTS_FB"],
-            opp_pts_paint=data["OPP_PTS_PAINT"],
+            pts_off_tov=data.get("PTS_OFF_TOV"),
+            pts_2nd_chance=data.get("PTS_2ND_CHANCE"),
+            pts_fb=data.get("PTS_FB"),
+            pts_paint=data.get("PTS_PAINT"),
+            opp_pts_off_tov=data.get("OPP_PTS_OFF_TOV"),
+            opp_pts_2nd_chance=data.get("OPP_PTS_2ND_CHANCE"),
+            opp_pts_fb=data.get("OPP_PTS_FB"),
+            opp_pts_paint=data.get("OPP_PTS_PAINT"),
             # ---- % of team contributions ----
             pct_fgm=data["PCT_FGM"],
             pct_fga=data["PCT_FGA"],
