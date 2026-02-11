@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Sequence
 
 from sqlalchemy import Index, Integer, String
@@ -9,28 +8,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
 from app.custom_types import MLSafe
+from app.data.league.player.career_averages import CareerAverages
+from app.data.league.player.player_bio import PlayerBio
+from app.data.league.player.supporting_contract_info import (
+    ContractSupportingInformation,
+)
 
 if TYPE_CHECKING:
     from app.data.league import Contract
     from app.data.league.player import PlayerSeason
     from app.data.league.team.payroll import TeamPlayerBuyout, TeamPlayerSalary
-
-
-@dataclass
-class CareerAverages:
-    games_played: int = 0
-
-    points_pg: float = 0
-    rebounds_pg: float = 0
-    assists_pg: float = 0
-    steals_pg: float = 0
-    blocks_pg: float = 0
-    turnovers_pg: float = 0
-    minutes_per_game: float = 0
-
-    field_goal_pct: float = 0
-    three_point_pct: float = 0
-    free_throw_pct: float = 0
 
 
 class Player(Base):
@@ -108,6 +95,7 @@ class Player(Base):
             s.relative_dollars for s in self.buyouts
         )
 
+    @property
     def career_averages(self) -> CareerAverages:
         career = CareerAverages()
 
@@ -156,3 +144,27 @@ class Player(Base):
             career.free_throw_pct = compute_pct(career.free_throw_pct)
 
         return career
+
+    @property
+    def bio(self) -> PlayerBio:
+        return PlayerBio(
+            height_inches=self.height_inches,
+            weight_pounds=self.weight_pounds,
+            country=self.country,
+            position=self.position,
+            draft_year=self.draft_year,
+            draft_round=self.draft_round,
+            draft_number=self.draft_number,
+        )
+
+    def supporting_contract_info(self) -> Iterable[ContractSupportingInformation]:
+        self.relative_dollars = {s.season_id: s.relative_dollars for s in self.salaries}
+        for contract in self.contracts:
+            yield ContractSupportingInformation(
+                self.relative_dollars[contract.start_year - 1],
+                contract,
+                self[contract.start_year - 1],
+                self[contract.start_year - 1],
+                self.bio,
+                self.career_averages,
+            )
