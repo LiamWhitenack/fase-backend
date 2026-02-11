@@ -1,4 +1,6 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Float, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,6 +11,9 @@ from app.data.league.player.core import Player
 from app.data.league.season import Season
 from app.data.league.team.core import Team
 from app.modeling.payload_types.seasonal import SeasonalMLPayload
+
+if TYPE_CHECKING:
+    from app.data.league import TeamPlayerBuyout, TeamPlayerSalary
 
 
 class PlayerSeason(Base):
@@ -179,6 +184,24 @@ class PlayerSeason(Base):
             unique=True,
         ),
     )
+
+    # @property
+    # def earnings(self) -> tuple[TeamPlayerSalary | None, TeamPlayerBuyout | None]:
+    #     return self.player.earnings(self.season_id)
+
+    # @property
+    # def dollars(self) -> int:
+    #     def dollars(x: TeamPlayerSalary | TeamPlayerBuyout | None) -> int:
+    #         return x.dollars if x is not None else 0
+
+    #     return sum(map(dollars, self.earnings))
+
+    # @property
+    # def relative_dollars(self) -> float:
+    #     def relative_dollars(x: TeamPlayerSalary | TeamPlayerBuyout | None) -> float:
+    #         return x.relative_dollars if x is not None else 0.0
+
+    #     return sum(map(relative_dollars, self.earnings))
 
     @classmethod
     def from_nba_api_json(

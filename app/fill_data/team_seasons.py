@@ -6,7 +6,8 @@ from nba_api.stats.static import teams as static_teams
 from pandas import DataFrame
 from sqlalchemy.orm import Session
 
-from app.data.connection import Team, TeamSeason, get_session
+from app.data.connection import get_session
+from app.data.league import Team, TeamSeason
 from app.fill_data.save_to_csv.scrape_spotrac_team_seasons import delay_seconds
 from app.utils.team_id_map import TEAM_ID
 

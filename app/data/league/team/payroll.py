@@ -110,7 +110,7 @@ class TeamPlayerBuyout(Base):
         return self.salary
 
     @property
-    def relative_money(self) -> float:
+    def relative_dollars(self) -> float:
         if self.salary is None:
             return 0.0
         return self.salary / self.season.cap

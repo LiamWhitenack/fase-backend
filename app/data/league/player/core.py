@@ -78,17 +78,8 @@ class Player(Base):
 
     def __post_init__(self) -> None:
         self.stats_dict = {s.season_id: s for s in self.seasons}
+        # self.salaries_dict = {s.season_id: s for s in self.salaries}
+        # self.buyouts_dict = {s.season_id: s for s in self.buyouts}
 
     def __getitem__(self, season_id: int) -> PlayerSeason:
         return self.stats_dict[season_id]
-
-    @property
-    def career_earnings(self) -> Iterable[dict[str, MLSafe]]:
-        years = {s.season_id for s in self.salaries + self.buyouts}
-        salaries = sorted(self.salaries, key=lambda s: s.season_id)
-        buyouts = sorted(self.buyouts, key=lambda s: s.season_id)
-        for year in sorted(years):
-            while salaries[0].season_id == year:
-                salary = salaries.pop(0)
-            while buyouts[0].season_id == year:
-                buyout = buyouts.pop(0)
