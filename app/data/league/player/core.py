@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Sequence
 
 from sqlalchemy import Index, Integer, String
@@ -13,6 +14,23 @@ if TYPE_CHECKING:
     from app.data.league import Contract
     from app.data.league.player import PlayerSeason
     from app.data.league.team.payroll import TeamPlayerBuyout, TeamPlayerSalary
+
+
+@dataclass
+class CareerAverages:
+    games_played: int = 0
+
+    points_pg: float = 0
+    rebounds_pg: float = 0
+    assists_pg: float = 0
+    steals_pg: float = 0
+    blocks_pg: float = 0
+    turnovers_pg: float = 0
+    minutes_per_game: float = 0
+
+    field_goal_pct: float = 0
+    three_point_pct: float = 0
+    free_throw_pct: float = 0
 
 
 class Player(Base):
@@ -83,3 +101,58 @@ class Player(Base):
 
     def __getitem__(self, season_id: int) -> PlayerSeason:
         return self.stats_dict[season_id]
+
+    @property
+    def career_relative_dollars(self) -> float:
+        return sum(s.relative_dollars for s in self.salaries) + sum(
+            s.relative_dollars for s in self.buyouts
+        )
+
+    def career_averages(self) -> CareerAverages:
+        career = CareerAverages()
+
+        for s in self.seasons:
+            if not s.games_played or s.games_played <= 0:
+                continue
+
+            career.games_played += s.games_played
+
+            # increment totals
+            career.points_pg += s.points or 0
+            career.rebounds_pg += s.rebounds or 0
+            career.assists_pg += s.assists or 0
+            career.steals_pg += s.steals or 0
+            career.blocks_pg += s.blocks or 0
+            career.turnovers_pg += s.turnovers or 0
+            career.minutes_per_game += s.minutes_per_game or 0
+
+            # accumulate makes/attempts for percentages
+            career.field_goal_pct += s.field_goals_made or 0
+            career.field_goal_pct += -(
+                s.field_goals_attempted or 0
+            )  # temporarily store attempts as negative
+            career.three_point_pct += s.three_pointers_made or 0
+            career.three_point_pct += -(s.three_pointers_attempted or 0)
+            career.free_throw_pct += s.free_throws_made or 0
+            career.free_throw_pct += -(s.free_throws_attempted or 0)
+
+        if career.games_played > 0:
+            # convert totals to per-game
+            career.points_pg /= career.games_played
+            career.rebounds_pg /= career.games_played
+            career.assists_pg /= career.games_played
+            career.steals_pg /= career.games_played
+            career.blocks_pg /= career.games_played
+            career.turnovers_pg /= career.games_played
+            career.minutes_per_game /= career.games_played
+
+            # convert shooting totals to percentages
+            def compute_pct(m_a: float) -> float:
+                made, attempted = m_a, -m_a
+                return made / attempted if attempted > 0 else 0
+
+            career.field_goal_pct = compute_pct(career.field_goal_pct)
+            career.three_point_pct = compute_pct(career.three_point_pct)
+            career.free_throw_pct = compute_pct(career.free_throw_pct)
+
+        return career
