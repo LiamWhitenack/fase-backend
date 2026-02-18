@@ -101,7 +101,7 @@ def get_all_salary_csvs() -> None:
             )
 
         # Iterate over years and teams
-        for year in range(2025, 2026):
+        for year in range(2010, 2033):
             for _, row in teams.iterrows():
                 team_name: str = row["team_name"]
                 if team_name == "Los Angeles Clippers":
