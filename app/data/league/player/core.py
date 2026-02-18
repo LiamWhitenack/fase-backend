@@ -231,8 +231,8 @@ class Player(Base):
             yield ContractSupportingInformation(
                 relative_dollars[contract.start_year],
                 contract,
-                self.get(contract.start_year),
-                self.get(contract.start_year),
+                self.get(contract.start_year - 1),
+                self.get(contract.start_year - 2),
                 self.bio,
                 self.career_averages,
             )

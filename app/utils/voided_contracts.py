@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class VoidedContractsManager:
     def __init__(self) -> None:
         with open("data/voided-contracts.json") as f:
-            self.voided_contracts: list[tuple[int, int, int]] = json.load(f)
+            self.voided_contracts: list[list[int]] = json.load(f)
 
     def voided(self, contract: Contract) -> bool:
         return [
@@ -21,11 +21,11 @@ class VoidedContractsManager:
 
     def add(self, contract: Contract) -> None:
         self.voided_contracts.append(
-            (
+            [
                 contract.player_id,
                 contract.team_id,
                 contract.start_year,
-            )
+            ]
         )
         self.save()
 

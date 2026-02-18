@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class ContractSupportingInformation:
     target: float
     contract: Contract
-    season: PlayerSeason | None
+    contract_season: PlayerSeason | None
     previous_season: PlayerSeason | None
     bio: PlayerBio
     averages: CareerAverages

@@ -28,12 +28,24 @@ session = Session(engine)
 input_data: list[list[MLSafe]] = []
 
 stmt = select(Player).where(exists().where(Contract.player_id == Player.id))
+count: int = 0
 for player in session.scalars(stmt).all():
     if not player.draft_year:
         continue
-    for contract_supporting_info in player.supporting_contract_info():
-        if contract_supporting_info.previous_season is None:
-            print("a missed season!")
+    if player.name == f"Andrew Wiggins":
+        pass
+    for i, contract_supporting_info in enumerate(
+        sorted(
+            list(player.supporting_contract_info()),
+            key=lambda csi: csi.contract.start_year,
+        )
+    ):
+        if contract_supporting_info.previous_season is None and i != 0:
+            print(
+                f"a missed season for {player.name} in {contract_supporting_info.contract.start_year - 1}!"
+            )
             continue
-        print(contract_supporting_info.previous_season.player.name)
-        input_data.append([1])
+        print(player.name)
+        count += 1
+
+print(count)
