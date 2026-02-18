@@ -16,7 +16,7 @@ DATABASE_URL = (
 )
 
 engine = create_engine(
-    DATABASE_URL, echo=True
+    DATABASE_URL, echo=False
 )  # echo=True prints SQL queries for debugging
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

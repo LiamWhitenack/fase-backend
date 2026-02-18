@@ -13,7 +13,7 @@ from tests.data.seasons import SEASON_DATA
 DATABASE_URL = "postgresql+psycopg://athlete_user:athlete_password@localhost:6544/athlete_market_test"
 
 engine = create_engine(
-    DATABASE_URL, echo=True
+    DATABASE_URL, echo=False
 )  # echo=True prints SQL queries for debugging
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
