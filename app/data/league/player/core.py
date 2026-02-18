@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 from sqlalchemy import Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,6 +13,9 @@ from app.data.league.player.player_bio import PlayerBio
 from app.data.league.player.supporting_contract_info import (
     ContractSupportingInformation,
 )
+from app.utils.voided_contracts import VOIDED_CONTRACTS_MANAGER
+
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     from app.data.league import Contract
@@ -22,6 +25,7 @@ if TYPE_CHECKING:
 
 class Player(Base):
     __tablename__ = "players"
+    __allow_unmapped__ = True
 
     # ---- identifiers ----
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -64,9 +68,10 @@ class Player(Base):
     )
 
     buyouts: Mapped[list[TeamPlayerBuyout]] = relationship(
-        "TeamPlayerSalary",
+        "TeamPlayerBuyout",
         back_populates="player",
         cascade="all, delete-orphan",
+        overlaps="salaries",
     )
 
     contracts: Mapped[list[Contract]] = relationship(
@@ -81,13 +86,39 @@ class Player(Base):
         Index("ix_player_draft", "draft_year", "draft_round", "draft_number"),
     )
 
-    def __post_init__(self) -> None:
-        self.stats_dict = {s.season_id: s for s in self.seasons}
-        # self.salaries_dict = {s.season_id: s for s in self.salaries}
-        # self.buyouts_dict = {s.season_id: s for s in self.buyouts}
+    _stats_dict: dict[int, PlayerSeason] | None = None
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+
+    @property
+    def stats_dict(self) -> dict[int, PlayerSeason]:
+        self._stats_dict = getattr(self, "_stats_dict", None)
+        if self._stats_dict is None:
+            self._stats_dict = {s.season_id: s for s in self.seasons}
+            self._stats_dict = self._stats_dict
+        return self._stats_dict
+
+    def rebuild_stats_dict(self) -> None:
+        self._stats_dict = {s.season_id: s for s in self.seasons}
 
     def __getitem__(self, season_id: int) -> PlayerSeason:
         return self.stats_dict[season_id]
+
+    def get(self, key: int, default: T | None = None) -> PlayerSeason | T | None:
+        return self.stats_dict.get(key, default)
+
+    def __repr__(self) -> str:
+        return (
+            f"Player("
+            f"id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"first_name={self.first_name!r}, "
+            f"last_name={self.last_name!r}, "
+            f"position={self.position!r}, "
+            f"draft_year={self.draft_year!r}"
+            f")"
+        )
 
     @property
     def career_relative_dollars(self) -> float:
@@ -146,25 +177,62 @@ class Player(Base):
         return career
 
     @property
+    def bio_complete(self) -> bool:
+        return None not in {
+            self.height_inches,
+            self.weight_pounds,
+            self.country,
+            self.position,
+            self.draft_year,
+        }
+
+    @property
     def bio(self) -> PlayerBio:
-        return PlayerBio(
-            height_inches=self.height_inches,
-            weight_pounds=self.weight_pounds,
-            country=self.country,
-            position=self.position,
-            draft_year=self.draft_year,
-            draft_round=self.draft_round,
-            draft_number=self.draft_number,
-        )
+        data = {
+            "height_inches": self.height_inches,
+            "weight_pounds": self.weight_pounds,
+            "country": self.country,
+            "position": self.position,
+            "draft_year": self.draft_year,
+            "draft_round": self.draft_round,
+            "draft_number": self.draft_number,
+        }
+        for key, value in data.items():
+            if value is None and key not in ["draft_round", "draft_number"]:
+                raise Exception(f"Missing {key} for bio")
+
+        return PlayerBio(**data)  # ty:ignore[invalid-argument-type]
 
     def supporting_contract_info(self) -> Iterable[ContractSupportingInformation]:
-        self.relative_dollars = {s.season_id: s.relative_dollars for s in self.salaries}
+        salaries = {s.season_id: s.relative_dollars for s in self.salaries}
+        relative_dollars = salaries | {
+            b.season_id: salaries.get(b.season_id, 0) + b.relative_dollars
+            for b in self.buyouts
+        }
         for contract in self.contracts:
+            if contract.start_year == 2011:
+                continue  # we don't actually have all the data we would need for this year
+            if contract.start_year not in relative_dollars and (
+                contract.duration < 2 or len(relative_dollars) < 3
+            ):
+                continue  # a short contract I don't have all the data for, I think we'll be okay without it
+            if not contract.player.bio_complete:
+                continue
+            if contract.start_year not in relative_dollars:
+                if VOIDED_CONTRACTS_MANAGER.voided(contract):
+                    continue
+                keep = input(
+                    f"Was {self.name}'s contract from {contract.start_year} voided? (y/n)"
+                )
+                if keep == "y":
+                    VOIDED_CONTRACTS_MANAGER.add(contract)
+                    continue
+
             yield ContractSupportingInformation(
-                self.relative_dollars[contract.start_year - 1],
+                relative_dollars[contract.start_year],
                 contract,
-                self[contract.start_year - 1],
-                self[contract.start_year - 1],
+                self.get(contract.start_year),
+                self.get(contract.start_year),
                 self.bio,
                 self.career_averages,
             )

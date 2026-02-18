@@ -23,6 +23,7 @@
     "reportReturnType": "none",
     "reportRedeclaration": "none",
     "reportOperatorIssue": "none",
+    "reportAssignmentType": "none",
   },
   "python.testing.pytestArgs": [
     "tests"
