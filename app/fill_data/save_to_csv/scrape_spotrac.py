@@ -1,6 +1,7 @@
 import os
 import time
 from collections.abc import Iterable
+from datetime import datetime
 from typing import Any
 
 from pandas import DataFrame, Series, read_csv
@@ -34,7 +35,8 @@ def get_salary_data(
     download_dir: str = "data/payroll-team-year",
 ) -> None:
     team_name = team_name.lower().replace(" ", "-")
-    URL = f"https://www.spotrac.com/nba/{team_name}/cap/_/year/{year}"
+    table = "overview" if year - 1 >= datetime.today().year else "cap"
+    URL = f"https://www.spotrac.com/nba/{team_name}/{table}/_/year/{year}"
     print(f"Visiting {URL}…")
 
     try:
@@ -99,7 +101,7 @@ def get_all_salary_csvs() -> None:
             )
 
         # Iterate over years and teams
-        for year in range(2011, 2032):
+        for year in range(2027, 2028):
             for _, row in teams.iterrows():
                 team_name: str = row["team_name"]
                 if team_name == "Los Angeles Clippers":
