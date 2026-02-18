@@ -61,7 +61,7 @@ def get_salary_data(
             download = download_info.value
 
             # New filename
-            new_filename = f"{team_name}-{year}-{i}.csv"
+            new_filename = f"{team_name.replace('bobcats', 'hornets')}-{year}-{i}.csv"
             save_path = os.path.join(download_dir, new_filename)
 
             # Save the download using the new name
@@ -104,6 +104,8 @@ def get_all_salary_csvs() -> None:
                 team_name: str = row["team_name"]
                 if team_name == "Los Angeles Clippers":
                     team_name = "LA Clippers"
+                if team_name == "Charlotte Hornets" and year < 2014:
+                    team_name = "Charlotte Bobcats"
                 get_salary_data(page, year, team_name, DOWNLOAD_DIR)
 
         print(f"Done! CSV files saved to: {os.path.abspath(DOWNLOAD_DIR)}")

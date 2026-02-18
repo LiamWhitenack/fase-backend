@@ -1,8 +1,6 @@
-" ","Player (6)","Pos","Age","Cap Hit","Cap Hit Pct                         League Cap"," "," "," "," "," "
-"1","Sexton                     Collin Sexton","PG","28","$28,462,500","17.15%","","","","","Bird"
-"2","Connaughton                     Pat Connaughton","SG","34","$17,905,351","10.79%","","","","","Bird"
-"3","Gibson                     Taj Gibson","C","41","$2,464,849","1.48%","","","","","Non-Bird"
-"4","Plumlee                     Mason Plumlee","C","36","$2,464,849","1.48%","","","","","Non-Bird"
-"5","Simpson                     K.J. Simpson","PG","24","$2,198,879","1.32%","","","","","Two-Way"
-"6","Reeves                     Antonio Reeves","SG","26","$2,198,879","1.32%","","","","","Two-Way"
+"Player (4)","Pos","Age","Type","Cap Hit","Cap Hit Pct                 League Cap","Qualifying Offer"," "," "," "," "
+"White                   Coby White","PG","26","FA","$24,488,889","14.75%","'-","","","Bird",""
+"Tillman                   Xavier Tillman","C","28","FA","$2,464,849","1.48%","'-","","","Bird",""
+"Gibson                   Taj Gibson","C","41","FA","$2,464,849","1.48%","'-","","","Non-Bird",""
+"Reeves                   Antonio Reeves","SG","26","2W","$2,198,879","1.32%","$2,198,879","","","Two-Way",""
 
