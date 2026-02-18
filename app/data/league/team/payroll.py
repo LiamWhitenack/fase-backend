@@ -88,6 +88,9 @@ class TeamPlayerBuyout(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), index=True)
     salary: Mapped[int | None] = mapped_column(Integer)
 
+    season: Mapped[Season] = relationship("Season")
+    player: Mapped[Player] = relationship("Player", back_populates="buyouts")
+
     __table_args__ = (
         Index("ix_buyout_unique", "season_id", "team_id", "player_id", unique=True),
     )

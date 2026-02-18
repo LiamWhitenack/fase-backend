@@ -115,8 +115,8 @@ def contract_exists(session: Session, obj: Contract) -> bool:
     res = session.execute(
         select(Contract).where(
             and_(
-                Contract.id == obj.id,
                 Contract.player_id == obj.player_id,
+                Contract.start_year == obj.start_year,
                 Contract.team_id == obj.team_id,
             )
         )

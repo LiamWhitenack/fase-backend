@@ -1,6 +1,6 @@
 from enum import Enum as PyEnum
 
-from sqlalchemy import Enum, ForeignKey, Index, Integer
+from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.data.league.team.core import Team
@@ -27,6 +27,8 @@ class Contract(Base):
     value: Mapped[int | None] = mapped_column(Integer)  # total value in dollars
     start_year: Mapped[int] = mapped_column(Integer, index=True)
     duration: Mapped[int] = mapped_column(Integer)  # number of years
+
+    voided: Mapped[bool] = mapped_column(Boolean, default=False)  # number of years
 
     # ---- optional contract clauses ----
     option_1: Mapped[ContractOption | None] = mapped_column(
