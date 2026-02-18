@@ -35,7 +35,7 @@ def get_salary_data(
     download_dir: str = "data/payroll-team-year",
 ) -> None:
     team_name = team_name.lower().replace(" ", "-")
-    table = "overview" if year - 1 >= datetime.today().year else "cap"
+    table = "overview" if year <= datetime.today().year else "cap"
     URL = f"https://www.spotrac.com/nba/{team_name}/{table}/_/year/{year}"
     print(f"Visiting {URL}…")
 
@@ -101,7 +101,7 @@ def get_all_salary_csvs() -> None:
             )
 
         # Iterate over years and teams
-        for year in range(2010, 2033):
+        for year in range(2025, 2026):
             for _, row in teams.iterrows():
                 team_name: str = row["team_name"]
                 if team_name == "Los Angeles Clippers":
