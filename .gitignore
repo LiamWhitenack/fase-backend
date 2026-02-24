@@ -1,6 +1,8 @@
 *.env
 test.py
 
+*.synctex.gz
+
 *.pkl
 
 *spotrac_auth.json
