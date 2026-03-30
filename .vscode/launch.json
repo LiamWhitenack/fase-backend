@@ -55,12 +55,12 @@
     //   "request": "launch",
     //   "module": "app.fill_data.player_seasons"
     // },
-    // {
-    //   "name": "Upload Prospects",
-    //   "type": "debugpy",
-    //   "request": "launch",
-    //   "module": "app.fill_data.prospects"
-    // },
+    {
+      "name": "Upload Prospects",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.fill_data.prospects"
+    },
     // {
     //   "name": "Upload Seasons",
     //   "type": "debugpy",
@@ -85,12 +85,12 @@
     //   "request": "launch",
     //   "module": "app.fill_data.team_playoffs"
     // },
-    {
-      "name": "Upload Draft Picks",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.fill_data.draft_picks"
-    },
+    // {
+    //   "name": "Upload Draft Picks",
+    //   "type": "debugpy",
+    //   "request": "launch",
+    //   "module": "app.fill_data.draft_picks"
+    // },
     {
       "name": "Download for Testing",
       "type": "debugpy",

@@ -80,6 +80,10 @@ def parse_big_board(soup: BeautifulSoup) -> tuple[datetime, list[str]]:
     if dt_tag is None:
         raise Exception("No <time> tag found on page")
 
+    for bad_slug in ("matchup",):
+        if bad_slug in players:
+            players.remove(bad_slug)
+
     return datetime.fromisoformat(dt_tag["datetime"]), list(players)
 
 

@@ -14,4 +14,7 @@ def delay_seconds(shape: float = 5.0, scale: float = 1.0) -> None:
 
     # Show progress bar
     for _ in tqdm(range(int(seconds * 10)), desc="Waiting", ncols=70):
-        sleep(0.1)
+        try:
+            sleep(0.1)
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt: skipping wait period.")
