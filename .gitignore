@@ -1,3 +1,9 @@
+documentation/report/*
+!documentation/report/*.tex
+!documentation/report/*.pdf
+!documentation/report/IEEEtran.cls
+!documentation/report/cite.sty
+
 *.env
 test.py
 
