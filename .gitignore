@@ -1,8 +1,10 @@
 documentation/report/*
-!documentation/report/*.tex
+!documentation/report/*.bib
 !documentation/report/*.pdf
-!documentation/report/IEEEtran.cls
+!documentation/report/*.tex
 !documentation/report/cite.sty
+!documentation/report/IEEEtran.bst
+!documentation/report/IEEEtran.cls
 
 *.env
 test.py
