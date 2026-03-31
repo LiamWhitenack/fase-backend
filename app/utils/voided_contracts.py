@@ -31,7 +31,7 @@ class VoidedContractsManager:
 
     def save(self) -> None:
         with open("data/voided-contracts.json", "w") as f:
-            json.dump(sorted(self.voided_contracts), f)
+            json.dump(sorted(self.voided_contracts), f, indent=4)
 
 
 VOIDED_CONTRACTS_MANAGER = VoidedContractsManager()

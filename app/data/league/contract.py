@@ -44,3 +44,22 @@ class Contract(Base):
 
     # ---- indexes ----
     __table_args__ = (Index("ix_contract_player_year", "player_id", "start_year"),)
+
+    def __repr__(self) -> str:
+        return (
+            f"Contract("
+            f"name={self.player.name!r}, "
+            f"value={self.value!r}, "
+            f"duration={self.duration!r}, "
+            f"start_year={self.start_year!r}"
+            f")"
+        )
+
+    def to_scalar(self) -> dict[str, bool | int | None]:
+        return {
+            "team_id": self.team_id,
+            "duration": self.team_id,
+            "voided": self.voided,
+            # "player_option": self.option_2 == "Player",
+            # "team_options": [self.option_1, self.option_2].count("Team"),
+        }

@@ -69,6 +69,19 @@ class TeamPlayerSalary(Base):
             return 0.0
         return self.salary / self.season.cap
 
+    def to_scalar(self) -> dict[str, float | int | bool | None]:
+        return {
+            "dollars": self.dollars,
+            "relative_dollars": self.relative_dollars,
+            "team_id": self.team_id,
+            "cap_hit_percent": self.cap_hit_percent,
+            "salary": self.salary,
+            "apron_salary": self.apron_salary,
+            "luxury_tax": self.luxury_tax,
+            "cash_total": self.cash_total,
+            "cash_garunteed": self.cash_garunteed,
+        }
+
 
 class TeamPlayerBuyout(Base):
     __tablename__ = "team_player_buyouts"
@@ -117,3 +130,16 @@ class TeamPlayerBuyout(Base):
         if self.salary is None:
             return 0.0
         return self.salary / self.season.cap
+
+    def to_scalar(self) -> dict[str, float | int | bool | None]:
+        return {
+            "dollars": self.dollars,
+            "relative_dollars": self.relative_dollars,
+            "team_id": self.team_id,
+            "cap_hit_percent": 0,
+            "salary": self.salary,
+            "apron_salary": 0,
+            "luxury_tax": 0,
+            "cash_total": 0,
+            "cash_garunteed": 0,
+        }

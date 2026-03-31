@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar
 
 from sqlalchemy import Index, Integer, String
@@ -121,6 +122,12 @@ class Player(Base):
         )
 
     @property
+    def birth_datetime(self) -> datetime | None:
+        if self.birth_date is None:
+            return None
+        return datetime.fromisoformat(self.birth_date)
+
+    @property
     def career_relative_dollars(self) -> float:
         return sum(s.relative_dollars for s in self.salaries) + sum(
             s.relative_dollars for s in self.buyouts
@@ -150,10 +157,11 @@ class Player(Base):
             career.field_goal_pct += -(
                 s.field_goals_attempted or 0
             )  # temporarily store attempts as negative
-            career.three_point_pct += s.three_pointers_made or 0
-            career.three_point_pct += -(s.three_pointers_attempted or 0)
-            career.free_throw_pct += s.free_throws_made or 0
-            career.free_throw_pct += -(s.free_throws_attempted or 0)
+            career.three_point_made += s.three_pointers_made or 0
+            career.three_point_attempted += s.three_pointers_attempted or 0
+
+            career.free_throw_made += s.free_throws_made or 0
+            career.free_throw_attempted += s.free_throws_attempted or 0
 
         if career.games_played > 0:
             # convert totals to per-game
@@ -165,14 +173,16 @@ class Player(Base):
             career.turnovers_pg /= career.games_played
             career.minutes_per_game /= career.games_played
 
-            # convert shooting totals to percentages
-            def compute_pct(m_a: float) -> float:
-                made, attempted = m_a, -m_a
+            def compute_pct(made: float, attempted: float) -> float:
                 return made / attempted if attempted > 0 else 0
 
-            career.field_goal_pct = compute_pct(career.field_goal_pct)
-            career.three_point_pct = compute_pct(career.three_point_pct)
-            career.free_throw_pct = compute_pct(career.free_throw_pct)
+            career.three_point_pct = compute_pct(
+                career.three_point_made, career.three_point_attempted
+            )
+
+            career.free_throw_pct = compute_pct(
+                career.free_throw_made, career.free_throw_attempted
+            )
 
         return career
 
@@ -204,36 +214,66 @@ class Player(Base):
         return PlayerBio(**data)  # ty:ignore[invalid-argument-type]
 
     def supporting_contract_info(self) -> Iterable[ContractSupportingInformation]:
-        salaries = {s.season_id: s.relative_dollars for s in self.salaries}
-        relative_dollars = salaries | {
-            b.season_id: salaries.get(b.season_id, 0) + b.relative_dollars
+        salaries = {s.season_id: s for s in self.salaries}
+        salary_dollars = {s.season_id: s.dollars for s in self.salaries}
+        buyouts = {b.season_id: b for b in self.buyouts}
+        dollars = salaries | {
+            b.season_id: salary_dollars.get(b.season_id, 0) + b.dollars
             for b in self.buyouts
         }
-        for contract in self.contracts:
+        contracts = sorted(
+            self.contracts, key=lambda c: (c.start_year, (c.value if c.value else 0))
+        )
+        last_contract_end = -1
+        for i, contract in enumerate(contracts, start=1):
+            if (
+                contract.start_year < last_contract_end
+                and contract.start_year not in buyouts
+                and (contract.start_year - 1) not in buyouts
+            ):
+                continue
             if contract.start_year == 2011:
                 continue  # we don't actually have all the data we would need for this year
-            if contract.start_year not in relative_dollars and (
-                contract.duration < 2 or len(relative_dollars) < 3
+            if contract.start_year not in dollars and (
+                contract.duration < 2 or len(dollars) < 3
             ):
                 continue  # a short contract I don't have all the data for, I think we'll be okay without it
             if not contract.player.bio_complete:
                 continue
-            if contract.start_year not in relative_dollars:
+            if contract.value is None:
+                continue
+            if contract.start_year not in dollars:
                 if VOIDED_CONTRACTS_MANAGER.voided(contract):
                     continue
-                keep = input(
-                    f"Was {self.name}'s contract from {contract.start_year} voided? (y/n)"
-                )
-                if keep == "y":
+                if self.ask_voided(contract):
                     VOIDED_CONTRACTS_MANAGER.add(contract)
                     continue
 
+            salary: TeamPlayerSalary | TeamPlayerBuyout
+            if contract.start_year not in salaries:
+                if VOIDED_CONTRACTS_MANAGER.voided(contract):
+                    continue
+                if contract.start_year not in buyouts:
+                    VOIDED_CONTRACTS_MANAGER.add(contract)
+                    continue
+                salary = buyouts[contract.start_year]
+            else:
+                salary = salaries.pop(contract.start_year)
+
             yield ContractSupportingInformation(
-                relative_dollars[contract.start_year],
-                contract.start_year,
+                self,
+                salary,
                 contract,
                 self.get(contract.start_year - 1),
                 self.get(contract.start_year - 2),
-                self.bio,
                 self.career_averages,
+                i,
             )
+            last_contract_end = contract.start_year + contract.duration
+
+    def ask_voided(self, contract: Contract) -> bool:
+        keep = input(
+            f"Was {self.name}'s contract from {contract.start_year} voided? (y/n)"
+        )
+
+        return keep == "y"

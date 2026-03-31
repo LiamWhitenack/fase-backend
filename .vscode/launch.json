@@ -61,6 +61,12 @@
       "request": "launch",
       "module": "app.fill_data.prospects"
     },
+    {
+      "name": "Generate Tabular Training Data",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.crud.read.contract_supporting_info"
+    },
     // {
     //   "name": "Upload Seasons",
     //   "type": "debugpy",

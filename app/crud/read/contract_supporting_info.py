@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 
+from pandas import DataFrame
 from sqlalchemy import create_engine, exists, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -34,17 +35,13 @@ def get_all_contract_supporting_info(
 
 
 if __name__ == "__main__":
-    DATABASE_URL = "postgresql+psycopg://athlete_user:athlete_password@localhost:6543/athlete_market"
+    with get_session() as session:
+        data: list[dict] = []
+        for contract in get_all_contract_supporting_info(session):
+            if contract.contract_number == 1:
+                continue
+            if contract.contract_season is None or contract.previous_season is None:
+                continue
+            data.append(contract.to_scalar())
 
-    engine = create_engine(
-        DATABASE_URL, echo=True
-    )  # echo=True prints SQL queries for debugging
-
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-    # Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    session = Session(engine)
-
-    for contract in get_all_contract_supporting_info(session):
-        pass
+    DataFrame(data).to_csv("data/contracts-for-ml.csv", index=False)

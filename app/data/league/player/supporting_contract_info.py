@@ -1,24 +1,177 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Literal
+
+from app.custom_types import MLSafe
 
 if TYPE_CHECKING:
-    from app.data.league import Contract, PlayerSeason
+    from app.data.league import (
+        Contract,
+        Player,
+        PlayerSeason,
+        TeamPlayerBuyout,
+        TeamPlayerSalary,
+    )
     from app.data.league.player.career_averages import CareerAverages
     from app.data.league.player.player_bio import PlayerBio
 
 
 @dataclass()
 class ContractSupportingInformation:
-    target: float
-    season_id: int
+    player: Player
+    salary: TeamPlayerSalary | TeamPlayerBuyout
     contract: Contract
     contract_season: PlayerSeason | None
     previous_season: PlayerSeason | None
-    bio: PlayerBio
     averages: CareerAverages
+    contract_number: int
+
+    def __post_init__(self) -> None:
+        super().__init__()
+        if self.salary is None and self.buyout is None:
+            raise Exception()
 
     @property
     def is_rookie_contract(self) -> bool:
-        return self.contract_season is None and self.bio.draft_year + 3 > self.season_id
+        return (
+            self.contract_season is None
+            and self.player.bio.draft_year + 3 > self.salary.season_id
+        )
+
+    def to_scalar(self) -> dict[str, MLSafe | None]:
+        return (
+            {
+                "buyout": not hasattr(self.salary, "apron_salary"),
+                "season": self.contract.start_year,
+                "contract_number": self.contract_number,
+                "ascending": self.is_ascending(),
+            }
+            | self.contract.to_scalar()
+            | (
+                self.salary.to_scalar()
+                if self.salary is not None
+                else blank_salary_scalar()
+            )
+            | {
+                "contract_season_" + k: v
+                for k, v in (
+                    self.contract_season.ml_data().no_colinearity()
+                    if self.contract_season is not None
+                    else blank_season_ml_data()
+                ).items()
+            }
+            | {
+                "previous_season_" + k: v
+                for k, v in (
+                    self.previous_season.ml_data().no_colinearity()
+                    if self.previous_season is not None
+                    else blank_season_ml_data()
+                ).items()
+            }
+            | self.player.bio.to_scalar()
+            | {"age": self.age()}
+            | self.averages.to_scalar()
+        )
+
+    def is_ascending(self) -> Literal[1, 0, -1]:
+        if self.contract.value is None or self.contract.duration is None:
+            raise Exception()
+        avg = self.contract.value / self.contract.duration
+        avg_div_first = self.salary.dollars / avg * 100 // 4 / 25
+        ascending: Literal[-1, 0, 1] = (
+            1 if avg_div_first < 1 else (0 if avg_div_first == 1 else -1)
+        )
+
+        return ascending
+
+    def age(self) -> int:
+        if self.player.birth_datetime is None:
+            raise Exception()
+        return (
+            datetime(self.contract.start_year + 1, 1, 1) - self.player.birth_datetime
+        ).days
+
+
+def blank_salary_scalar() -> dict[str, None]:
+    return {
+        key: None
+        for key in [
+            "dollars",
+            "relative_dollars",
+            "team_id",
+            "player_id",
+            "cap_hit_percent",
+            "salary",
+            "apron_salary",
+            "luxury_tax",
+            "cash_total",
+            "cash_garunteed",
+        ]
+    }
+
+
+def blank_buyout_scalar() -> dict[str, None]:
+    return {
+        key: None
+        for key in [
+            "buyout_dollars",
+            "buyout_relative_dollars",
+            "buyout_team_id",
+            "buyout_player_id",
+            "buyout_salary",
+        ]
+    }
+
+
+def blank_season_ml_data() -> dict[str, None]:
+    return {
+        key: None
+        for key in [
+            "games_played",
+            "minutes_per_game",
+            "points_pg",
+            "rebounds_pg",
+            "assists_pg",
+            "steals_pg",
+            "blocks_pg",
+            "turnovers_pg",
+            "personal_fouls_pg",
+            "field_goals_made_pg",
+            "field_goals_attempted_pg",
+            "three_pointers_made_pg",
+            "three_pointers_attempted_pg",
+            "two_pointers_made_pg",
+            "two_pointers_attempted_pg",
+            "free_throws_made_pg",
+            "free_throws_attempted_pg",
+            "field_goal_pct",
+            "three_point_pct",
+            "two_point_pct",
+            "free_throw_pct",
+            "assist_percentage",
+            "assist_to_turnover",
+            "assist_ratio",
+            "offensive_rebound_pct",
+            "defensive_rebound_pct",
+            "rebound_pct",
+            "turnover_pct",
+            "usage_pct",
+            "offensive_rating",
+            "defensive_rating",
+            "net_rating",
+            "estimated_offensive_rating",
+            "estimated_defensive_rating",
+            "estimated_net_rating",
+            "estimated_pace",
+            "possessions",
+            "pts_off_tov",
+            "pts_fb",
+            "pts_paint",
+            "opp_pts_off_tov",
+            "opp_pts_fb",
+            "opp_pts_paint",
+            "plus_minus_pg",
+        ]
+    }
