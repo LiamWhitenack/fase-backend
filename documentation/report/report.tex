@@ -29,8 +29,182 @@ Each professional basketball player's contract-based salary reflects their perce
 
 
 \section{Introduction}
-As shown in previous work \cite{sklearn}.
 
+This project investigates the prediction of player contract value in the National Basketball Association (NBA) using machine learning, with a specific focus on estimating a contract's value relative to the league salary cap. Rather than predicting raw salary, this study models \textit{relative dollars}—defined as the percentage of the salary cap that a player's contract occupies in its first year. This formulation normalizes financial values across seasons with varying cap sizes and allows for more meaningful comparisons of player value over time. Accurately predicting this quantity provides insight into how teams translate on-court performance, player characteristics, and contextual factors into financial decisions, effectively treating salary as a proxy for perceived player value.
+
+Prior work in sports analytics has explored salary prediction and player valuation using a variety of machine learning techniques. Jain et al. \cite{10041664} demonstrate that nonlinear models such as random forests and gradient boosting outperform traditional linear regression when predicting NBA salaries, highlighting the complex relationships between performance metrics and compensation. More broadly, ensemble learning methods such as gradient boosting \cite{xgboost} and general-purpose machine learning frameworks \cite{sklearn} have been shown to be effective in modeling high-dimensional, nonlinear datasets. Additionally, earlier analytical work by Barzilai \cite{barzilai2007nba} emphasizes the importance of contextual factors—such as draft position—in determining player value, reinforcing the need for comprehensive feature sets. However, much of the existing literature focuses on predicting absolute salary values or relies on limited subsets of features. This project extends prior work by incorporating a more extensive feature space and by reframing the prediction target to account for salary cap dynamics.
+
+The dataset used in this study is constructed by combining data from the NBA API and Spotrac. The NBA API provides detailed player performance statistics across seasons, including both traditional box score metrics and advanced analytics. Spotrac contributes contract-level financial data, including salary, contract length, and timing. These sources are merged to create a rich dataset containing a wide range of features relevant to player valuation, including age, position, experience, historical performance trends, and prior contract information. The resulting dataset captures both performance-based and contextual factors that influence contract negotiations.
+
+The model design emphasizes flexibility and the ability to capture nonlinear relationships. Multiple regression-based approaches are considered, including linear regression as a baseline and more advanced models such as random forests, gradient boosting machines, and neural networks. Feature engineering plays a significant role, including the aggregation of career and recent-season statistics, normalization of performance metrics, and encoding of categorical variables. The target variable—relative dollars in the first contract year—is computed by dividing the player's first-year salary by the corresponding league salary cap, ensuring consistency across seasons.
+
+Overall, this project aims to provide a data-driven framework for understanding how NBA player value is quantified in financial terms. By leveraging a comprehensive dataset and modern machine learning techniques, the study seeks not only to improve predictive performance but also to identify the key factors that most strongly influence contract valuation.
+
+
+\section{Data Exploration}
+
+To better understand the structure of the dataset and inform model selection, we performed an extensive exploratory data analysis focused on the target variable, \textit{relative\_dollars}, and its relationship with player performance, position, and temporal trends.
+
+\subsection{Target Distribution}
+
+Figure~\ref{fig:rel_dist} shows the distribution of \textit{relative\_dollars}. The distribution is heavily right-skewed, with a large concentration of values near zero and a long tail of higher-value contracts. This indicates that most players receive relatively low normalized compensation, while a small subset captures a disproportionately large share.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/relative-dollars-distribution.png}
+\caption{Distribution of relative dollars.}
+\label{fig:rel_dist}
+\end{figure}
+
+\subsection{Temporal Trends}
+
+Figure~\ref{fig:time_trend} illustrates the average relative value over time. A clear upward trend is observed, indicating that relative player value has increased across seasons, likely due to league-wide financial growth and salary cap expansion.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/average-relative-value-over-time.png}
+\caption{Average relative dollars over time.}
+\label{fig:time_trend}
+\end{figure}
+
+This trend is further supported by the distributional changes shown in Figure~\ref{fig:season_box}, where both the median and spread of \textit{relative\_dollars} increase over time. This non-stationarity suggests that season should be incorporated as a feature or used for normalization.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-season.png}
+\caption{Relative dollars distribution by season.}
+\label{fig:season_box}
+\end{figure}
+
+\subsection{Position-Based Differences}
+
+Figure~\ref{fig:position_box} shows the distribution of relative dollars across player positions. Certain hybrid roles, such as forward-guard and center-forward, exhibit higher median values and greater variability, indicating that positional versatility may be associated with increased value.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-position.png}
+\caption{Relative dollars by position.}
+\label{fig:position_box}
+\end{figure}
+
+To further examine positional trends over time, Figure~\ref{fig:clustered_trends} presents clustered trajectories by position. Distinct patterns emerge, with some positions experiencing sharper growth in value than others, reinforcing the importance of modeling interaction effects between position and performance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/clustered-relative-value-trends.png}
+\caption{Clustered relative value trends by position.}
+\label{fig:clustered_trends}
+\end{figure}
+
+\subsection{Performance Metrics and Value}
+
+Figures~\ref{fig:points_scatter} and~\ref{fig:assists_scatter} illustrate the relationship between player performance and relative value. Both points per game and assists per game show positive correlations with \textit{relative\_dollars}, though the relationships are noisy and exhibit significant variance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-points-pg.png}
+\caption{Relative dollars by points per game.}
+\label{fig:points_scatter}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-assists-pg.png}
+\caption{Relative dollars by assists per game.}
+\label{fig:assists_scatter}
+\end{figure}
+
+To better capture nonlinear effects, Figure~\ref{fig:points_binned} shows the average relative value across binned scoring levels. The relationship is strongly nonlinear, with noticeable increases in value at higher scoring thresholds, suggesting diminishing returns at lower levels and sharp gains among high scorers.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/average-relative-dollars-across-points-pg.png}
+\caption{Average relative dollars across points per game.}
+\label{fig:points_binned}
+\end{figure}
+
+\subsection{Correlation Analysis}
+
+Finally, Figure~\ref{fig:corr_heatmap} presents the correlation matrix for the most relevant numerical features. Strong correlations are observed between \textit{relative\_dollars} and scoring-related metrics, particularly contract-season and previous-season performance indicators.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{plots/top-correlations-with-relative-dollars.png}
+\caption{Top correlations with relative dollars.}
+\label{fig:corr_heatmap}
+\end{figure}
+
+\subsection{Summary of Insights}
+
+The exploratory analysis reveals several key characteristics of the dataset:
+
+\begin{itemize}
+    \item The target variable is highly skewed, motivating transformation.
+    \item Player value exhibits strong temporal trends, indicating non-stationarity.
+    \item Position plays a significant role in determining value.
+    \item Performance metrics such as scoring and playmaking are important but exhibit nonlinear relationships.
+    \item Feature interactions and nonlinear models are likely necessary to capture the underlying structure of the data.
+\end{itemize}
+
+\section{Data Preparation and Mining}
+
+The dataset used in this study consists of NBA player contract and performance data, where the target variable is \textit{relative\_dollars}, representing normalized player salary. Initial preprocessing involved filtering out records with missing target values to ensure consistency in downstream modeling. Additionally, several monetary-related columns (e.g., salary, cash totals, and luxury tax) were excluded from the feature set to prevent leakage, as these variables are highly correlated with the target.
+
+\subsection{Feature Engineering and Transformation}
+
+To enhance the predictive and structural quality of the data, a series of engineered features were introduced based on domain knowledge and exploratory analysis. Temporal effects were incorporated by centering the \textit{season} variable and introducing polynomial and era-based indicators (pre-2016, 2016--2019, and post-2020), capturing shifts in league dynamics such as salary cap changes. 
+
+Performance-based features were constructed to better represent player contributions. For example, a \textit{box\_creation\_proxy} aggregates scoring, playmaking, and rebounding, while efficiency metrics such as \textit{points\_per\_minute} and \textit{rebounds\_per\_minute} normalize production by playing time. Interaction terms (e.g., age-scoring and age-minutes interactions) were added to capture nonlinear relationships between experience and performance. Additionally, shooting efficiency was summarized into a composite metric combining field goal, three-point, and free throw percentages.
+
+Categorical information, particularly player position, was preserved and further expanded through interaction features that link positional roles with scoring, playmaking, and rebounding outputs. This allows the model to differentiate how similar statistics may carry different value depending on positional context.
+
+The target variable exhibited significant right skew, as shown in the raw distribution plot. To address this, a Yeo-Johnson power transformation was applied, producing a more symmetric distribution and improving the suitability of the data for both clustering and downstream modeling.
+
+\subsection{Preprocessing Pipeline}
+
+A structured preprocessing pipeline was implemented using a column-wise transformation approach. Numerical features were imputed using median values to mitigate the effect of outliers, followed by robust scaling to normalize distributions without being overly sensitive to extreme values. Categorical features were imputed using the most frequent category and encoded using one-hot encoding, enabling their inclusion in numerical models.
+
+To capture higher-order relationships without excessive dimensionality, polynomial feature expansion (degree 2) was selectively applied to a subset of the most interpretable features. This step introduces interaction and nonlinear terms while maintaining computational tractability.
+
+\subsection{Clustering and Dimensionality Reduction}
+
+Instead, a novel \textit{prism fan representation} was introduced. This approach operates in the two-dimensional space produced by Principal Component Analysis (PCA), which projects the high-dimensional feature space into orthogonal components capturing the majority of variance. Rather than fundamentally partitioning the data into discrete clusters, each observation is first mapped to a continuous angular coordinate relative to an estimated apex point, yielding a smooth directional representation of player roles in the transformed space.
+
+First, an \textit{apex point} is estimated to represent the origin of the data distribution. Rather than assuming the origin at $(0,0)$, the apex is computed as the median location of the leftmost portion of the dataset (based on a lower quantile of the first principal component). This allows the representation to align with the natural “tip” of the data cloud, as shown in Figure~\ref{fig:pca_prism_fan}. :contentReference[oaicite:0]{index=0}
+
+Next, each data point is transformed into polar coordinates relative to the apex, yielding an angular component (direction from the apex) and a radial component (distance from the apex). The angular coordinate serves as a continuous variable that captures the relative direction of a player’s statistical profile, while the radial component reflects the magnitude of that profile.
+
+For visualization and interpretability, the continuous angular variable can be discretized into equal-sized bins, producing the fan-like regions shown in Figure~\ref{fig:pca_prism_fan}. Importantly, this discretization is not inherent to the representation itself, but rather a convenience for grouping and visual inspection. The underlying structure remains continuous, allowing for smooth transitions between player roles and avoiding artificial boundaries imposed by traditional clustering methods.
+
+This formulation prevents overemphasis on dense regions near the apex while preserving the natural geometry of the data. As a result, the prism fan representation captures both directional variation (role/type of player) and radial variation (overall magnitude or impact), providing a more faithful and interpretable structure than purely discrete clustering approaches.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{plots/prism_fan_clustering.png}
+    \caption{PCA projection with prism fan clustering from an estimated apex. Clusters are defined by angular partitions, creating a fan-like structure.}
+    \label{fig:pca_prism_fan}
+\end{figure}
+
+The resulting visualization reveals a clear directional structure in the data. Rather than forming spherical or elliptical clusters, players are grouped based on their relative position in the performance-value space. Lower-value players are concentrated near the apex, while higher-value and more specialized players spread outward along distinct angular trajectories. This structure suggests that player roles and contributions manifest as directional patterns rather than purely magnitude-based differences.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.48\textwidth]{plots/pca_position_overlay.png}
+    \caption{PCA projection colored by player position. Positional roles exhibit directional structure that aligns with prism fan clustering partitions.}
+    \label{fig:pca_position}
+\end{figure}
+
+Importantly, the prism fan clustering method naturally aligns with player positional roles while remaining flexible enough to capture hybrid behavior. As shown in Figure~\ref{fig:pca_position}, players of similar positions tend to occupy consistent angular regions in the PCA space. For example, traditional guards are concentrated along lower angular directions associated with ball-handling and perimeter play, while centers and forwards extend into regions associated with rebounding and interior scoring.
+
+However, unlike rigid categorical labels, this clustering approach captures \textit{functional roles} rather than strictly assigned positions. Players who are officially listed at one position but exhibit statistical profiles characteristic of another (e.g., a forward with guard-like playmaking or a center with perimeter shooting ability) are positioned accordingly within the fan structure. As a result, such players are grouped with others who share similar performance characteristics, even if their nominal positions differ.
+
+This demonstrates that the prism fan clustering method effectively encodes a continuum of player roles, rather than discrete positional buckets. The angular partitioning reflects how different skill sets manifest directionally in the feature space, allowing hybrid and versatile players to be naturally categorized based on what they \textit{do} rather than what they are \textit{labeled as}. This provides a more nuanced and data-driven interpretation of player roles, which is particularly valuable in modern NBA contexts where positional boundaries are increasingly fluid.
+
+Additionally, the visualization supports optional opacity scaling using the target variable (\textit{relative\_dollars}), allowing higher-value players to appear more prominently. This further reinforces the relationship between cluster position and economic value.
+
+Overall, the prism fan clustering approach provides a more interpretable and structurally aligned representation of the data compared to traditional clustering methods, capturing both directional and magnitude-based variation in player performance.
+\subsection{Summary}
+
+Overall, the data preparation process integrates domain-informed feature engineering, robust preprocessing, and controlled nonlinear expansion. The subsequent clustering analysis reveals interpretable groupings of players, supporting the hypothesis that salary-related structure can be uncovered through performance-based features. These steps provide a strong foundation for both unsupervised analysis and predictive modeling of player value.
 
 \bibliographystyle{IEEEtran} 
 \bibliography{references}

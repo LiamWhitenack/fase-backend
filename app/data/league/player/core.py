@@ -225,7 +225,8 @@ class Player(Base):
             self.contracts, key=lambda c: (c.start_year, (c.value if c.value else 0))
         )
         last_contract_end = -1
-        for i, contract in enumerate(contracts, start=1):
+        i = 1
+        for contract in contracts:
             if (
                 contract.start_year < last_contract_end
                 and contract.start_year not in buyouts
@@ -269,7 +270,7 @@ class Player(Base):
                 self.career_averages,
                 i,
             )
-            last_contract_end = contract.start_year + contract.duration
+            last_contract_end, i = contract.start_year + contract.duration, i + 1
 
     def ask_voided(self, contract: Contract) -> bool:
         keep = input(
