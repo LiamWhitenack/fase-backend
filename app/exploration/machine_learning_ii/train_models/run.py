@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Callable
 
+import numpy as np
 import optuna
+from joblib import parallel_backend
 from pandas import DataFrame, Series
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import r2_score
 
-from app.exploration.machine_learning_ii.data_preparation.basic import PreparedData
+from app.exploration.machine_learning_ii.data_preparation.basic import (
+    PreparedPipelineData,
+)
 from app.exploration.machine_learning_ii.data_preparation.default import (
     build_default_preprocessor,
     prepare_training_data,
@@ -16,9 +21,21 @@ from app.exploration.machine_learning_ii.data_preparation.transformation import 
     inverse_transform_target,
     transform_target,
 )
-from app.exploration.machine_learning_ii.train_models.evaluation import score_pipeline
+from app.exploration.machine_learning_ii.train_models.evaluation import (
+    build_results_dataframe,
+    score_pipeline,
+)
 from app.exploration.machine_learning_ii.train_models.helper_classes import SplitData
-from app.exploration.machine_learning_ii.train_models.models import build_xgboost_model
+from app.exploration.machine_learning_ii.train_models.models import (
+    build_decision_tree_model,
+    build_elastic_net_model,
+    build_extra_trees_model,
+    build_knn_model,
+    build_lasso_model,
+    build_random_forest_model,
+    build_ridge_model,
+    build_xgboost_model,
+)
 from app.exploration.machine_learning_ii.train_models.pipeline import (
     ModelBuilder,
     PreprocessorBuilder,
@@ -27,6 +44,45 @@ from app.exploration.machine_learning_ii.train_models.pipeline import (
 from app.exploration.machine_learning_ii.train_models.split_training_data import (
     split_training_data,
 )
+
+
+def get_permutation_feature_importance(
+    *,
+    pipeline: Any,
+    X_test: DataFrame,
+    y_test: Series,
+    inverse_target_transform: Callable[[Series], Series],
+    scoring_function: Callable[[Series, Series], float],
+    n_repeats: int = 10,
+    random_state: int = 42,
+) -> list[tuple[float, str]]:
+    def scorer(estimator: Any, X: DataFrame, y: Series) -> float:
+        predictions = estimator.predict(X)
+
+        y_series = Series(y, index=X.index)
+        prediction_series = Series(predictions, index=X.index)
+
+        y_original = inverse_target_transform(y_series)
+        predictions_original = inverse_target_transform(prediction_series)
+
+        return scoring_function(y_original, predictions_original)
+
+    with parallel_backend("threading"):
+        result = permutation_importance(
+            estimator=pipeline,
+            X=X_test,
+            y=y_test,
+            scoring=scorer,
+            n_repeats=n_repeats,
+            random_state=random_state,
+            n_jobs=-1,
+        )
+
+    return sorted(
+        zip(result.importances_mean.tolist(), X_test.columns.tolist()),
+        key=lambda pair: pair[0],
+        reverse=True,
+    )
 
 
 def _get_validation_season(
@@ -130,7 +186,6 @@ def optimize_regression_pipeline(
     if n_trials == 1:
         pipeline = build_pipeline(trial=None)
 
-        # Optional sanity fit on inner train/validation so we do not touch test_season
         _ = score_pipeline(
             pipeline,
             X_train=X_inner_train,
@@ -151,7 +206,17 @@ def optimize_regression_pipeline(
             inverse_target_transform=inverse_target_transform,
         )
 
+        feature_importance = get_permutation_feature_importance(
+            pipeline=final_pipeline,
+            X_test=outer_split.X_test,
+            y_test=outer_split.y_test,
+            inverse_target_transform=inverse_target_transform,
+            scoring_function=scoring_function,
+            random_state=random_state,
+        )
+
         return {
+            "columns": outer_split.X_train.columns,
             "best_params": None,
             "best_value": scoring_function(
                 evaluation.y_test_original,
@@ -165,6 +230,7 @@ def optimize_regression_pipeline(
             "test_rmse": evaluation.test_rmse,
             "train_r2": evaluation.train_r2,
             "test_r2": evaluation.test_r2,
+            "feature_importance": feature_importance,
             "pipeline": final_pipeline,
             "model": final_pipeline.named_steps["model"],
             "preprocessor": final_pipeline.named_steps["preprocessor"],
@@ -188,8 +254,13 @@ def optimize_regression_pipeline(
             evaluation.test_predictions,
         )
 
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = optuna.create_study(direction=study_direction)
-    study.optimize(objective, n_trials=n_trials)
+    study.optimize(
+        objective,
+        n_trials=n_trials,
+        show_progress_bar=True,
+    )
 
     best_pipeline = build_pipeline(trial=study.best_trial)
 
@@ -200,6 +271,16 @@ def optimize_regression_pipeline(
         y_train=outer_split.y_train,
         y_test=outer_split.y_test,
         inverse_target_transform=inverse_target_transform,
+    )
+
+    print("evaluating feature importance...")
+    feature_importance = get_permutation_feature_importance(
+        pipeline=best_pipeline,
+        X_test=outer_split.X_test,
+        y_test=outer_split.y_test,
+        inverse_target_transform=inverse_target_transform,
+        scoring_function=scoring_function,
+        random_state=random_state,
     )
 
     return {
@@ -213,6 +294,7 @@ def optimize_regression_pipeline(
         "test_rmse": evaluation.test_rmse,
         "train_r2": evaluation.train_r2,
         "test_r2": evaluation.test_r2,
+        "feature_importance": feature_importance,
         "pipeline": best_pipeline,
         "model": best_pipeline.named_steps["model"],
         "preprocessor": best_pipeline.named_steps["preprocessor"],
@@ -221,4 +303,26 @@ def optimize_regression_pipeline(
 
 
 if __name__ == "__main__":
-    optimize_regression_pipeline(test_season=2026)
+    res: list[dict] = []
+    for name, model in {
+        "ridge": build_ridge_model,
+        "lasso": build_lasso_model,
+        "elastic_net": build_elastic_net_model,
+        # "knn": build_knn_model,
+        "xgboost": build_xgboost_model,
+        "decision_tree": build_decision_tree_model,
+        "random_forest": build_random_forest_model,
+        "extra_trees": build_extra_trees_model,
+    }.items():
+        print(f"starting {name} ...........")
+        res.append(
+            optimize_regression_pipeline(
+                test_season=2026, model_builder=model, n_trials=30
+            )
+        )
+        for k, f in res[-1]["feature_importance"]:
+            print(k, f)
+        pass
+    build_results_dataframe(res).to_csv(
+        "documentation/report/tables/first_training_methods.csv"
+    )

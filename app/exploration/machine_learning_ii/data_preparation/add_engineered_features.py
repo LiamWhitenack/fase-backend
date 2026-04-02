@@ -71,7 +71,6 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
     working["season_squared"] = working["season_centered"] ** 2
 
     working["locale"] = working.pop("country").map(narrow_locales)
-    working["team_id"] = working["team_id"].astype(str)
 
     for season in ("contract_season_", "previous_season_"):
         working[season + "free_throw_rate"] = safe_divide(
@@ -97,6 +96,7 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
             and any(
                 key in col
                 for key in [
+                    "_per_game",
                     "_pg",
                     "_rate",
                     "percent",
@@ -109,8 +109,8 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
 
         for col in STAT_COLS_TO_SHRINK:
             league_avg = working[col].mean()
-            working[season + f"{col}_shrunk"] = (
-                alpha * working[col] + (1 - alpha) * league_avg
+            working[f"{col}_shrunk"] = (
+                alpha * working.pop(col) + (1 - alpha) * league_avg
             )
 
     return working

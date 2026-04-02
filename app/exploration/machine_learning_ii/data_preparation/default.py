@@ -14,6 +14,7 @@ from app.exploration.machine_learning_ii.data_preparation.add_engineered_feature
     add_season_deltas,
 )
 from app.exploration.machine_learning_ii.data_preparation.basic import (
+    PreparedPipelineData,
     get_numeric_and_categorical_columns,
 )
 from app.exploration.machine_learning_ii.data_preparation.position_labeling_helper import (
@@ -22,14 +23,16 @@ from app.exploration.machine_learning_ii.data_preparation.position_labeling_help
 from app.exploration.machine_learning_ii.data_preparation.transformation import (
     transform_target,
 )
-from app.exploration.machine_learning_ii.train_models.helper_classes import PreparedData
+from app.exploration.machine_learning_ii.train_models.helper_classes import (
+    PreparedData,
+)
 
 
 def default_feature_builder() -> DataFrame:
     working = contracts_for_ml()
     working = add_engineered_features(working)
     working = add_position_ordinal(working)
-    working = add_season_deltas(working)
+    # working = add_season_deltas(working)
     return working
 
 
@@ -73,7 +76,6 @@ def build_default_preprocessor(
                 "categorical",
                 Pipeline(
                     steps=[
-                        ("imputer", SimpleImputer(strategy="most_frequent")),
                         (
                             "onehot",
                             OneHotEncoder(
@@ -81,30 +83,64 @@ def build_default_preprocessor(
                                 sparse_output=False,
                             ),
                         ),
+                        ("imputer", SimpleImputer(strategy="most_frequent")),
                     ]
                 ),
                 categorical_columns,
             ),
             (
-                "prism",
-                Pipeline(
-                    steps=[
-                        ("imputer", SimpleImputer(strategy="median")),
-                        ("prism", PcaPrismTransformer()),
-                    ]
-                ),
-                features.columns,
-            ),
-            (
                 "numeric",
                 Pipeline(
                     steps=[
-                        ("imputer", SimpleImputer(strategy="median")),
+                        ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
                         ("scaler", RobustScaler()),
+                    ]
+                ),
+                numeric_columns,
+            ),
+            (
+                "prism",
+                Pipeline(
+                    steps=[
+                        ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
+                        ("prism", PcaPrismTransformer()),
                     ]
                 ),
                 numeric_columns,
             ),
         ],
         remainder="drop",
+    )
+
+
+def prepare_data(df: DataFrame) -> PreparedPipelineData:
+    df = df.copy()
+
+    if "relative_dollars" not in df.columns:
+        raise KeyError(f"Missing target column: relative_dollars")
+
+    df = df.dropna(subset=["relative_dollars"])
+
+    features_engineered = add_engineered_features(df)
+    y_raw = features_engineered["relative_dollars"]
+    y_log = transform_target(y_raw)
+
+    numeric_cols, categorical_cols = get_numeric_and_categorical_columns(
+        features_engineered
+    )
+    feature_cols = numeric_cols + categorical_cols
+
+    X = features_engineered[feature_cols].copy()
+
+    preprocessor = build_default_preprocessor(X, numeric_cols)
+    X_transformed = preprocessor.fit_transform(X)
+    feature_names = list(preprocessor.get_feature_names_out())
+
+    return PreparedPipelineData(
+        features_raw=X.copy(),
+        features_engineered=X.copy(),
+        target_raw=y_raw,
+        target_log=y_log,
+        transformed_matrix=X_transformed,
+        transformed_feature_names=feature_names,
     )

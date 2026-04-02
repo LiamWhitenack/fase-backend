@@ -24,7 +24,7 @@ def build_training_pipeline(
 ) -> Pipeline:
     preprocessor = preprocessor_builder(
         features,
-        categorical_columns,
+        numeric_columns,
     )
     model = model_builder(trial, random_state)
 

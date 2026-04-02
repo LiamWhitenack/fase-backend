@@ -56,3 +56,53 @@ def score_pipeline(
         train_r2=r2_score(y_train_original, train_predictions),
         test_r2=r2_score(y_test_original, test_predictions),
     )
+
+
+def build_results_dataframe(
+    results: list[dict[str, Any]],
+    *,
+    top_n_features: int | None = 5,
+) -> DataFrame:
+    """
+    Convert a list of training result dicts into a clean DataFrame
+    suitable for reporting / papers.
+
+    Parameters
+    ----------
+    results : list of dict
+        Output from your training pipeline
+    include_params : bool
+        Whether to expand best_params into columns
+    top_n_features : int | None
+        Number of top features to include (None = skip)
+
+    Returns
+    -------
+    DataFrame
+    """
+    rows: list[dict[str, Any]] = []
+
+    for res in results:
+        row: dict[str, Any] = {
+            "validation_season": res["validation_season"],
+            "test_season": res["test_season"],
+            "train_mae": res["train_mae"],
+            "test_mae": res["test_mae"],
+            "train_rmse": res["train_rmse"],
+            "test_rmse": res["test_rmse"],
+            "train_r2": res["train_r2"],
+            "test_r2": res["test_r2"],
+            "best_value": res["best_value"],
+        }
+
+        # Add top feature importances
+        if top_n_features and res["feature_importance"] is not None:
+            top_features = res["feature_importance"][:top_n_features]
+
+            for i, (importance, name) in enumerate(top_features, start=1):
+                row[f"feature_{i}_name"] = name
+                row[f"feature_{i}_importance"] = importance
+
+        rows.append(row)
+
+    return DataFrame(rows)
