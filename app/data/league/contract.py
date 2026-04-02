@@ -55,9 +55,9 @@ class Contract(Base):
             f")"
         )
 
-    def to_scalar(self) -> dict[str, bool | int | None]:
+    def to_scalar(self) -> dict[str, str | bool | int | None]:
         return {
-            "team_id": self.team_id,
+            "team": self.team.nickname,
             "duration": self.team_id,
             "voided": self.voided,
             # "player_option": self.option_2 == "Player",
