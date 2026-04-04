@@ -308,7 +308,7 @@ if __name__ == "__main__":
         "ridge": build_ridge_model,
         "lasso": build_lasso_model,
         "elastic_net": build_elastic_net_model,
-        # "knn": build_knn_model,
+        "knn": build_knn_model,
         "xgboost": build_xgboost_model,
         "decision_tree": build_decision_tree_model,
         "random_forest": build_random_forest_model,
