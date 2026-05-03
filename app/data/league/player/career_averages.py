@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class CareerAverages:
+class CareerStats:
     games_played: int = 0
 
     points_pg: float = 0
@@ -22,6 +22,8 @@ class CareerAverages:
     field_goal_pct: float = 0
     three_point_pct: float = 0
     free_throw_pct: float = 0
+
+    percentile: float = 0.5
 
     def to_scalar(self) -> dict[str, int | float]:
         return {

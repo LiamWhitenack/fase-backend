@@ -14,7 +14,7 @@ if TYPE_CHECKING:
         TeamPlayerBuyout,
         TeamPlayerSalary,
     )
-    from app.data.league.player.career_averages import CareerAverages
+    from app.data.league.player.career_averages import CareerStats
     from app.data.league.player.player_bio import PlayerBio
 
 
@@ -23,7 +23,6 @@ class ContractSupportingInformation:
     player: Player
     season_id: int
     contract_number: int
-    averages: CareerAverages
     salary: TeamPlayerSalary | TeamPlayerBuyout | None
     contract: Contract | None
     contract_season: PlayerSeason | None
@@ -73,9 +72,14 @@ class ContractSupportingInformation:
                     else blank_season_ml_data()
                 ).items()
             }
+            | {
+                "career_" + k: v
+                for k, v in (
+                    self.player.career_averages(until=self.season_id - 1).to_scalar()
+                ).items()
+            }
             | self.player.bio.to_scalar()
             | {"age": self.age()}
-            | self.averages.to_scalar()
         )
 
     def is_buyout(self) -> bool:

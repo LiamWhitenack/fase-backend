@@ -32,7 +32,7 @@ def default_feature_builder() -> DataFrame:
     working = contracts_for_ml()
     working = add_engineered_features(working)
     working = add_position_ordinal(working)
-    # working = add_season_deltas(working)
+    working = add_season_deltas(working)
     return working
 
 

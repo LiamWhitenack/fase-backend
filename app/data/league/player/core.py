@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base import Base
 from app.custom_types import MLSafe
-from app.data.league.player.career_averages import CareerAverages
+from app.data.league.player.career_averages import CareerStats
 from app.data.league.player.player_bio import PlayerBio
 from app.data.league.player.supporting_contract_info import (
     ContractSupportingInformation,
@@ -133,13 +133,14 @@ class Player(Base):
             s.relative_dollars for s in self.buyouts
         )
 
-    @property
-    def career_averages(self) -> CareerAverages:
-        career = CareerAverages()
+    def career_averages(self, until: int | None = None) -> CareerStats:
+        career = CareerStats()
 
         for s in self.seasons:
             if not s.games_played or s.games_played <= 0:
                 continue
+            if until is not None and s.season_id > until:
+                break
 
             career.games_played += s.games_played
 
@@ -183,6 +184,75 @@ class Player(Base):
             career.free_throw_pct = compute_pct(
                 career.free_throw_made, career.free_throw_attempted
             )
+
+        return career
+
+    def career_percentile(self, percentile: float = 0.5) -> CareerStats:
+        career = CareerStats(percentile=percentile)
+
+        # collect values
+        points: list[float] = []
+        rebounds: list[float] = []
+        assists: list[float] = []
+        steals: list[float] = []
+        blocks: list[float] = []
+        turnovers: list[float] = []
+        minutes: list[float] = []
+
+        fg_made: list[float] = []
+        fg_attempted: list[float] = []
+        tp_made: list[float] = []
+        tp_attempted: list[float] = []
+        ft_made: list[float] = []
+        ft_attempted: list[float] = []
+
+        for s in sorted(self.seasons, key=lambda s: s.season_id):
+            if not s.games_played or s.games_played <= 0:
+                continue
+
+            career.games_played += s.games_played
+
+            points.append(s.points or 0)
+            rebounds.append(s.rebounds or 0)
+            assists.append(s.assists or 0)
+            steals.append(s.steals or 0)
+            blocks.append(s.blocks or 0)
+            turnovers.append(s.turnovers or 0)
+            minutes.append(s.minutes_per_game or 0)
+
+            fg_made.append(s.field_goals_made or 0)
+            fg_attempted.append(s.field_goals_attempted or 0)
+            tp_made.append(s.three_pointers_made or 0)
+            tp_attempted.append(s.three_pointers_attempted or 0)
+            ft_made.append(s.free_throws_made or 0)
+            ft_attempted.append(s.free_throws_attempted or 0)
+
+        def q(values: list[float]) -> float:
+            if not values:
+                return 0
+            values = sorted(values)
+            idx = percentile * (len(values) - 1)
+            lower = int(idx)
+            upper = min(lower + 1, len(values) - 1)
+            weight = idx - lower
+            return values[lower] * (1 - weight) + values[upper] * weight
+
+        # assign quantiles
+        career.points_pg = q(points)
+        career.rebounds_pg = q(rebounds)
+        career.assists_pg = q(assists)
+        career.steals_pg = q(steals)
+        career.blocks_pg = q(blocks)
+        career.turnovers_pg = q(turnovers)
+        career.minutes_per_game = q(minutes)
+
+        def compute_pct(made_list: list[float], attempted_list: list[float]) -> float:
+            made = sum(made_list)
+            attempted = sum(attempted_list)
+            return made / attempted if attempted > 0 else 0
+
+        career.three_point_pct = compute_pct(tp_made, tp_attempted)
+        career.free_throw_pct = compute_pct(ft_made, ft_attempted)
 
         return career
 
@@ -249,7 +319,6 @@ class Player(Base):
                 self,
                 season_id,
                 contract_num,
-                self.career_averages,
                 salary,
                 contract,
                 self.get(season_id - 1),

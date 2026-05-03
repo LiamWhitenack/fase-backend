@@ -79,7 +79,7 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
             working[season + "games_played"] * working[season + "minutes_per_game"]
         )
 
-        # --- NEW: shrink stats toward league average ---
+        # --- NEW: shrink stats toward league 33rd percentile of their career ---
 
         C = 150  # controls shrink strength
         minutes = (
@@ -105,10 +105,13 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
             )
         ]
 
+        pct = "career_"
         for col in STAT_COLS_TO_SHRINK:
-            league_avg = working[col].mean()
+            career_col = col.replace("contract_season_", pct).replace(
+                "previous_season_", pct
+            )
             working[f"{col}_shrunk"] = (
-                alpha * working.pop(col) + (1 - alpha) * league_avg
+                alpha * working.pop(col) + (1 - alpha) * working[career_col]
             )
 
     return working
