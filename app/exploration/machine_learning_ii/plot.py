@@ -7,6 +7,7 @@ import numpy as np
 from pandas import DataFrame, Series, read_csv
 
 from app.crud.read.contracts_for_ml import contracts_for_ml
+from app.exploration.machine_learning_ii.data_preparation.constants import DATA_PATH
 from app.exploration.machine_learning_ii.plotting_utils import (
     THEME,
     bar_plot,
@@ -41,8 +42,7 @@ def save_figure(fig: plt.Figure, title: str) -> None:  # pyright: ignore[reportP
 
 
 def contracts_for_ml() -> DataFrame:
-    df = read_csv("data/contracts-for-ml.csv")
-    df = df[df["season"] < 2027].copy()
+    df = read_csv(DATA_PATH)
 
     df["draft_round"] = df["draft_round"].replace({np.nan: 3})
     df["draft_number"] = df["draft_number"].replace({np.nan: 61})

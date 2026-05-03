@@ -21,34 +21,37 @@ if TYPE_CHECKING:
 @dataclass()
 class ContractSupportingInformation:
     player: Player
-    salary: TeamPlayerSalary | TeamPlayerBuyout
-    contract: Contract
+    season_id: int
+    contract_number: int
+    averages: CareerAverages
+    salary: TeamPlayerSalary | TeamPlayerBuyout | None
+    contract: Contract | None
     contract_season: PlayerSeason | None
     previous_season: PlayerSeason | None
-    averages: CareerAverages
-    contract_number: int
 
     def __post_init__(self) -> None:
         super().__init__()
-        if self.salary is None and self.buyout is None:
-            raise Exception()
-
-    @property
-    def is_rookie_contract(self) -> bool:
-        return (
-            self.contract_season is None
-            and self.player.bio.draft_year + 3 > self.salary.season_id
-        )
+        if self.season_id is None:
+            raise
+        if self.contract is None:
+            if self.salary is None and not self.is_buyout():
+                raise Exception()
 
     def to_scalar(self) -> dict[str, MLSafe | None]:
         return (
             {
                 "buyout": not hasattr(self.salary, "apron_salary"),
-                "season": self.contract.start_year,
+                "season": self.season_id,
                 "contract_number": self.contract_number,
-                "ascending": self.is_ascending(),
+                "ascending": None
+                if self.contract is None or self.is_buyout()
+                else self.is_ascending(),
             }
-            | self.contract.to_scalar()
+            | (
+                blank_contract_scalar()
+                if self.contract is None
+                else self.contract.to_scalar()
+            )
             | (
                 self.salary.to_scalar()
                 if self.salary is not None
@@ -75,9 +78,18 @@ class ContractSupportingInformation:
             | self.averages.to_scalar()
         )
 
-    def is_ascending(self) -> Literal[1, 0, -1]:
-        if self.contract.value is None or self.contract.duration is None:
-            raise Exception()
+    def is_buyout(self) -> bool:
+        return not hasattr(self.salary, "luxury_tax")
+
+    def is_ascending(self) -> Literal[1, 0, -1, None]:
+        if (
+            self.contract is None
+            or self.contract.value is None
+            or self.contract.duration is None
+            or self.salary is None
+            or self.salary.dollars is None
+        ):
+            return None
         avg = self.contract.value / self.contract.duration
         avg_div_first = self.salary.dollars / avg * 100 // 4 / 25
         ascending: Literal[-1, 0, 1] = (
@@ -89,9 +101,17 @@ class ContractSupportingInformation:
     def age(self) -> int:
         if self.player.birth_datetime is None:
             raise Exception()
-        return (
-            datetime(self.contract.start_year + 1, 1, 1) - self.player.birth_datetime
-        ).days
+        return (datetime(self.season_id + 1, 1, 1) - self.player.birth_datetime).days
+
+
+def blank_contract_scalar() -> dict[str, None]:
+    return {
+        "team": None,
+        "duration": None,
+        "voided": None,
+        # "player_option": self.option_2 == "Player",
+        # "team_options": [self.option_1, self.option_2].count("Team"),
+    }
 
 
 def blank_salary_scalar() -> dict[str, None]:
@@ -101,7 +121,6 @@ def blank_salary_scalar() -> dict[str, None]:
             "dollars",
             "relative_dollars",
             "team_id",
-            "player_id",
             "cap_hit_percent",
             "salary",
             "apron_salary",

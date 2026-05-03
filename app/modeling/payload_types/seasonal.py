@@ -6,7 +6,6 @@ from app.custom_types import MLSafe
 @dataclass
 class SeasonalMLPayload:
     # ---- identifiers ----
-    player_id: int
     team_id: int
     season_id: int
 

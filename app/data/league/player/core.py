@@ -203,7 +203,9 @@ class Player(Base):
             "weight_pounds": self.weight_pounds,
             "country": self.country,
             "position": self.position,
-            "draft_year": self.draft_year,
+            "draft_year": min(self.stats_dict)
+            if self.draft_year is None
+            else self.draft_year,
             "draft_round": self.draft_round,
             "draft_number": self.draft_number,
         }
@@ -213,64 +215,64 @@ class Player(Base):
 
         return PlayerBio(**data)  # ty:ignore[invalid-argument-type]
 
+    def contracts_by_year(self) -> dict[int, Contract]:
+        """contains just the biggest contract of each year"""
+
+        def sorting_key(contract: Contract) -> tuple[int, float]:
+            """when sorted, the last of the contracts is the most valuable of that year"""
+            return contract.start_year, (contract.value if contract.value else 0)
+
+        return dict(
+            map(lambda c: (c.start_year, c), sorted(self.contracts, key=sorting_key))
+        )
+
     def supporting_contract_info(self) -> Iterable[ContractSupportingInformation]:
         salaries = {s.season_id: s for s in self.salaries}
-        salary_dollars = {s.season_id: s.dollars for s in self.salaries}
         buyouts = {b.season_id: b for b in self.buyouts}
-        dollars = salaries | {
-            b.season_id: salary_dollars.get(b.season_id, 0) + b.dollars
-            for b in self.buyouts
+        seasons = {s.season_id: s for s in self.seasons}
+        contracts = {
+            k: v for k, v in self.contracts_by_year().items() if k in salaries | buyouts
         }
-        contracts = sorted(
-            self.contracts, key=lambda c: (c.start_year, (c.value if c.value else 0))
-        )
-        last_contract_end = -1
-        i = 1
-        for contract in contracts:
-            if (
+
+        def contract_is_a_bonus(contract: Contract) -> bool:
+            return (
                 contract.start_year < last_contract_end
+                # they have an existing contract
                 and contract.start_year not in buyouts
+                # and the contract wasn't bought out this year
                 and (contract.start_year - 1) not in buyouts
-            ):
-                continue
-            if contract.start_year == 2011:
-                continue  # we don't actually have all the data we would need for this year
-            if contract.start_year not in dollars and (
-                contract.duration < 2 or len(dollars) < 3
-            ):
-                continue  # a short contract I don't have all the data for, I think we'll be okay without it
-            if not contract.player.bio_complete:
-                continue
-            if contract.value is None:
-                continue
-            if contract.start_year not in dollars:
-                if VOIDED_CONTRACTS_MANAGER.voided(contract):
-                    continue
-                if self.ask_voided(contract):
-                    VOIDED_CONTRACTS_MANAGER.add(contract)
-                    continue
+                # or last year
+            )
 
-            salary: TeamPlayerSalary | TeamPlayerBuyout
-            if contract.start_year not in salaries:
-                if VOIDED_CONTRACTS_MANAGER.voided(contract):
-                    continue
-                if contract.start_year not in buyouts:
-                    VOIDED_CONTRACTS_MANAGER.add(contract)
-                    continue
-                salary = buyouts[contract.start_year]
-            else:
-                salary = salaries.pop(contract.start_year)
-
-            yield ContractSupportingInformation(
+        def contract_supporting_info() -> ContractSupportingInformation:
+            return ContractSupportingInformation(
                 self,
+                season_id,
+                contract_num,
+                self.career_averages,
                 salary,
                 contract,
-                self.get(contract.start_year - 1),
-                self.get(contract.start_year - 2),
-                self.career_averages,
-                i,
+                self.get(season_id - 1),
+                self.get(season_id - 2),
             )
-            last_contract_end, i = contract.start_year + contract.duration, i + 1
+
+        last_contract_end = -1
+        contract_num = 1
+        salary: TeamPlayerSalary | TeamPlayerBuyout | None
+        for season_id in range(min(seasons), max(seasons) + 2):
+            salary, contract = None, None
+            if season_id in seasons or season_id >= 2027:
+                if not (contract := contracts.get(season_id)) or contract_is_a_bonus(
+                    contract
+                ):
+                    continue
+                salary = salaries.get(season_id, buyouts.get(season_id))
+                last_contract_end = season_id + contract.duration
+            elif last_contract_end > season_id:
+                continue
+
+            yield contract_supporting_info()
+            contract_num += 1
 
     def ask_voided(self, contract: Contract) -> bool:
         keep = input(

@@ -330,7 +330,6 @@ class PlayerSeason(Base):
     def ml_data(self) -> SeasonalMLPayload:
         res: dict[str, MLSafe | None] = {
             # identifiers
-            "player_id": self.player_id,
             "team_id": self.team_id,
             "season_id": self.season_id,
             # basic context
