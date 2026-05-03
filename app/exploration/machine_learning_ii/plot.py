@@ -7,7 +7,6 @@ import numpy as np
 from pandas import DataFrame, Series, read_csv
 
 from app.crud.read.contracts_for_ml import contracts_for_ml
-from app.exploration.machine_learning_ii.data_preparation.constants import DATA_PATH
 from app.exploration.machine_learning_ii.plotting_utils import (
     THEME,
     bar_plot,
@@ -39,28 +38,6 @@ def save_figure(fig: plt.Figure, title: str) -> None:  # pyright: ignore[reportP
     save_path = Path("documentation/report/plots") / to_filename(title)
     fig.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-
-
-def contracts_for_ml() -> DataFrame:
-    df = read_csv(DATA_PATH)
-
-    df["draft_round"] = df["draft_round"].replace({np.nan: 3})
-    df["draft_number"] = df["draft_number"].replace({np.nan: 61})
-
-    contract_columns = [
-        "cap_hit_percent",
-        "salary",
-        "apron_salary",
-        "luxury_tax",
-        "cash_total",
-        "cash_garunteed",
-    ]
-    df = df.drop(columns=contract_columns)
-
-    leakage_columns = ["buyout", "ascending", "duration", "voided", "dollars"]
-    df = df.drop(columns=leakage_columns)
-
-    return df
 
 
 def _valid_numeric_columns(df: DataFrame, exclude: set[str] | None = None) -> list[str]:

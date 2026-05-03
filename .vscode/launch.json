@@ -102,6 +102,18 @@
       "type": "debugpy",
       "request": "launch",
       "module": "app.data.to_python_syntax"
+    },
+    {
+      "name": "ML2 Report: Data Exploration",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.data.to_python_syntax"
+    },
+    {
+      "name": "ML2 Report: Model Training / Evaluation",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "app.data.to_python_syntax"
     }
   ]
 }

@@ -1,8 +1,6 @@
 import numpy as np
 from pandas import DataFrame, Series
 
-from app.exploration.machine_learning_ii.data_preparation.constants import TIME_COL
-
 narrow_locales = {
     "USA": "USA",
     # New World Countries
@@ -67,7 +65,7 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
         working["weight_pounds"], (working["height_inches"] ** 2)
     )
 
-    working["season_centered"] = working[TIME_COL] - working[TIME_COL].median()
+    working["season_centered"] = working["season"] - working["season"].median()
     working["season_squared"] = working["season_centered"] ** 2
 
     working["locale"] = working.pop("country").map(narrow_locales)

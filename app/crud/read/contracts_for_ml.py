@@ -1,9 +1,9 @@
 import numpy as np
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, read_parquet
 
 
 def contracts_for_ml() -> DataFrame:
-    df = read_csv("data/contracts-for-ml.csv")
+    df = read_parquet("data/contracts-for-ml.parquet")
     df = df[df["season"] < 2027]
 
     df["draft_round"] = df["draft_round"].replace({np.nan: 3})
