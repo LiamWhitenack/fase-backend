@@ -45,5 +45,6 @@ if __name__ == "__main__":
             data[contract.player.id, contract.season_id] = row
 
     df = DataFrame.from_dict(data, orient="index")
+    df = df.sort_index()
     df.index.names = ["player_id", "season"]
-    df.to_csv("data/contracts-for-ml.csv")
+    df.to_parquet("data/contracts-for-ml.parquet")

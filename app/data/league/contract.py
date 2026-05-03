@@ -59,7 +59,6 @@ class Contract(Base):
         return {
             "team": self.team.nickname,
             "duration": self.team_id,
-            "voided": self.voided,
             # "player_option": self.option_2 == "Player",
             # "team_options": [self.option_1, self.option_2].count("Team"),
         }

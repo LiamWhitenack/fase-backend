@@ -108,7 +108,6 @@ def blank_contract_scalar() -> dict[str, None]:
     return {
         "team": None,
         "duration": None,
-        "voided": None,
         # "player_option": self.option_2 == "Player",
         # "team_options": [self.option_1, self.option_2].count("Team"),
     }
@@ -116,18 +115,15 @@ def blank_contract_scalar() -> dict[str, None]:
 
 def blank_salary_scalar() -> dict[str, None]:
     return {
-        key: None
-        for key in [
-            "dollars",
-            "relative_dollars",
-            "team_id",
-            "cap_hit_percent",
-            "salary",
-            "apron_salary",
-            "luxury_tax",
-            "cash_total",
-            "cash_garunteed",
-        ]
+        "dollars": 0.0,
+        "relative_dollars": 0.0,
+        "team_id": None,
+        "cap_hit_percent": None,
+        "salary": None,
+        "apron_salary": None,
+        "luxury_tax": None,
+        "cash_total": None,
+        "cash_garunteed": None,
     }
 
 
