@@ -169,12 +169,24 @@ class SeasonalMLPayload:
             "estimated_defensive_rating": self.estimated_defensive_rating,
             "estimated_net_rating": self.estimated_net_rating,
             "estimated_pace": self.estimated_pace,
-            "possessions": self.possessions,
-            "pts_off_tov": self.pts_off_tov,
-            "pts_fb": self.pts_fb,
-            "pts_paint": self.pts_paint,
-            "opp_pts_off_tov": self.opp_pts_off_tov,
-            "opp_pts_fb": self.opp_pts_fb,
-            "opp_pts_paint": self.opp_pts_paint,
+            "pts_off_tov_pg": self.pts_off_tov / self.games_played
+            if self.games_played
+            else 0.0,
+            "possessions_pg": self.possessions / self.games_played
+            if self.games_played
+            else 0.0,
+            "pts_fb_pg": self.pts_fb / self.games_played if self.games_played else 0.0,
+            "pts_paint_pg": self.pts_paint / self.games_played
+            if self.games_played
+            else 0.0,
+            "opp_pts_off_tov_pg": self.opp_pts_off_tov / self.games_played
+            if self.games_played
+            else 0.0,
+            "opp_pts_fb_pg": self.opp_pts_fb / self.games_played
+            if self.games_played
+            else 0.0,
+            "opp_pts_paint_pg": self.opp_pts_paint / self.games_played
+            if self.games_played
+            else 0.0,
             "plus_minus_pg": self.plus_minus_pg,
         }

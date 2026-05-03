@@ -34,7 +34,7 @@ class CareerStats:
             "steals_pg": self.steals_pg,
             "blocks_pg": self.blocks_pg,
             "turnovers_pg": self.turnovers_pg,
-            "minutes_per_game": self.minutes_per_game,
+            "minutes_pg": self.minutes_per_game,
             "field_goal_pct": self.field_goal_pct,
             "three_point_pct": self.three_point_pct,
             "free_throw_pct": self.free_throw_pct,

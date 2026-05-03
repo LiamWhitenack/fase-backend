@@ -131,22 +131,9 @@ def blank_salary_scalar() -> dict[str, None]:
     }
 
 
-def blank_buyout_scalar() -> dict[str, None]:
+def blank_season_ml_data() -> dict[str, Literal[0]]:
     return {
-        key: None
-        for key in [
-            "buyout_dollars",
-            "buyout_relative_dollars",
-            "buyout_team_id",
-            "buyout_player_id",
-            "buyout_salary",
-        ]
-    }
-
-
-def blank_season_ml_data() -> dict[str, None]:
-    return {
-        key: None
+        key: 0
         for key in [
             "games_played",
             "minutes_per_game",
@@ -184,13 +171,13 @@ def blank_season_ml_data() -> dict[str, None]:
             "estimated_defensive_rating",
             "estimated_net_rating",
             "estimated_pace",
-            "possessions",
-            "pts_off_tov",
-            "pts_fb",
-            "pts_paint",
-            "opp_pts_off_tov",
-            "opp_pts_fb",
-            "opp_pts_paint",
+            "possessions_pg",
+            "pts_off_tov_pg",
+            "pts_fb_pg",
+            "pts_paint_pg",
+            "opp_pts_off_tov_pg",
+            "opp_pts_fb_pg",
+            "opp_pts_paint_pg",
             "plus_minus_pg",
         ]
     }

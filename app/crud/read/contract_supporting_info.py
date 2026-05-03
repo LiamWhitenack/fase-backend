@@ -34,14 +34,11 @@ if __name__ == "__main__":
     with get_session() as session:
         data: dict[tuple[int, int], dict] = {}
         for contract in get_all_contract_supporting_info(session):
-            if contract.contract_number == 1:
-                continue
-            if contract.contract_season is None or contract.previous_season is None:
-                continue
+            # check that columns match expected (besides order)
             if not data:
-                expected_format = list((row := contract.to_scalar()))
-            elif list(row := contract.to_scalar()) != expected_format:
-                raise Exception(set(expected_format).symmetric_difference(row))
+                expected_format = sorted(row := contract.to_scalar())
+            elif sorted(row := contract.to_scalar()) != expected_format:
+                raise Exception(", ".join(set(expected_format) - set(row)))
             data[contract.player.id, contract.season_id] = row
 
     df = DataFrame.from_dict(data, orient="index")
