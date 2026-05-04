@@ -14,12 +14,13 @@ from app.data.league.player.player_bio import PlayerBio
 from app.data.league.player.supporting_contract_info import (
     ContractSupportingInformation,
 )
+from app.data.league.salary_rules import MAX_SALARIES, MIN_SALARIES
 from app.utils.voided_contracts import VOIDED_CONTRACTS_MANAGER
 
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from app.data.league import Contract
+    from app.data.league import Award, Contract, Season
     from app.data.league.player import PlayerSeason
     from app.data.league.team.payroll import TeamPlayerBuyout, TeamPlayerSalary
 
@@ -81,6 +82,12 @@ class Player(Base):
         cascade="all, delete-orphan",
     )
 
+    awards: Mapped[list[Award]] = relationship(
+        "Award",
+        back_populates="player",
+        cascade="all, delete-orphan",
+    )
+
     __table_args__ = (
         Index("ix_player_name", "name"),
         Index("ix_player_last_first", "last_name", "first_name"),
@@ -129,9 +136,9 @@ class Player(Base):
 
     @property
     def career_relative_dollars(self) -> float:
-        return sum(s.relative_dollars for s in self.salaries) + sum(
-            s.relative_dollars for s in self.buyouts
-        )
+        return sum(
+            s.relative_dollars for s in self.salaries if s.relative_dollars is not None
+        ) + sum(s.relative_dollars for s in self.buyouts)
 
     def career_averages(self, until: int | None = None) -> CareerStats:
         career = CareerStats()
@@ -299,7 +306,7 @@ class Player(Base):
     def supporting_contract_info(self) -> Iterable[ContractSupportingInformation]:
         salaries = {s.season_id: s for s in self.salaries}
         buyouts = {b.season_id: b for b in self.buyouts}
-        seasons = {s.season_id: s for s in self.seasons}
+        player_seasons = {s.season_id: s for s in self.seasons}
         contracts = {
             k: v for k, v in self.contracts_by_year().items() if k in salaries | buyouts
         }
@@ -319,6 +326,13 @@ class Player(Base):
                 self,
                 season_id,
                 contract_num,
+                MIN_SALARIES.eligibility(season_id - first_season),
+                MAX_SALARIES.eligibility(
+                    season_id,
+                    season_id - first_season,
+                    len({s.team_id for s in player_seasons.values()}),
+                    {a.season_id for a in self.awards},
+                ),
                 salary,
                 contract,
                 self.get(season_id - 1),
@@ -328,14 +342,19 @@ class Player(Base):
         last_contract_end = -1
         contract_num = 1
         salary: TeamPlayerSalary | TeamPlayerBuyout | None
-        for season_id in range(min(seasons), max(seasons) + 2):
+        first_season = min(player_seasons)
+        for season_id in range(first_season, max(player_seasons) + 2):
             salary, contract = None, None
-            if season_id in seasons or season_id >= 2027:
-                if not (contract := contracts.get(season_id)) or contract_is_a_bonus(
-                    contract
+            if season_id in player_seasons or season_id >= 2027:
+                if (
+                    not (contract := contracts.get(season_id))
+                    or contract_is_a_bonus(contract)
+                    or (salary := salaries.get(season_id, buyouts.get(season_id)))
+                    is not None
+                    and salary.dollars is None  # ignore two ways
                 ):
                     continue
-                salary = salaries.get(season_id, buyouts.get(season_id))
+
                 last_contract_end = season_id + contract.duration
             elif last_contract_end > season_id:
                 continue

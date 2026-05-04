@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.base import Base
 
 if TYPE_CHECKING:
+    from app.data.league import Player
     from app.data.league.season import Season
 
 
@@ -33,6 +34,8 @@ class Award(Base):
     player_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id"), index=True, nullable=True
     )
+
+    player = relationship("Player", back_populates="awards")
 
     __table_args__ = (
         # Prevent duplicate awards for the same recipient in a season

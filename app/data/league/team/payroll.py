@@ -58,13 +58,13 @@ class TeamPlayerSalary(Base):
         )
 
     @property
-    def dollars(self) -> int:
+    def dollars(self) -> int | None:
         if self.salary is None:
             return 0
         return self.salary
 
     @property
-    def relative_dollars(self) -> float:
+    def relative_dollars(self) -> float | None:
         if self.salary is None:
             return 0.0
         return self.salary / self.season.cap

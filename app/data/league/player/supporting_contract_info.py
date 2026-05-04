@@ -23,6 +23,8 @@ class ContractSupportingInformation:
     player: Player
     season_id: int
     contract_number: int
+    min_garunteed: float
+    max_garunteed: float
     salary: TeamPlayerSalary | TeamPlayerBuyout | None
     contract: Contract | None
     contract_season: PlayerSeason | None
@@ -36,34 +38,46 @@ class ContractSupportingInformation:
             if self.salary is None and not self.is_buyout():
                 raise Exception()
 
+        self.salary_scalar: dict[str, MLSafe | None] = (
+            self.salary.to_scalar()
+            if self.salary is not None
+            else blank_salary_scalar()
+        )
+        self.relative_dollars: float = self.salary_scalar.pop("relative_dollars")
+        assert self.relative_dollars is not None
+
     def to_scalar(self) -> dict[str, MLSafe | None]:
         return (
             {
-                "buyout": not hasattr(self.salary, "apron_salary"),
-                "season": self.season_id,
-                "contract_number": self.contract_number,
-                "ascending": None
-                if self.contract is None or self.is_buyout()
-                else self.is_ascending(),
+                "contract_type": self.contract_type(),
+                "relative_dollars": self.relative_dollars,
             }
+            | (
+                {
+                    "buyout": not hasattr(self.salary, "apron_salary"),
+                    "season": self.season_id,
+                    "contract_number": self.contract_number,
+                    "ascending": None
+                    if self.contract is None or self.is_buyout()
+                    else self.is_ascending(),
+                }
+            )
             | (
                 blank_contract_scalar()
                 if self.contract is None
                 else self.contract.to_scalar()
             )
+            | self.salary_scalar
             | (
-                self.salary.to_scalar()
-                if self.salary is not None
-                else blank_salary_scalar()
+                {
+                    "contract_season_" + k: v
+                    for k, v in (
+                        self.contract_season.ml_data().no_colinearity()
+                        if self.contract_season is not None
+                        else blank_season_ml_data()
+                    ).items()
+                }
             )
-            | {
-                "contract_season_" + k: v
-                for k, v in (
-                    self.contract_season.ml_data().no_colinearity()
-                    if self.contract_season is not None
-                    else blank_season_ml_data()
-                ).items()
-            }
             | {
                 "previous_season_" + k: v
                 for k, v in (
@@ -79,7 +93,7 @@ class ContractSupportingInformation:
                 ).items()
             }
             | self.player.bio.to_scalar()
-            | {"age": self.age()}
+            | {"age": self.age()}  # ty:ignore[invalid-return-type]
         )
 
     def is_buyout(self) -> bool:
@@ -107,6 +121,23 @@ class ContractSupportingInformation:
             raise Exception()
         return (datetime(self.season_id + 1, 1, 1) - self.player.birth_datetime).days
 
+    def contract_type(
+        self,
+    ) -> Literal["unsigned", "minimum", "maximum", None]:
+        tolerance = 0.01
+        value = self.relative_dollars // tolerance
+        if self.relative_dollars == 0:
+            return "unsigned"
+        if value < self.min_garunteed // tolerance:
+            self.relative_dollars = self.min_garunteed
+            return "minimum"
+        if value == self.min_garunteed // tolerance:
+            return "minimum"
+        if value == self.max_garunteed // tolerance:
+            return "maximum"
+        else:
+            return None
+
 
 def blank_contract_scalar() -> dict[str, None]:
     return {
@@ -117,7 +148,7 @@ def blank_contract_scalar() -> dict[str, None]:
     }
 
 
-def blank_salary_scalar() -> dict[str, None]:
+def blank_salary_scalar() -> dict[str, float | None]:
     return {
         "dollars": 0.0,
         "relative_dollars": 0.0,

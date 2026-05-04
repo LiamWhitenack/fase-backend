@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.base import Base
 from app.data.connection import get_session
-from app.data.league import Contract, Player, PlayerSeason
+from app.data.league import Contract, Player, PlayerSeason, Season
 from app.data.league.player.supporting_contract_info import (
     ContractSupportingInformation,
 )
