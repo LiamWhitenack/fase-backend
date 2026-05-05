@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import optuna
 from joblib import parallel_backend
 from pandas import DataFrame, Series
+from pandas.errors import PerformanceWarning
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import r2_score
 
@@ -134,71 +137,142 @@ def optimize_regression_pipeline(
     if n_trials < 1:
         raise ValueError("n_trials must be >= 1")
 
-    prepared_data = prepare_training_data(
-        target_column=target_column,
-        feature_builder=feature_builder,
-        target_transform=target_transform,
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", PerformanceWarning)
+        warnings.simplefilter("ignore", ConvergenceWarning)
 
-    if "season" not in prepared_data.features.columns:
-        raise ValueError("prepared_data.features must contain a 'season' column.")
-
-    outer_split = split_training_data(
-        prepared_data,
-        test_season=test_season,
-    )
-
-    chosen_validation_season = _get_validation_season(
-        prepared_data.features,
-        test_season=test_season,
-        validation_season=validation_season,
-    )
-
-    inner_train_mask = outer_split.X_train["season"] < chosen_validation_season
-    inner_valid_mask = outer_split.X_train["season"] == chosen_validation_season
-
-    X_inner_train = outer_split.X_train.loc[inner_train_mask]
-    y_inner_train = outer_split.y_train.loc[inner_train_mask]
-    X_inner_valid = outer_split.X_train.loc[inner_valid_mask]
-    y_inner_valid = outer_split.y_train.loc[inner_valid_mask]
-
-    if X_inner_train.empty:
-        raise ValueError(
-            "Inner training set is empty. Choose a later test_season or validation_season."
+        prepared_data = prepare_training_data(
+            target_column=target_column,
+            feature_builder=feature_builder,
+            target_transform=target_transform,
         )
 
-    if X_inner_valid.empty:
-        raise ValueError(
-            "Validation set is empty. The chosen validation_season has no rows."
+        if "season" not in prepared_data.features.columns:
+            raise ValueError("prepared_data.features must contain a 'season' column.")
+
+        outer_split = split_training_data(
+            prepared_data,
+            test_season=test_season,
         )
 
-    def build_pipeline(trial: optuna.Trial | None) -> Any:
-        return build_training_pipeline(
-            trial=trial,
-            features=outer_split.X_train,
-            numeric_columns=prepared_data.numeric_columns,
-            categorical_columns=prepared_data.categorical_columns,
-            random_state=random_state,
-            preprocessor_builder=preprocessor_builder,
-            model_builder=model_builder,
+        chosen_validation_season = _get_validation_season(
+            prepared_data.features,
+            test_season=test_season,
+            validation_season=validation_season,
         )
 
-    if n_trials == 1:
-        pipeline = build_pipeline(trial=None)
+        inner_train_mask = outer_split.X_train["season"] < chosen_validation_season
+        inner_valid_mask = outer_split.X_train["season"] == chosen_validation_season
 
-        _ = score_pipeline(
-            pipeline,
-            X_train=X_inner_train,
-            X_test=X_inner_valid,
-            y_train=y_inner_train,
-            y_test=y_inner_valid,
-            inverse_target_transform=inverse_target_transform,
+        X_inner_train = outer_split.X_train.loc[inner_train_mask]
+        y_inner_train = outer_split.y_train.loc[inner_train_mask]
+        X_inner_valid = outer_split.X_train.loc[inner_valid_mask]
+        y_inner_valid = outer_split.y_train.loc[inner_valid_mask]
+
+        if X_inner_train.empty:
+            raise ValueError(
+                "Inner training set is empty. Choose a later test_season or validation_season."
+            )
+
+        if X_inner_valid.empty:
+            raise ValueError(
+                "Validation set is empty. The chosen validation_season has no rows."
+            )
+
+        def build_pipeline(trial: optuna.Trial | None) -> Any:
+            return build_training_pipeline(
+                trial=trial,
+                features=outer_split.X_train,
+                numeric_columns=prepared_data.numeric_columns,
+                categorical_columns=prepared_data.categorical_columns,
+                random_state=random_state,
+                preprocessor_builder=preprocessor_builder,
+                model_builder=model_builder,
+            )
+
+        if n_trials == 1:
+            pipeline = build_pipeline(trial=None)
+
+            _ = score_pipeline(
+                pipeline,
+                X_train=X_inner_train,
+                X_test=X_inner_valid,
+                y_train=y_inner_train,
+                y_test=y_inner_valid,
+                inverse_target_transform=inverse_target_transform,
+            )
+
+            final_pipeline = build_pipeline(trial=None)
+
+            evaluation = score_pipeline(
+                final_pipeline,
+                X_train=outer_split.X_train,
+                X_test=outer_split.X_test,
+                y_train=outer_split.y_train,
+                y_test=outer_split.y_test,
+                inverse_target_transform=inverse_target_transform,
+            )
+
+            feature_importance = get_permutation_feature_importance(
+                pipeline=final_pipeline,
+                X_test=outer_split.X_test,
+                y_test=outer_split.y_test,
+                inverse_target_transform=inverse_target_transform,
+                scoring_function=scoring_function,
+                random_state=random_state,
+            )
+
+            return {
+                "columns": outer_split.X_train.columns,
+                "best_params": None,
+                "best_value": scoring_function(
+                    evaluation.y_test_original,
+                    evaluation.test_predictions,
+                ),
+                "validation_season": chosen_validation_season,
+                "test_season": test_season,
+                "train_mae": evaluation.train_mae,
+                "test_mae": evaluation.test_mae,
+                "train_rmse": evaluation.train_rmse,
+                "test_rmse": evaluation.test_rmse,
+                "train_r2": evaluation.train_r2,
+                "test_r2": evaluation.test_r2,
+                "feature_importance": feature_importance,
+                "pipeline": final_pipeline,
+                "model": final_pipeline.named_steps["model"],
+                "preprocessor": final_pipeline.named_steps["preprocessor"],
+                "study": None,
+            }
+
+        def objective(trial: optuna.Trial) -> float:
+            pipeline = build_pipeline(trial=trial)
+
+            evaluation = score_pipeline(
+                pipeline,
+                X_train=X_inner_train,
+                X_test=X_inner_valid,
+                y_train=y_inner_train,
+                y_test=y_inner_valid,
+                inverse_target_transform=inverse_target_transform,
+            )
+
+            return scoring_function(
+                evaluation.y_test_original,
+                evaluation.test_predictions,
+            )
+
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        study = optuna.create_study(direction=study_direction)
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            show_progress_bar=True,
         )
 
-        final_pipeline = build_pipeline(trial=None)
+        best_pipeline = build_pipeline(trial=study.best_trial)
 
         evaluation = score_pipeline(
-            final_pipeline,
+            best_pipeline,
             X_train=outer_split.X_train,
             X_test=outer_split.X_test,
             y_train=outer_split.y_train,
@@ -206,8 +280,9 @@ def optimize_regression_pipeline(
             inverse_target_transform=inverse_target_transform,
         )
 
+        print("evaluating feature importance...")
         feature_importance = get_permutation_feature_importance(
-            pipeline=final_pipeline,
+            pipeline=best_pipeline,
             X_test=outer_split.X_test,
             y_test=outer_split.y_test,
             inverse_target_transform=inverse_target_transform,
@@ -216,12 +291,8 @@ def optimize_regression_pipeline(
         )
 
         return {
-            "columns": outer_split.X_train.columns,
-            "best_params": None,
-            "best_value": scoring_function(
-                evaluation.y_test_original,
-                evaluation.test_predictions,
-            ),
+            "best_params": study.best_params,
+            "best_value": study.best_value,
             "validation_season": chosen_validation_season,
             "test_season": test_season,
             "train_mae": evaluation.train_mae,
@@ -231,86 +302,23 @@ def optimize_regression_pipeline(
             "train_r2": evaluation.train_r2,
             "test_r2": evaluation.test_r2,
             "feature_importance": feature_importance,
-            "pipeline": final_pipeline,
-            "model": final_pipeline.named_steps["model"],
-            "preprocessor": final_pipeline.named_steps["preprocessor"],
-            "study": None,
+            "pipeline": best_pipeline,
+            "model": best_pipeline.named_steps["model"],
+            "preprocessor": best_pipeline.named_steps["preprocessor"],
+            "study": study,
         }
-
-    def objective(trial: optuna.Trial) -> float:
-        pipeline = build_pipeline(trial=trial)
-
-        evaluation = score_pipeline(
-            pipeline,
-            X_train=X_inner_train,
-            X_test=X_inner_valid,
-            y_train=y_inner_train,
-            y_test=y_inner_valid,
-            inverse_target_transform=inverse_target_transform,
-        )
-
-        return scoring_function(
-            evaluation.y_test_original,
-            evaluation.test_predictions,
-        )
-
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
-    study = optuna.create_study(direction=study_direction)
-    study.optimize(
-        objective,
-        n_trials=n_trials,
-        show_progress_bar=True,
-    )
-
-    best_pipeline = build_pipeline(trial=study.best_trial)
-
-    evaluation = score_pipeline(
-        best_pipeline,
-        X_train=outer_split.X_train,
-        X_test=outer_split.X_test,
-        y_train=outer_split.y_train,
-        y_test=outer_split.y_test,
-        inverse_target_transform=inverse_target_transform,
-    )
-
-    print("evaluating feature importance...")
-    feature_importance = get_permutation_feature_importance(
-        pipeline=best_pipeline,
-        X_test=outer_split.X_test,
-        y_test=outer_split.y_test,
-        inverse_target_transform=inverse_target_transform,
-        scoring_function=scoring_function,
-        random_state=random_state,
-    )
-
-    return {
-        "best_params": study.best_params,
-        "best_value": study.best_value,
-        "validation_season": chosen_validation_season,
-        "test_season": test_season,
-        "train_mae": evaluation.train_mae,
-        "test_mae": evaluation.test_mae,
-        "train_rmse": evaluation.train_rmse,
-        "test_rmse": evaluation.test_rmse,
-        "train_r2": evaluation.train_r2,
-        "test_r2": evaluation.test_r2,
-        "feature_importance": feature_importance,
-        "pipeline": best_pipeline,
-        "model": best_pipeline.named_steps["model"],
-        "preprocessor": best_pipeline.named_steps["preprocessor"],
-        "study": study,
-    }
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("error", category=UserWarning)
     res: list[dict] = []
     for name, model in {
-        "ridge": build_ridge_model,
-        "lasso": build_lasso_model,
-        "elastic_net": build_elastic_net_model,
-        "knn": build_knn_model,
         "xgboost": build_xgboost_model,
         "decision_tree": build_decision_tree_model,
+        "ridge": build_ridge_model,
+        "knn": build_knn_model,
+        "elastic_net": build_elastic_net_model,
+        "lasso": build_lasso_model,
         "random_forest": build_random_forest_model,
         "extra_trees": build_extra_trees_model,
     }.items():
@@ -322,7 +330,6 @@ if __name__ == "__main__":
         )
         for k, f in res[-1]["feature_importance"]:
             print(k, f)
-        pass
     build_results_dataframe(res).to_csv(
         "documentation/report/tables/first_training_methods.csv"
     )

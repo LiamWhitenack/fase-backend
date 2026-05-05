@@ -162,18 +162,18 @@ def plot_average_relative_dollars_over_time(df: DataFrame) -> None:
         return
 
     grouped = (
-        df[["season", "relative_dollars"]]
+        df[["relative_dollars"]]
         .dropna()
         .groupby("season", as_index=False)
         .agg(mean_relative_dollars=("relative_dollars", "mean"))
-        .sort_values("season")
+        .sort_index()
     )
 
     if grouped.empty:
         return
 
     fig, ax = plt.subplots(figsize=(12, 7))
-    ax.plot(grouped["season"], grouped["mean_relative_dollars"], linewidth=3)
+    ax.plot(grouped.index, grouped["mean_relative_dollars"], linewidth=3)
     ax.set_title("Average Relative Value Over Time")
     ax.set_xlabel("season")
     ax.set_ylabel("mean(relative_dollars)")
@@ -234,16 +234,17 @@ def plot_clustered_position_trends(df: DataFrame) -> None:
         return
 
     grouped = (
-        working.groupby(["season", "position"], as_index=False)
+        working.groupby(["position"], as_index=False)
         .agg(mean_relative_dollars=("relative_dollars", "mean"))
-        .sort_values(["position", "season"])
+        .sort_values(["position"])
+        .sort_index()
     )
 
     fig, ax = plt.subplots(figsize=(14, 8))
     for position in sorted(grouped["position"].unique()):
         position_data = grouped[grouped["position"] == position]
         ax.plot(
-            position_data["season"],
+            position_data.index,
             position_data["mean_relative_dollars"],
             linewidth=2.5,
             label=position,
@@ -307,7 +308,7 @@ def plot_feature_vs_target_suite(df: DataFrame) -> None:
         "points_pg",
         "assists_pg",
         "rebounds_pg",
-        "minutes_per_game",
+        "minutes_pg",
         "age",
         "draft_number",
         "games_played",
@@ -317,13 +318,13 @@ def plot_feature_vs_target_suite(df: DataFrame) -> None:
         "contract_season_points_pg",
         "contract_season_assists_pg",
         "contract_season_rebounds_pg",
-        "contract_season_minutes_per_game",
+        "contract_season_minutes_pg",
         "contract_season_usage_pct",
         "contract_season_net_rating",
         "previous_season_points_pg",
         "previous_season_assists_pg",
         "previous_season_rebounds_pg",
-        "previous_season_minutes_per_game",
+        "previous_season_minutes_pg",
         "previous_season_usage_pct",
         "previous_season_net_rating",
     ]
@@ -396,15 +397,24 @@ def main() -> None:
 
     # 6. Feature Exploration vs Target
     scatter_plot(
-        df, "points_pg", "relative_dollars", title="Relative Dollars By Points"
+        df,
+        "contract_season_points_pg",
+        "relative_dollars",
+        title="Relative Dollars By Points",
     )
 
     scatter_plot(
-        df, "assists_pg", "relative_dollars", title="Relative Dollars By Assists"
+        df,
+        "contract_season_assists_pg",
+        "relative_dollars",
+        title="Relative Dollars By Assists",
     )
 
     scatter_plot(
-        df, "rebounds_pg", "relative_dollars", title="Relative Dollars By Rebounds"
+        df,
+        "contract_season_rebounds_pg",
+        "relative_dollars",
+        title="Relative Dollars By Rebounds",
     )
 
     plot_target_distribution(df)

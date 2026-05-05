@@ -57,44 +57,47 @@ narrow_locales = {
 }
 
 
+from pandas import DataFrame, concat
+
+
 def add_engineered_features(df: DataFrame) -> DataFrame:
     working = df.copy()
 
+    new_features = {}
+
     # --- existing features ---
-    working["estimated_strength"] = safe_divide(
+    new_features["estimated_strength"] = safe_divide(
         working["weight_pounds"], (working["height_inches"] ** 2)
     )
 
-    working["season_centered"] = working["season"] - working["season"].median()
-    working["season_squared"] = working["season_centered"] ** 2
+    new_features["season_centered"] = working["season"] - working["season"].median()
+    new_features["season_squared"] = new_features["season_centered"] ** 2
 
     working["locale"] = working.pop("country").map(narrow_locales)
 
+    # --- seasonal features ---
     for season in ("contract_season_", "previous_season_"):
-        working[season + "free_throw_rate"] = safe_divide(
+        new_features[season + "free_throw_rate"] = safe_divide(
             working[season + "free_throws_attempted_pg"],
             working[season + "field_goals_attempted_pg"],
         )
-        working[season + "low_sample_size"] = (
-            working[season + "games_played"] * working[season + "minutes_per_game"]
+
+        new_features[season + "low_sample_size"] = (
+            working[season + "games_played"] * working[season + "minutes_pg"]
         )
 
-        # --- NEW: shrink stats toward league 33rd percentile of their career ---
-
-        C = 150  # controls shrink strength
-        minutes = (
-            working[season + "minutes_per_game"] * working[season + "games_played"]
-        )
+        # --- shrinkage ---
+        C = 150
+        minutes = working[season + "minutes_pg"] * working[season + "games_played"]
         alpha = minutes / (minutes + C)
 
-        STAT_COLS_TO_SHRINK = [
+        stat_cols = [
             col
             for col in working.columns
             if season in col
             and any(
                 key in col
                 for key in [
-                    "_per_game",
                     "_pg",
                     "_rate",
                     "percent",
@@ -106,15 +109,23 @@ def add_engineered_features(df: DataFrame) -> DataFrame:
         ]
 
         pct = "career_"
-        for col in STAT_COLS_TO_SHRINK:
+
+        for col in stat_cols:
             career_col = col.replace("contract_season_", pct).replace(
                 "previous_season_", pct
             )
-            working[f"{col}_shrunk"] = (
-                alpha * working.pop(col) + (1 - alpha) * working[career_col]
+
+            career_values = working.get(career_col, None)
+
+            if career_values is None:
+                career_values = working[col].mean()
+
+            new_features[f"{col}_shrunk"] = (
+                alpha * working[col] + (1 - alpha) * career_values
             )
 
-    return working
+    # --- single concat = no fragmentation ---
+    return concat([working, DataFrame(new_features)], axis=1)
 
 
 def add_position_ordinal(df: DataFrame, col: str = "position") -> DataFrame:

@@ -312,19 +312,13 @@ def line_plot(
             .replace("", "None")
         )
 
-    grouped = (
-        working.groupby([x_col] + group_cols_list, observed=True)[y_col]
-        .apply(agg)
-        .reset_index()
-    )
-
     fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
 
     if not linear_scale:
         ax.set_yscale("log")
 
     if group_cols_list:
-        for name, sub in grouped.groupby(group_cols_list):
+        for name, sub in df.groupby(group_cols_list):
             label = name if isinstance(name, str) else " | ".join(map(str, name))
             ax.plot(
                 sub[x_col],
@@ -335,7 +329,7 @@ def line_plot(
             )
         ax.legend(frameon=False)
     else:
-        grouped = grouped.sort_values(x_col)
+        grouped = df.sort_index(level="season")
         ax.plot(
             grouped[x_col],
             grouped[y_col],
@@ -410,12 +404,16 @@ def line_show_save_clustered(
     else:
         working["_series"] = "all"
 
-    wide = working.pivot_table(
-        index=x_col,
-        columns="_series",
-        values=y_col,
-        aggfunc=agg,
-    ).sort_index()
+    wide = (
+        working.drop(columns=["season"])
+        .pivot_table(
+            index=x_col,
+            columns="_series",
+            values=y_col,
+            aggfunc=agg,
+        )
+        .sort_index()
+    )
 
     # --- COLOR MAP ---
     palette = [

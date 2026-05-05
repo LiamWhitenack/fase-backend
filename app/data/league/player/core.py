@@ -277,7 +277,9 @@ class Player(Base):
     def bio(self) -> PlayerBio:
         data = {
             "height_inches": self.height_inches,
-            "weight_pounds": self.weight_pounds,
+            "weight_pounds": self.weight_pounds
+            if self.weight_pounds
+            else 200,  # estimating to 200 bc it doesn't matter. Only rookie contracts missing this data
             "country": self.country,
             "position": self.position,
             "draft_year": min(self.stats_dict)

@@ -12,7 +12,7 @@ class SeasonalMLPayload:
     # ---- basic context ----
     age: float
     games_played: int
-    minutes_per_game: float
+    minutes_pg: float
 
     # ---- ratings ----
     offensive_rating: float
@@ -134,7 +134,7 @@ class SeasonalMLPayload:
     def no_colinearity(self) -> dict[str, MLSafe]:
         return {
             "games_played": self.games_played,
-            "minutes_per_game": self.minutes_per_game,
+            "minutes_pg": self.minutes_pg,
             "points_pg": self.points_pg,
             "rebounds_pg": self.rebounds_pg,
             "assists_pg": self.assists_pg,

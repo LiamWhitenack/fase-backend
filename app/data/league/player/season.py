@@ -335,7 +335,7 @@ class PlayerSeason(Base):
             # basic context
             "age": self.age,
             "games_played": self.games_played,
-            "minutes_per_game": self.minutes_per_game,
+            "minutes_pg": self.minutes_per_game,
             # ratings
             "offensive_rating": self.offensive_rating,
             "defensive_rating": self.defensive_rating,
