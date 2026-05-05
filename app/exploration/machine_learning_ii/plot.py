@@ -19,8 +19,8 @@ from app.exploration.machine_learning_ii.plotting_utils import (
 # Load your data
 df = contracts_for_ml()
 
-for filename in os.listdir("documentation/report/plots"):
-    os.remove(f"documentation/report/plots/{filename}")
+# for filename in os.listdir("documentation/report/plots"):
+#     os.remove(f"documentation/report/plots/{filename}")
 
 
 PLOTS_DIR = Path("documentation/report/plots")
