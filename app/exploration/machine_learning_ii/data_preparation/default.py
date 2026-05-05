@@ -1,6 +1,3 @@
-from collections.abc import Callable
-
-import optuna
 from pandas import DataFrame, Series
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -23,9 +20,6 @@ from app.exploration.machine_learning_ii.data_preparation.position_labeling_help
 from app.exploration.machine_learning_ii.data_preparation.transformation import (
     transform_target,
 )
-from app.exploration.machine_learning_ii.training.helper_classes import (
-    PreparedData,
-)
 
 
 def default_feature_builder() -> DataFrame:
@@ -34,32 +28,6 @@ def default_feature_builder() -> DataFrame:
     working = add_position_ordinal(working)
     working = add_season_deltas(working)
     return working
-
-
-def prepare_training_data(
-    *,
-    target_column: str = "relative_dollars",
-    feature_builder: Callable[[], DataFrame] | None = None,
-    target_transform: Callable[[Series], Series] = transform_target,
-) -> PreparedData:
-    if feature_builder is None:
-        processed_dataframe = default_feature_builder()
-    else:
-        processed_dataframe = feature_builder()
-
-    target = processed_dataframe.pop(target_column)
-    transformed_target = target_transform(target)
-
-    numeric_columns, categorical_columns = get_numeric_and_categorical_columns(
-        processed_dataframe
-    )
-
-    return PreparedData(
-        features=processed_dataframe,
-        target=transformed_target,
-        numeric_columns=numeric_columns,
-        categorical_columns=categorical_columns,
-    )
 
 
 def build_default_preprocessor(
