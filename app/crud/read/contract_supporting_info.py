@@ -25,8 +25,7 @@ def get_all_contract_supporting_info(
     stmt = select(Player).where(exists().where(query))
     for player in session.scalars(stmt).all():
         for csi in player.supporting_contract_info():
-            if csi.contract_number > 1:
-                yield csi
+            yield csi
 
 
 if __name__ == "__main__":

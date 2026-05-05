@@ -123,9 +123,11 @@ class ContractSupportingInformation:
 
     def contract_type(
         self,
-    ) -> Literal["unsigned", "minimum", "maximum", None]:
+    ) -> Literal["unsigned", "rookie", "minimum", "maximum", None]:
         tolerance = 0.01
         value = self.relative_dollars // tolerance
+        if self.contract_number == 1:
+            return "rookie"
         if self.relative_dollars == 0:
             return "unsigned"
         if value < self.min_garunteed // tolerance:
@@ -167,7 +169,7 @@ def blank_season_ml_data() -> dict[str, Literal[0]]:
         key: 0
         for key in [
             "games_played",
-            "minutes_per_game",
+            "minutes_pg",
             "points_pg",
             "rebounds_pg",
             "assists_pg",
