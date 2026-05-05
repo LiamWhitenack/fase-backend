@@ -25,6 +25,7 @@ from app.exploration.machine_learning_ii.training.helper_classes import (
 from app.exploration.machine_learning_ii.training.table_results import (
     build_feature_importance_dataframe,
     build_performance_dataframe,
+    build_performance_dataframe_classification,
 )
 
 
@@ -195,12 +196,12 @@ def classify_contracts(
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "xgboost": classification.build_xgboost_model,
-        "decision_tree": classification.build_decision_tree_model,
-        "logistic_regression": classification.build_logistic_regression_model,
-        "knn": classification.build_knn_model,
-        "random_forest": classification.build_random_forest_model,
-        "extra_trees": classification.build_extra_trees_model,
+        "Decision Tree": classification.build_decision_tree_model,
+        "Extra Trees": classification.build_extra_trees_model,
+        "KNN": classification.build_knn_model,
+        "Random Forest": classification.build_random_forest_model,
+        "XGBoost": classification.build_xgboost_model,
+        # "logistic_regression": classification.build_logistic_regression_model,
     }.items():
         df = df_original.copy()
         print(f"starting {name} ...")
@@ -210,13 +211,12 @@ def classify_contracts(
 
     for table, name in (
         (build_feature_importance_dataframe(res), "feature_importance"),
-        (build_performance_dataframe(res), "performance"),
+        (build_performance_dataframe_classification(res), "performance"),
     ):
         if test_season != 2026:
             name += f"_{test_season}"
         table.to_latex(
-            f"documentation/report/tables/{name}.tex",
-            index=False,
+            f"documentation/report/tables/{name}_classification.tex",
             escape=True,
             float_format="%.4f",
             column_format="lccccccccc",
@@ -228,18 +228,17 @@ def main(
     n_trials: int = 30,
     test_season: int = 2026,
 ) -> None:
-    warnings.filterwarnings("error", category=UserWarning)
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "xgboost": regression.build_xgboost_model,
-        "decision_tree": regression.build_decision_tree_model,
-        "ridge": regression.build_ridge_model,
-        "knn": regression.build_knn_model,
-        "elastic_net": regression.build_elastic_net_model,
-        "lasso": regression.build_lasso_model,
-        "random_forest": regression.build_random_forest_model,
-        "extra_trees": regression.build_extra_trees_model,
+        "Decision Tree": regression.build_decision_tree_model,
+        "Elastic Net": regression.build_elastic_net_model,
+        "Extra Trees": regression.build_extra_trees_model,
+        "KNN": regression.build_knn_model,
+        "Lasso": regression.build_lasso_model,
+        "Random Forest": regression.build_random_forest_model,
+        "Ridge": regression.build_ridge_model,
+        "XGBoost": regression.build_xgboost_model,
     }.items():
         df = df_original.copy()
         if filter_to_only_mid_contracts:
@@ -267,4 +266,4 @@ def main(
 
 
 if __name__ == "__main__":
-    classify_contracts()
+    main()

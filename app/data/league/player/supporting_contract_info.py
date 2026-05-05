@@ -29,6 +29,7 @@ class ContractSupportingInformation:
     contract: Contract | None
     contract_season: PlayerSeason | None
     previous_season: PlayerSeason | None
+    first_season: int
 
     def __post_init__(self) -> None:
         super().__init__()
@@ -126,10 +127,10 @@ class ContractSupportingInformation:
     ) -> Literal["unsigned", "rookie", "minimum", "maximum", None]:
         tolerance = 0.01
         value = self.relative_dollars // tolerance
-        if self.contract_number == 1:
-            return "rookie"
-        if self.relative_dollars == 0:
+        if self.contract is None:
             return "unsigned"
+        if self.contract.start_year == self.first_season:
+            return "rookie"
         if value < self.min_garunteed // tolerance:
             self.relative_dollars = self.min_garunteed
             return "minimum"

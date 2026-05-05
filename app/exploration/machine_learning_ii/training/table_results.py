@@ -32,6 +32,31 @@ def build_performance_dataframe(
     return df
 
 
+def build_performance_dataframe_classification(
+    results: dict[str, dict[str, Any]],
+) -> DataFrame:
+    data: dict[str, dict[str, float]] = {}
+
+    for key, res in results.items():
+        data[key] = {
+            "Evaluation Season": res["test_season"],
+            # classification metrics
+            "Train Accuracy": res["train_accuracy"],
+            "Validation Accuracy": res["validation_accuracy"],
+            "Test Accuracy": res["test_accuracy"],
+            "Train AUC": res["train_auc"],
+            "Validation AUC": res["validation_auc"],
+            "Test AUC": res["test_auc"],
+        }
+
+    df = DataFrame.from_dict(data, orient="index")
+
+    if len(set(df["Evaluation Season"])) == 1:
+        df = df.drop(columns=["Evaluation Season"])
+
+    return df
+
+
 def build_feature_importance_dataframe(
     results: dict[str, dict[str, Any]],
     *,

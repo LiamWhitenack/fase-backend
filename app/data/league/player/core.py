@@ -314,6 +314,8 @@ class Player(Base):
         }
 
         def contract_is_a_bonus(contract: Contract) -> bool:
+            if self.last_name == "Beal" and contract.start_year == 2024:
+                pass
             return (
                 contract.start_year < last_contract_end
                 # they have an existing contract
@@ -339,6 +341,7 @@ class Player(Base):
                 contract,
                 self.get(season_id - 1),
                 self.get(season_id - 2),
+                first_season,
             )
 
         last_contract_end = -1
