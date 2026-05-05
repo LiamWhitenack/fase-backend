@@ -5,6 +5,8 @@ documentation/report/*
 !documentation/report/cite.sty
 !documentation/report/IEEEtran.bst
 !documentation/report/IEEEtran.cls
+!documentation/report/tables
+# !documentation/report/plots
 
 *.env
 test.py

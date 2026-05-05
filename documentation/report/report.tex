@@ -26,7 +26,7 @@
 \maketitle
 
 \begin{abstract}
-    Each professional basketball player's contract-based salary reflects their perceived value and can be viewed as a quantitative measure of their impact, skill, and contribution in the NBA. Accurately estimating salary therefore provides a mechanism for comparing and ranking players according to their theoretical value, offering a data-driven perspective on player quality. In this study, we develop a nonlinear framework that leverages performance metrics and related factors to estimate player salaries. By modeling the relationship between on-court performance and compensation, we construct a system that enables players to be evaluated on a common scale of inferred value. Additionally, we examine the relative importance of different features in shaping these estimates, providing further insight into the attributes most closely associated with high-value players. Our approach reframes salary prediction as a tool for player evaluation, allowing for the systematic ranking of athletes based on their projected worth. This perspective highlights how statistical performance translates into perceived value, offering a quantitative foundation for comparing players across the league.
+    Each professional basketball player's contract-based salary reflects their perceived value and can be viewed as a quantitative measure of their impact, skill, and contribution in the NBA. Accurately estimating salary therefore provides a mechanism for comparing and ranking players according to their theoretical value, offering a data-driven perspective on player quality. In this study, I develop a nonlinear framework that leverages performance metrics and related factors to estimate player salaries. By modeling the relationship between on-court performance and compensation, I construct a system that enables players to be evaluated on a common scale of inferred value. Additionally, I examine the relative importance of different features in shaping these estimates, providing further insight into the attributes most closely associated with high-value players. I's approach reframes salary prediction as a tool for player evaluation, allowing for the systematic ranking of athletes based on their projected worth. This perspective highlights how statistical performance translates into perceived value, offering a quantitative foundation for comparing players across the league.
 \end{abstract}
 
 
@@ -39,7 +39,7 @@ Prior work in sports analytics has explored salary prediction and player valuati
 
 The model design emphasizes flexibility and the ability to capture nonlinear relationships. Multiple regression-based approaches are considered, including linear regression as a baseline and more advanced models such as random forests, gradient boosting machines, and neural networks. Feature engineering plays a significant role, including the aggregation of career and recent-season statistics, normalization of performance metrics, and encoding of categorical variables. The target variable—relative dollars in the first contract year—is computed by dividing the player's first-year salary by the corresponding league salary cap, ensuring consistency across seasons.
 
-Overall, this project aims to provide a data-driven framework for understanding how NBA player value is quantified in financial terms. By leveraging a comprehensive dataset and modern machine learning techniques, the study seeks not only to improve predictive performance but also to identify the key factors that most strongly influence contract valuation.
+Overall, this project aims to provide a data-driven framework for understanding how NBA player value is quantified in financial terms. By leveraging a comprehensive dataset (from 2012 and going forward) and modern machine learning techniques, the study seeks not only to improve predictive performance but also to identify the key factors that most strongly influence contract valuation.
 
 \section{Input Data}
 The dataset used in this study is constructed by combining data from the NBA API and Spotrac. The NBA API provides detailed player performance statistics across seasons, including both traditional box score metrics and advanced analytics. Spotrac contributes contract-level financial data, including salary, contract length, and timing. These sources are merged to create a rich dataset containing a wide range of features relevant to player valuation, including age, position, experience, historical performance trends, and prior contract information. The resulting dataset captures both performance-based and contextual factors that influence contract negotiations.
@@ -47,7 +47,7 @@ The dataset used in this study is constructed by combining data from the NBA API
 Because rookie-scale contracts are trivial to calculate as they have a low max salary, the first contract of every NBA player is excluded from the data, reducing the number of trainable contracts from roughly 6,000 to roughly 1,700.
 \section{Data Exploration}
 
-To better understand the structure of the dataset and inform model selection, we performed an extensive exploratory data analysis focused on the target variable, \textit{relative\_dollars}, and its relationship with player performance, position, and temporal trends.
+To better understand the structure of the dataset and inform model selection, I performed an extensive exploratory data analysis focused on the target variable, \textit{relative\_dollars}, and its relationship with player performance, position, and temporal trends.
 
 \subsection{Target Distribution}
 
@@ -212,19 +212,7 @@ Model performance was evaluated using multiple metrics, including mean absolute 
 \begin{table*}[htbp]
     \centering
     \caption{Model Performance Comparison}
-    \begin{tabular}{lccccccccc}
-        \toprule
-        Model          & Val Season & Test Season & Train MAE & Test MAE & Train RMSE & Test RMSE & Train $R^2$ & Test $R^2$ \\
-        \midrule
-        ridge          & 2025       & 2026        & 0.0264    & 0.0331   & 0.0370     & 0.0442    & 0.7827      & 0.7683     \\
-        lasso          & 2025       & 2026        & 0.0272    & 0.0324   & 0.0382     & 0.0441    & 0.7691      & 0.7693     \\
-        elastic\_net   & 2025       & 2026        & 0.0266    & 0.0331   & 0.0373     & 0.0442    & 0.7788      & 0.7677     \\
-        xgboost        & 2025       & 2026        & 0.0000    & 0.0329   & 0.0000     & 0.0493    & 1.0000      & 0.7117     \\
-        decision\_tree & 2025       & 2026        & 0.0027    & 0.0260   & 0.0049     & 0.0407    & 0.9961      & 0.8029     \\
-        random\_forest & 2025       & 2026        & 0.0286    & 0.0335   & 0.0421     & 0.0487    & 0.7188      & 0.7189     \\
-        extra\_trees   & 2025       & 2026        & 0.0142    & 0.0290   & 0.0223     & 0.0453    & 0.9209      & 0.7565     \\
-        \bottomrule
-    \end{tabular}
+    \input{tables/performance.tex}
 \end{table*}
 
 Across models, tree-based methods such as XGBoost and ensemble approaches achieved the highest test $R^2$, with XGBoost performing best overall. Linear models (ridge, lasso, and elastic net) performed competitively but were consistently outperformed in terms of variance explained, suggesting the presence of nonlinear relationships in the data, which aligns with preconcieved notions.

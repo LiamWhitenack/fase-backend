@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 import optuna
-from pandas import Series
+from pandas import DataFrame, Series
 from pandas.errors import PerformanceWarning
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import mean_squared_error, r2_score
@@ -13,9 +13,6 @@ from sklearn.metrics import mean_squared_error, r2_score
 from app.exploration.machine_learning_ii.custom_types import ModelBuilder
 from app.exploration.machine_learning_ii.data_preparation.default import (
     default_feature_builder,
-)
-from app.exploration.machine_learning_ii.training.evaluation import (
-    build_results_dataframe,
 )
 from app.exploration.machine_learning_ii.training.helper_classes import (
     PreparedData,
@@ -29,6 +26,10 @@ from app.exploration.machine_learning_ii.training.models import (
     build_random_forest_model,
     build_ridge_model,
     build_xgboost_model,
+)
+from app.exploration.machine_learning_ii.training.table_results import (
+    build_feature_importance_dataframe,
+    build_performance_dataframe,
 )
 
 
@@ -114,23 +115,33 @@ def find_best_hyperparameters(
 
 if __name__ == "__main__":
     warnings.filterwarnings("error", category=UserWarning)
-    res: list[dict] = []
+    res: dict[str, dict] = {}
     for name, model in {
         "xgboost": build_xgboost_model,
-        "decision_tree": build_decision_tree_model,
-        "ridge": build_ridge_model,
-        "knn": build_knn_model,
-        "elastic_net": build_elastic_net_model,
-        "lasso": build_lasso_model,
-        "random_forest": build_random_forest_model,
-        "extra_trees": build_extra_trees_model,
+        # "decision_tree": build_decision_tree_model,
+        # "ridge": build_ridge_model,
+        # "knn": build_knn_model,
+        # "elastic_net": build_elastic_net_model,
+        # "lasso": build_lasso_model,
+        # "random_forest": build_random_forest_model,
+        # "extra_trees": build_extra_trees_model,
     }.items():
         print(f"starting {name} ...........")
-        res.append(
-            optimize_regression_pipeline(
-                test_season=2026, model_builder=model, n_trials=1
-            )
+        res[name] = optimize_regression_pipeline(
+            test_season=2026, model_builder=model, n_trials=1
         )
-    build_results_dataframe(res).to_csv(
-        "documentation/report/tables/first_training_methods.csv"
+
+    build_feature_importance_dataframe(res).to_latex(
+        "documentation/report/tables/feature_importance.tex",
+        index=False,
+        escape=True,
+        float_format="%.4f",
+        column_format="lccccccccc",
+    )
+    build_performance_dataframe(res).to_latex(
+        "documentation/report/tables/performance.tex",
+        index=False,
+        escape=True,
+        float_format="%.4f",
+        column_format="lccccccccc",
     )
