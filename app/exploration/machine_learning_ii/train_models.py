@@ -69,12 +69,15 @@ def optimize_regression_pipeline(
         "best_value": None if study is None else study.best_value,
         "validation_season": test_season - 1,
         "test_season": test_season,
-        "train_mae": evaluation.train_mae,
-        "test_mae": evaluation.test_mae,
-        "train_rmse": evaluation.train_rmse,
-        "test_rmse": evaluation.test_rmse,
-        "train_r2": evaluation.train_r2,
-        "test_r2": evaluation.test_r2,
+        "train_mae": evaluation.train.mae,
+        "validation_mae": evaluation.validation.mae,
+        "test_mae": evaluation.test.mae,
+        "train_rmse": evaluation.train.rmse,
+        "validation_rmse": evaluation.validation.rmse,
+        "test_rmse": evaluation.test.rmse,
+        "train_r2": evaluation.train.r2,
+        "validation_r2": evaluation.validation.r2,
+        "test_r2": evaluation.test.r2,
         "feature_importance": feature_importance,
         "pipeline": pipeline,
         "model": pipeline.named_steps["model"],
@@ -91,12 +94,9 @@ def find_best_hyperparameters(
             trial=trial, model_builder=model_builder
         )
 
-        evaluation = prepared_data.score_pipeline(pipeline, use_validation=True)
+        evaluation = prepared_data.score_pipeline(pipeline)
 
-        return mean_squared_error(
-            evaluation.y_test_original,
-            evaluation.test_predictions,
-        )
+        return evaluation.test.mse
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", PerformanceWarning)

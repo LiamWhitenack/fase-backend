@@ -8,7 +8,12 @@ import optuna
 from joblib import parallel_backend
 from pandas import DataFrame, Series, concat
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+    root_mean_squared_error,
+)
 from sklearn.pipeline import Pipeline
 
 from app.exploration.machine_learning_ii.custom_types import (
@@ -72,52 +77,31 @@ class PreparedData:
             ]
         )
 
-    def score_pipeline(
-        self, pipeline: Pipeline, use_validation: bool = False
-    ) -> EvaluationResult:
-        if use_validation:
-            X_train, y_train = self.X_train, self.y_train
-            X_test, y_test = self.X_validation, self.y_validation
-        else:
-            X_train, y_train = (
-                concat([self.X_train, self.X_validation]),
-                concat([self.y_train, self.y_validation]),
+    def score_pipeline(self, pipeline: Pipeline) -> EvaluationResults:
+        train = TrainTest(self.X_train, self.y_train, self.X_train, self.y_train)
+        validation = TrainTest(
+            concat([self.X_train, self.X_validation]),
+            concat([self.y_train, self.y_validation]),
+            self.X_validation,
+            self.y_validation,
+        )
+        test = TrainTest(self.X_train, self.y_train, self.X_test, self.y_test)
+        results: list[EvaluationResult] = []
+        for data in (train, validation, test):
+            if data is not validation:
+                pipeline.fit(data.X_train, data.y_train)
+
+            test_predictions_transformed = Series(
+                pipeline.predict(data.X_test),
+                index=data.y_test.index,
+                name=data.y_test.name,
             )
-            X_test, y_test = self.X_test, self.y_test
-        pipeline.fit(X_train, y_train)
 
-        train_predictions_transformed = Series(
-            pipeline.predict(X_train),
-            index=y_train.index,
-            name=y_train.name,
-        )
-        test_predictions_transformed = Series(
-            pipeline.predict(X_test),
-            index=y_test.index,
-            name=y_test.name,
-        )
+            predictions = inverse_transform_target(test_predictions_transformed)
+            actual = inverse_transform_target(data.y_test)
 
-        train_predictions = inverse_transform_target(
-            train_predictions_transformed,
-        )
-        test_predictions = inverse_transform_target(
-            test_predictions_transformed,
-        )
-        y_train_original = inverse_transform_target(y_train)
-        y_test_original = inverse_transform_target(y_test)
-
-        return EvaluationResult(
-            train_predictions=train_predictions,
-            test_predictions=test_predictions,
-            y_train_original=y_train_original,
-            y_test_original=y_test_original,
-            train_mae=mean_absolute_error(y_train_original, train_predictions),
-            test_mae=mean_absolute_error(y_test_original, test_predictions),
-            train_rmse=root_mean_squared_error(y_train_original, train_predictions),
-            test_rmse=root_mean_squared_error(y_test_original, test_predictions),
-            train_r2=r2_score(y_train_original, train_predictions),
-            test_r2=r2_score(y_test_original, test_predictions),
-        )
+            results.append(EvaluationResult(predictions, actual))
+        return EvaluationResults(*results)
 
     def get_permutation_feature_importance(
         self,
@@ -156,15 +140,28 @@ class PreparedData:
         )
 
 
-@dataclass(slots=True)
+@dataclass
+class TrainTest:
+    X_train: DataFrame
+    y_train: Series
+    X_test: DataFrame
+    y_test: Series
+
+
+@dataclass
 class EvaluationResult:
-    train_predictions: Series
-    test_predictions: Series
-    y_train_original: Series
-    y_test_original: Series
-    train_mae: float
-    test_mae: float
-    train_rmse: float
-    test_rmse: float
-    train_r2: float
-    test_r2: float
+    predictions: Series
+    actual: Series
+
+    def __post_init__(self) -> None:
+        self.mae = mean_absolute_error(self.predictions, self.actual)
+        self.mse = mean_squared_error(self.predictions, self.actual)
+        self.rmse = root_mean_squared_error(self.predictions, self.actual)
+        self.r2 = r2_score(self.predictions, self.actual)
+
+
+@dataclass
+class EvaluationResults:
+    train: EvaluationResult
+    validation: EvaluationResult
+    test: EvaluationResult
