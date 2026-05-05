@@ -213,7 +213,11 @@ def plot_position_boxplot(df: DataFrame) -> None:
     if working.empty:
         return
 
-    grouped = working.groupby("position")["relative_dollars"].apply(list).sort_index()
+    grouped = (
+        working.groupby([df.index.get_level_values(1), "position"])["relative_dollars"]
+        .apply(list)
+        .sort_index()
+    )
 
     fig, ax = plt.subplots(figsize=(12, 7))
     ax.boxplot(grouped.tolist(), labels=grouped.index, showfliers=False)  # ty:ignore[unknown-argument]
@@ -225,19 +229,20 @@ def plot_position_boxplot(df: DataFrame) -> None:
 
 
 def plot_clustered_position_trends(df: DataFrame) -> None:
-    required_columns = {"season", "position", "relative_dollars"}
+    required_columns = {"position", "relative_dollars"}
     if not required_columns.issubset(df.columns):
         return
 
-    working = df[["season", "position", "relative_dollars"]].dropna()
+    working = df[["position", "relative_dollars"]].dropna()
     if working.empty:
         return
 
     grouped = (
-        working.groupby(["position"], as_index=False)
+        df.groupby([df.index.get_level_values(1), "position"])
         .agg(mean_relative_dollars=("relative_dollars", "mean"))
-        .sort_values(["position"])
-        .sort_index()
+        .reset_index()
+        .rename(columns={"level_1": "season"})
+        .sort_values(["season", "position"])
     )
 
     fig, ax = plt.subplots(figsize=(14, 8))
