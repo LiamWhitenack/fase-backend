@@ -343,11 +343,14 @@ class Player(Base):
         contract_num = 1
         salary: TeamPlayerSalary | TeamPlayerBuyout | None
         first_season = min(player_seasons)
-        for season_id in range(first_season, max(player_seasons) + 2):
+        prev_missing = True
+        for season_id in range(max(first_season, 2012), max(player_seasons) + 2):
             salary, contract = None, None
-            if season_id in player_seasons or season_id >= 2027:
+            if season_id >= 2027:
+                continue
+            if season_id in player_seasons:
                 if (
-                    not (contract := contracts.get(season_id))
+                    (contract := contracts.get(season_id)) is None
                     or contract_is_a_bonus(contract)
                     or (salary := salaries.get(season_id, buyouts.get(season_id)))
                     is not None
@@ -355,9 +358,14 @@ class Player(Base):
                 ):
                     continue
 
+                prev_missing = False
                 last_contract_end = season_id + contract.duration
             elif last_contract_end > season_id:
                 continue
+            else:
+                if prev_missing:
+                    continue
+                prev_missing = True
 
             yield contract_supporting_info()
             contract_num += 1
