@@ -109,12 +109,12 @@ def build_knn_model(
         params = trial.params
     else:
         params = dict(
-            n_neighbors=trial.suggest_int("knn_n_neighbors", 3, 50),
-            weights=trial.suggest_categorical("knn_weights", ["uniform", "distance"]),
+            n_neighbors=trial.suggest_int("n_neighbors", 3, 50),
+            weights=trial.suggest_categorical("weights", ["uniform", "distance"]),
+            p=trial.suggest_int("p", 1, 2),  # 1=manhattan, 2=euclidean
         )
     return KNeighborsRegressor(
         **params,
-        p=trial.suggest_int("knn_p", 1, 2),  # 1=manhattan, 2=euclidean
     )
 
 

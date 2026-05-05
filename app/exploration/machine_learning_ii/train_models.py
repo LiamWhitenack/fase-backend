@@ -7,30 +7,95 @@ from typing import Any
 import optuna
 from pandas import DataFrame, Series
 from pandas.errors import PerformanceWarning
+from sklearn.base import ClassifierMixin
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, mean_squared_error, r2_score
 
+import app.exploration.machine_learning_ii.training.classification_models as classification
+import app.exploration.machine_learning_ii.training.regression_models as regression
 from app.exploration.machine_learning_ii.custom_types import ModelBuilder
 from app.exploration.machine_learning_ii.data_preparation.default import (
     default_feature_builder,
 )
 from app.exploration.machine_learning_ii.training.helper_classes import (
+    ClassificationResults,
     PreparedData,
-)
-from app.exploration.machine_learning_ii.training.models import (
-    build_decision_tree_model,
-    build_elastic_net_model,
-    build_extra_trees_model,
-    build_knn_model,
-    build_lasso_model,
-    build_random_forest_model,
-    build_ridge_model,
-    build_xgboost_model,
+    RegressionResults,
 )
 from app.exploration.machine_learning_ii.training.table_results import (
     build_feature_importance_dataframe,
     build_performance_dataframe,
 )
+
+
+def optimize_classification_pipeline(
+    *,
+    test_season: int,
+    random_state: int = 42,
+    n_trials: int = 1,
+    df: DataFrame,
+    model_builder: ModelBuilder,
+    scoring_function: Callable[[Series, Series], float] = accuracy_score,
+) -> dict[str, Any]:
+    if n_trials < 1:
+        raise ValueError("n_trials must be >= 1")
+
+    study: optuna.Study | None = None
+
+    prepared_data = PreparedData(df, test_season, mode="classification")
+
+    if n_trials > 1:
+        study = find_best_hyperparameters(
+            n_trials, prepared_data, model_builder=model_builder
+        )
+
+    pipeline = prepared_data.build_training_pipeline(
+        None if study is None else study.best_trial,  # ty:ignore[invalid-argument-type]
+        model_builder=model_builder,
+    )
+
+    evaluation: ClassificationResults = prepared_data.score_pipeline(pipeline)  # ty:ignore[invalid-assignment]
+
+    print("evaluating feature importance...")
+    feature_importance = prepared_data.get_permutation_feature_importance(
+        pipeline=pipeline,
+        scoring_function=scoring_function,
+        random_state=random_state,
+    )
+
+    return {
+        "best_params": None if study is None else study.best_params,
+        "best_value": None if study is None else study.best_value,
+        "validation_season": test_season - 1,
+        "test_season": test_season,
+        # classification metrics
+        "train_accuracy": evaluation.train.accuracy,
+        "validation_accuracy": evaluation.validation.accuracy,
+        "test_accuracy": evaluation.test.accuracy,
+        "train_log_loss": evaluation.train.log_loss,
+        "validation_log_loss": evaluation.validation.log_loss,
+        "test_log_loss": evaluation.test.log_loss,
+        "train_f1": evaluation.train.f1,
+        "validation_f1": evaluation.validation.f1,
+        "test_f1": evaluation.test.f1,
+        "train_auc": evaluation.train.auc,
+        "validation_auc": evaluation.validation.auc,
+        "test_auc": evaluation.test.auc,
+        "train_precision_weighted": evaluation.train.precision,
+        "validation_precision_weighted": evaluation.validation.precision,
+        "test_precision_weighted": evaluation.test.precision,
+        "train_log_loss": evaluation.train.log_loss,
+        "validation_log_loss": evaluation.validation.log_loss,
+        "test_log_loss": evaluation.test.log_loss,
+        "train_auc": evaluation.train.auc,
+        "validation_auc": evaluation.validation.auc,
+        "test_auc": evaluation.test.auc,
+        "feature_importance": feature_importance,
+        "pipeline": pipeline,
+        "model": pipeline.named_steps["model"],
+        "preprocessor": pipeline.named_steps["preprocessor"],
+        "study": study,
+    }
 
 
 def optimize_regression_pipeline(
@@ -39,7 +104,7 @@ def optimize_regression_pipeline(
     random_state: int = 42,
     n_trials: int = 1,
     df: DataFrame,
-    model_builder: ModelBuilder = build_xgboost_model,
+    model_builder: ModelBuilder = regression.build_xgboost_model,
     scoring_function: Callable[[Series, Series], float] = r2_score,
 ) -> dict[str, Any]:
     if n_trials < 1:
@@ -47,7 +112,7 @@ def optimize_regression_pipeline(
 
     study: optuna.Study | None = None
 
-    prepared_data = PreparedData(df, test_season)
+    prepared_data = PreparedData(df, test_season, "regression")
 
     if n_trials > 1:
         study = find_best_hyperparameters(
@@ -58,7 +123,7 @@ def optimize_regression_pipeline(
         model_builder=model_builder,
     )
 
-    evaluation = prepared_data.score_pipeline(pipeline)
+    evaluation: RegressionResults = prepared_data.score_pipeline(pipeline)  # ty:ignore[invalid-assignment]
 
     print("evaluating feature importance...")
     feature_importance = prepared_data.get_permutation_feature_importance(
@@ -90,7 +155,9 @@ def optimize_regression_pipeline(
 
 
 def find_best_hyperparameters(
-    n_trials: int, prepared_data: PreparedData, model_builder: ModelBuilder
+    n_trials: int,
+    prepared_data: PreparedData,
+    model_builder: ModelBuilder,
 ) -> optuna.Study:
     def objective(trial: optuna.Trial) -> float:
         pipeline = prepared_data.build_training_pipeline(
@@ -99,13 +166,18 @@ def find_best_hyperparameters(
 
         evaluation = prepared_data.score_pipeline(pipeline)
 
-        return evaluation.test.mse
+        if prepared_data.mode == "classification":
+            return evaluation.test.auc  # ty:ignore[possibly-missing-attribute]
+        else:
+            return evaluation.test.mse  # ty:ignore[possibly-missing-attribute]
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", PerformanceWarning)
         warnings.simplefilter("ignore", ConvergenceWarning)
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        study = optuna.create_study(direction="minimize")
+        study = optuna.create_study(
+            direction="minimize" if prepared_data.mode == "regression" else "maximize"
+        )
         study.optimize(
             objective,
             n_trials=n_trials,
@@ -115,27 +187,24 @@ def find_best_hyperparameters(
     return study
 
 
-def classification(
+def classify_contracts(
     n_trials: int = 30,
     test_season: int = 2026,
 ) -> None:
-    warnings.filterwarnings("error", category=UserWarning)
+    # warnings.filterwarnings("error", category=UserWarning)
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "xgboost": build_xgboost_model,
-        "decision_tree": build_decision_tree_model,
-        "ridge": build_ridge_model,
-        "knn": build_knn_model,
-        "elastic_net": build_elastic_net_model,
-        "lasso": build_lasso_model,
-        "random_forest": build_random_forest_model,
-        "extra_trees": build_extra_trees_model,
+        "xgboost": classification.build_xgboost_model,
+        "decision_tree": classification.build_decision_tree_model,
+        "logistic_regression": classification.build_logistic_regression_model,
+        "knn": classification.build_knn_model,
+        "random_forest": classification.build_random_forest_model,
+        "extra_trees": classification.build_extra_trees_model,
     }.items():
         df = df_original.copy()
-        df = df[df["contract_type"].apply(lambda x: x is None or x != x)]
         print(f"starting {name} ...")
-        res[name] = optimize_regression_pipeline(
+        res[name] = optimize_classification_pipeline(
             test_season=test_season, model_builder=model, n_trials=n_trials, df=df
         )
 
@@ -163,14 +232,14 @@ def main(
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "xgboost": build_xgboost_model,
-        "decision_tree": build_decision_tree_model,
-        "ridge": build_ridge_model,
-        "knn": build_knn_model,
-        "elastic_net": build_elastic_net_model,
-        "lasso": build_lasso_model,
-        "random_forest": build_random_forest_model,
-        "extra_trees": build_extra_trees_model,
+        "xgboost": regression.build_xgboost_model,
+        "decision_tree": regression.build_decision_tree_model,
+        "ridge": regression.build_ridge_model,
+        "knn": regression.build_knn_model,
+        "elastic_net": regression.build_elastic_net_model,
+        "lasso": regression.build_lasso_model,
+        "random_forest": regression.build_random_forest_model,
+        "extra_trees": regression.build_extra_trees_model,
     }.items():
         df = df_original.copy()
         if filter_to_only_mid_contracts:
@@ -198,4 +267,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    classify_contracts()
