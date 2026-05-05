@@ -4,7 +4,7 @@ from pandas import DataFrame, read_csv, read_parquet
 
 def contracts_for_ml() -> DataFrame:
     df = read_parquet("data/contracts-for-ml.parquet")
-    df = df[df["season"] < 2027]
+    df = df[df["season"] < 2027 & df["contract_num"] > 1]
 
     df["draft_round"] = df["draft_round"].replace({np.nan: 3})
     df["draft_number"] = df["draft_number"].replace({np.nan: 61})
@@ -24,7 +24,6 @@ def contracts_for_ml() -> DataFrame:
         "team_id",
         "ascending",
         "duration",
-        "voided",
         "dollars",
     ]
     return df.drop(columns=leakage_columns)
