@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 from app.exploration.machine_learning_ii.data_preparation.transformation import (
     inverse_transform_target,
 )
-from app.exploration.machine_learning_ii.train_models.helper_classes import (
+from app.exploration.machine_learning_ii.training.helper_classes import (
     EvaluationResult,
 )
 

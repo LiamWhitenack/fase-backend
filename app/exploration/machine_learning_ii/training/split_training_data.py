@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 
-from app.exploration.machine_learning_ii.train_models.helper_classes import (
+from app.exploration.machine_learning_ii.training.helper_classes import (
     PreparedData,
     SplitData,
 )

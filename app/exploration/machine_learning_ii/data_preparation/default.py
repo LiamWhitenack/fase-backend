@@ -23,7 +23,7 @@ from app.exploration.machine_learning_ii.data_preparation.position_labeling_help
 from app.exploration.machine_learning_ii.data_preparation.transformation import (
     transform_target,
 )
-from app.exploration.machine_learning_ii.train_models.helper_classes import (
+from app.exploration.machine_learning_ii.training.helper_classes import (
     PreparedData,
 )
 

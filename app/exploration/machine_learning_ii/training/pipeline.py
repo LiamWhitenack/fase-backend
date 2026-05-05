@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from app.exploration.machine_learning_ii.data_preparation.default import (
     build_default_preprocessor,
 )
-from app.exploration.machine_learning_ii.train_models.models import build_xgboost_model
+from app.exploration.machine_learning_ii.training.models import build_xgboost_model
 
 
 def build_training_pipeline(
