@@ -17,6 +17,10 @@ from app.exploration.machine_learning_ii.custom_types import ModelBuilder
 from app.exploration.machine_learning_ii.data_preparation.default import (
     default_feature_builder,
 )
+from app.exploration.machine_learning_ii.plotting_utils import (
+    plot_residuals_to_downloads,
+    save_multiclass_confusion_matrices,
+)
 from app.exploration.machine_learning_ii.training.helper_classes import (
     ClassificationResults,
     PreparedData,
@@ -63,6 +67,12 @@ def optimize_classification_pipeline(
         scoring_function=scoring_function,
         random_state=random_state,
     )
+
+    # save_multiclass_confusion_matrices(
+    #     prepared_data=prepared_data,
+    #     pipeline=pipeline,
+    #     labels=["unsigned", "minimum", "maximum", "between"],
+    # )
 
     return {
         "best_params": None if study is None else study.best_params,
@@ -125,6 +135,11 @@ def optimize_regression_pipeline(
     )
 
     evaluation: RegressionResults = prepared_data.score_pipeline(pipeline)  # ty:ignore[invalid-assignment]
+
+    # plot_residuals_to_downloads(
+    #     pipeline=pipeline,
+    #     prepared_data=prepared_data,
+    # )
 
     print("evaluating feature importance...")
     feature_importance = prepared_data.get_permutation_feature_importance(
@@ -231,13 +246,13 @@ def main(
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "Decision Tree": regression.build_decision_tree_model,
-        "Elastic Net": regression.build_elastic_net_model,
-        "Extra Trees": regression.build_extra_trees_model,
-        "KNN": regression.build_knn_model,
-        "Lasso": regression.build_lasso_model,
-        "Random Forest": regression.build_random_forest_model,
-        "Ridge": regression.build_ridge_model,
+        # "Decision Tree": regression.build_decision_tree_model,
+        # "Elastic Net": regression.build_elastic_net_model,
+        # "Extra Trees": regression.build_extra_trees_model,
+        # "KNN": regression.build_knn_model,
+        # "Lasso": regression.build_lasso_model,
+        # "Random Forest": regression.build_random_forest_model,
+        # "Ridge": regression.build_ridge_model,
         "XGBoost": regression.build_xgboost_model,
     }.items():
         df = df_original.copy()
@@ -266,4 +281,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    main(n_trials=1)

@@ -5,8 +5,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
-from pandas import DataFrame, Series, to_datetime
+from pandas import DataFrame, Series, concat, to_datetime
+from sklearn.metrics import confusion_matrix
 
+from app.exploration.machine_learning_ii.training.helper_classes import PreparedData
 from app.exploration.machine_learning_ii.utils import to_filename
 
 THEME = {
@@ -610,3 +612,128 @@ def scatter_plot(
     plt.close(fig)
 
     return save_path
+
+
+def plot_residuals_to_downloads(
+    *,
+    pipeline,
+    prepared_data: PreparedData,
+    file_name: str = "regression_residuals.png",
+) -> None:
+    # Predict on each split (adjust attribute names if your PreparedData differs)
+    y_train_true, X_train = prepared_data.y_train, prepared_data.X_train
+    y_val_true, X_val = prepared_data.y_validation, prepared_data.X_validation
+    y_test_true, X_test = prepared_data.y_test, prepared_data.X_test
+
+    y_train_pred = pipeline.predict(X_train)
+    y_val_pred = pipeline.predict(X_val)
+    y_test_pred = pipeline.predict(X_test)
+
+    data = concat(
+        [
+            DataFrame(
+                {
+                    "residual": y_train_true - y_train_pred,
+                    "split": "train",
+                }
+            ),
+            DataFrame(
+                {
+                    "residual": y_val_true - y_val_pred,
+                    "split": "validation",
+                }
+            ),
+            DataFrame(
+                {
+                    "residual": y_test_true - y_test_pred,
+                    "split": "test",
+                }
+            ),
+        ]
+    )
+
+    plt.figure()
+    for split_name in ["train", "validation", "test"]:
+        subset = data[data["split"] == split_name]
+        plt.scatter(range(len(subset)), subset["residual"], label=split_name, s=10)
+
+    plt.axhline(0)
+    plt.title("Residual Comparison (Train vs Validation vs Test)")
+    plt.legend()
+
+    downloads_path = Path.home() / "Downloads"
+    downloads_path.mkdir(exist_ok=True)
+
+    plt.savefig(downloads_path / file_name, bbox_inches="tight")
+    plt.close()
+
+
+def save_multiclass_confusion_matrices(
+    *,
+    prepared_data: PreparedData,
+    pipeline,
+    labels=None,
+    file_name: str = "confusion_matrices.csv",
+    plot_name: str = "confusion_matrices.png",
+) -> None:
+    splits = {
+        "train": (
+            pipeline.predict(prepared_data.X_train),
+            prepared_data.decode_labels(prepared_data.y_train),
+        ),
+        "validation": (
+            pipeline.predict(prepared_data.X_validation),
+            prepared_data.decode_labels(prepared_data.y_validation),
+        ),
+        "test": (
+            pipeline.predict(prepared_data.X_test),
+            prepared_data.decode_labels(prepared_data.y_test),
+        ),
+    }
+
+    downloads_path = Path.home() / "Downloads"
+    downloads_path.mkdir(exist_ok=True)
+
+    all_rows = []
+    matrices = {}
+
+    for split_name, (y_pred, y_true) in splits.items():
+        cm = confusion_matrix(
+            prepared_data.decode_labels(y_true)
+            if y_true.dtype.name == "int64"
+            else y_true,
+            prepared_data.decode_labels(y_pred),
+            labels=labels,
+        )
+        matrices[split_name] = cm
+
+        # flatten for CSV storage
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                all_rows.append(
+                    {
+                        "split": split_name,
+                        "true_label": i,
+                        "pred_label": j,
+                        "count": cm[i, j],
+                    }
+                )
+
+    # ---- CSV ----
+    DataFrame(all_rows).to_csv(downloads_path / file_name, index=False)
+
+    # ---- Plot ----
+    fig, ax = plt.subplots(figsize=(5, 4))
+    im = ax.imshow(cm)
+
+    ax.set_title("Test Confusion Matrix")
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, str(cm[i, j]), ha="center", va="center")
+
+    plt.tight_layout()
+    plt.savefig(downloads_path / plot_name, bbox_inches="tight")
+    plt.close()

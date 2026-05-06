@@ -89,7 +89,7 @@ class PreparedData:
 
     def decode_labels(self, y: Series) -> Series:
         to_string = {0: "unsigned", 1: "minimum", 2: "maximum", 3: "between"}
-        return y.apply(lambda c: to_string.get(c, 3))
+        return Series([to_string[round(val)] for val in y])
 
     def build_training_pipeline(
         self,
