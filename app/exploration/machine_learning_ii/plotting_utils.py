@@ -633,18 +633,21 @@ def plot_residuals_to_downloads(
         [
             DataFrame(
                 {
+                    "predicted": y_train_pred,
                     "residual": y_train_true - y_train_pred,
                     "split": "train",
                 }
             ),
             DataFrame(
                 {
+                    "predicted": y_val_pred,
                     "residual": y_val_true - y_val_pred,
                     "split": "validation",
                 }
             ),
             DataFrame(
                 {
+                    "predicted": y_test_pred,
                     "residual": y_test_true - y_test_pred,
                     "split": "test",
                 }
@@ -653,19 +656,23 @@ def plot_residuals_to_downloads(
     )
 
     plt.figure()
+
     for split_name in ["train", "validation", "test"]:
-        subset = data[data["split"] == split_name]
-        plt.scatter(range(len(subset)), subset["residual"], label=split_name, s=10)
+        subset = data[data["split"] == split_name].sort_values("predicted")
+
+        plt.scatter(
+            subset["predicted"],
+            subset["residual"],
+            label=split_name,
+            s=10,
+            alpha=0.6,
+        )
 
     plt.axhline(0)
-    plt.title("Residual Comparison (Train vs Validation vs Test)")
+    plt.xlabel("Predicted value")
+    plt.ylabel("Residual (actual - predicted)")
+    plt.title("Residuals vs Predicted Value")
     plt.legend()
-
-    downloads_path = Path.home() / "Downloads"
-    downloads_path.mkdir(exist_ok=True)
-
-    plt.savefig(downloads_path / file_name, bbox_inches="tight")
-    plt.close()
 
 
 def save_multiclass_confusion_matrices(
