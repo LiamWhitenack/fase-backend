@@ -1,3 +1,5 @@
+from typing import Any
+
 import optuna
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
@@ -9,11 +11,9 @@ from xgboost import XGBClassifier
 
 def build_extra_trees_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> ClassifierMixin:
     if trial is None:
         return ExtraTreesClassifier(
-            random_state=random_state,
             n_jobs=-1,
         )
 
@@ -30,18 +30,15 @@ def build_extra_trees_model(
 
     return ExtraTreesClassifier(
         **params,
-        random_state=random_state,
         n_jobs=-1,
     )
 
 
 def build_logistic_regression_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> ClassifierMixin:
     if trial is None:
         return LogisticRegression(
-            random_state=random_state,
             max_iter=10000,
         )
 
@@ -63,14 +60,13 @@ def build_logistic_regression_model(
 
     return LogisticRegression(
         **params,
-        random_state=random_state,
         max_iter=10000,
     )
 
 
 def build_knn_model(
     trial: optuna.Trial | None,
-    random_state: int,  # unused but kept for consistency
+    # unused but kept for consistency
 ) -> ClassifierMixin:
     if trial is None:
         return KNeighborsClassifier()
@@ -91,12 +87,9 @@ def build_knn_model(
 
 def build_decision_tree_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> ClassifierMixin:
     if trial is None:
-        return DecisionTreeClassifier(
-            random_state=random_state,
-        )
+        return DecisionTreeClassifier()
 
     if hasattr(trial, "state"):
         params = trial.params
@@ -110,17 +103,14 @@ def build_decision_tree_model(
 
     return DecisionTreeClassifier(
         **params,
-        random_state=random_state,
     )
 
 
 def build_random_forest_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> ClassifierMixin:
     if trial is None:
         return RandomForestClassifier(
-            random_state=random_state,
             n_jobs=-1,
         )
 
@@ -137,39 +127,81 @@ def build_random_forest_model(
 
     return RandomForestClassifier(
         **params,
-        random_state=random_state,
         n_jobs=-1,
     )
 
 
 def build_xgboost_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> ClassifierMixin:
     if trial is None:
         return XGBClassifier(
-            objective="binary:logistic",
-            random_state=random_state,
             n_jobs=-1,
-            eval_metric="logloss",
         )
-
-    if hasattr(trial, "state"):
-        params = trial.params
-    else:
-        params = dict(
-            n_estimators=trial.suggest_int("n_estimators", 100, 400),
-            max_depth=trial.suggest_int("max_depth", 3, 8),
-            learning_rate=trial.suggest_float("learning_rate", 0.03, 0.2, log=True),
-            subsample=trial.suggest_float("subsample", 0.7, 1.0),
-            colsample_bytree=trial.suggest_float("colsample_bytree", 0.7, 1.0),
-            min_child_weight=trial.suggest_int("min_child_weight", 1, 10),
-        )
+    params = dict(
+        # Slightly higher upper bound; classification often benefits from more rounds
+        n_estimators=trial.suggest_int("classification_n_estimators", 200, 1200),
+        # Keep trees controlled
+        max_depth=trial.suggest_int("classification_max_depth", 3, 8),
+        # Slightly wider but still safe
+        learning_rate=trial.suggest_float(
+            "classification_learning_rate", 0.02, 0.15, log=True
+        ),
+        # Encourage stochasticity
+        subsample=trial.suggest_float("classification_subsample", 0.6, 0.9),
+        # KEY: much more aggressive feature subsampling
+        colsample_bytree=trial.suggest_float(
+            "classification_colsample_bytree", 0.3, 0.7
+        ),
+        # Avoid splits on tiny one-hot groups
+        min_child_weight=trial.suggest_int("classification_min_child_weight", 3, 8),
+        # Add regularization (missing in your version)
+        reg_alpha=trial.suggest_float("classification_reg_alpha", 1e-4, 1.0, log=True),
+        reg_lambda=trial.suggest_float(
+            "classification_reg_lambda", 1e-3, 5.0, log=True
+        ),
+        # Optional but useful for classification boundaries
+        gamma=trial.suggest_float("classification_gamma", 1e-4, 3.0, log=True),
+    )
 
     return XGBClassifier(
         **params,
-        objective="binary:logistic",
-        random_state=random_state,
         n_jobs=-1,
-        eval_metric="logloss",
+    )
+
+
+def build_xgboost_model_params(
+    trial: optuna.Trial | None,
+) -> dict[str, Any]:
+    if trial is None:
+        params = {}
+    else:
+        params = dict(
+            # Slightly higher upper bound; classification often benefits from more rounds
+            # n_estimators=trial.suggest_int("n_estimators", 200, 1200),
+            # Keep trees controlled
+            max_depth=trial.suggest_int("max_depth", 3, 8),
+            # Slightly wider but still safe
+            learning_rate=trial.suggest_float("learning_rate", 0.02, 0.15, log=True),
+            # Encourage stochasticity
+            subsample=trial.suggest_float("subsample", 0.6, 0.9),
+            # KEY: much more aggressive feature subsampling
+            colsample_bytree=trial.suggest_float("colsample_bytree", 0.3, 0.7),
+            # Avoid splits on tiny one-hot groups
+            min_child_weight=trial.suggest_int("min_child_weight", 3, 8),
+            # Add regularization (missing in your version)
+            reg_alpha=trial.suggest_float("reg_alpha", 1e-4, 1.0, log=True),
+            reg_lambda=trial.suggest_float("reg_lambda", 1e-3, 5.0, log=True),
+            # Optional but useful for classification boundaries
+            gamma=trial.suggest_float("gamma", 1e-4, 3.0, log=True),
+            # early_stopping_rounds=trial.suggest_int("early_stopping_rounds", 5, 75),
+        )
+
+    return dict(
+        **params,
+        n_jobs=-1,
+        random_state=42,
+        objective="multi:softprob",
+        num_class=4,
+        eval_metric="mlogloss",
     )

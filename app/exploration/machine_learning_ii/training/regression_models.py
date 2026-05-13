@@ -1,3 +1,5 @@
+from typing import Any
+
 import optuna
 from sklearn.base import RegressorMixin
 from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
@@ -9,11 +11,9 @@ from xgboost import XGBRegressor
 
 def build_extra_trees_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
         return ExtraTreesRegressor(
-            random_state=random_state,
             n_jobs=-1,
         )
     if hasattr(trial, "state"):
@@ -29,17 +29,16 @@ def build_extra_trees_model(
 
     return ExtraTreesRegressor(
         **params,
-        random_state=random_state,
         n_jobs=-1,
+        random_state=42,
     )
 
 
 def build_elastic_net_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
-        return ElasticNet(random_state=random_state)
+        return ElasticNet()
 
     if hasattr(trial, "state"):
         params = trial.params
@@ -50,17 +49,16 @@ def build_elastic_net_model(
         )
     return ElasticNet(
         **params,
-        random_state=random_state,
         max_iter=10000,
+        random_state=42,
     )
 
 
 def build_lasso_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
-        return Lasso(random_state=random_state)
+        return Lasso()
 
     if hasattr(trial, "state"):
         params = trial.params
@@ -70,17 +68,16 @@ def build_lasso_model(
         )
     return Lasso(
         **params,
-        random_state=random_state,
         max_iter=10000,
+        random_state=42,
     )
 
 
 def build_ridge_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
-        return Ridge(random_state=random_state)
+        return Ridge()
 
     if hasattr(trial, "state"):
         params = trial.params
@@ -94,13 +91,13 @@ def build_ridge_model(
         )
     return Ridge(
         **params,
-        random_state=random_state,
+        random_state=42,
     )
 
 
 def build_knn_model(
     trial: optuna.Trial | None,
-    random_state: int,  # unused but kept for consistency
+    # unused but kept for consistency
 ) -> RegressorMixin:
     if trial is None:
         return KNeighborsRegressor()
@@ -120,12 +117,9 @@ def build_knn_model(
 
 def build_decision_tree_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
-        return DecisionTreeRegressor(
-            random_state=random_state,
-        )
+        return DecisionTreeRegressor()
 
     if hasattr(trial, "state"):
         params = trial.params
@@ -138,18 +132,17 @@ def build_decision_tree_model(
         )
     return DecisionTreeRegressor(
         **params,
-        random_state=random_state,
+        random_state=42,
     )
 
 
 def build_random_forest_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
         return RandomForestRegressor(
-            random_state=random_state,
             n_jobs=-1,
+            random_state=42,
         )
 
     if hasattr(trial, "state"):
@@ -164,40 +157,91 @@ def build_random_forest_model(
         )
     return RandomForestRegressor(
         **params,
-        random_state=random_state,
         n_jobs=-1,
+        random_state=42,
     )
 
 
 def build_xgboost_model(
     trial: optuna.Trial | None,
-    random_state: int,
 ) -> RegressorMixin:
     if trial is None:
         return XGBRegressor(
             objective="reg:squarederror",
-            random_state=random_state,
             n_jobs=-1,
+            random_state=42,
         )
 
     if hasattr(trial, "state"):
         params = trial.params
     else:
         params = dict(
-            n_estimators=trial.suggest_int("n_estimators", 100, 1200),
-            max_depth=trial.suggest_int("max_depth", 2, 10),
-            learning_rate=trial.suggest_float("learning_rate", 0.005, 0.3, log=True),
-            subsample=trial.suggest_float("subsample", 0.5, 1.0),
-            colsample_bytree=trial.suggest_float("colsample_bytree", 0.5, 1.0),
-            min_child_weight=trial.suggest_int("min_child_weight", 1, 20),
-            reg_alpha=trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
-            reg_lambda=trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
-            gamma=trial.suggest_float("gamma", 1e-8, 10.0, log=True),
+            n_estimators=trial.suggest_int("n_estimators", 300, 900),
+            # allow a bit more complexity back
+            max_depth=trial.suggest_int("max_depth", 4, 8),
+            # keep improved but slightly wider
+            learning_rate=trial.suggest_float("learning_rate", 0.01, 0.2, log=True),
+            # still stochastic, but less restrictive
+            subsample=trial.suggest_float("subsample", 0.7, 1.0),
+            # IMPORTANT: loosen this a bit
+            colsample_bytree=trial.suggest_float("colsample_bytree", 0.5, 0.9),
+            # allow smaller splits again
+            min_child_weight=trial.suggest_int("min_child_weight", 1, 8),
+            # keep regularization but allow near-zero
+            reg_alpha=trial.suggest_float("reg_alpha", 1e-6, 1.0, log=True),
+            reg_lambda=trial.suggest_float("reg_lambda", 1e-3, 5.0, log=True),
+            # same idea
+            gamma=trial.suggest_float("gamma", 1e-6, 3.0, log=True),
         )
 
     return XGBRegressor(
         **params,
         objective="reg:squarederror",
-        random_state=random_state,
         n_jobs=-1,
+        early_stopping_rounds=50,
+        random_state=42,
+    )
+
+
+def build_xgboost_model_params(
+    trial: optuna.Trial | None,
+) -> dict[str, Any]:
+    if trial is None:
+        return dict(
+            objective="reg:squarederror",
+            n_jobs=-1,
+            random_state=42,
+        )
+    else:
+        params = dict(
+            # n_estimators=trial.suggest_int("n_estimators", 300, 900),
+            # allow a bit more complexity back
+            max_depth=trial.suggest_int("regression_max_depth", 4, 8),
+            # keep improved but slightly wider
+            learning_rate=trial.suggest_float(
+                "regression_learning_rate", 0.01, 0.2, log=True
+            ),
+            # still stochastic, but less restrictive
+            subsample=trial.suggest_float("regression_subsample", 0.7, 1.0),
+            # IMPORTANT: loosen this a bit
+            colsample_bytree=trial.suggest_float(
+                "regression_colsample_bytree", 0.5, 0.9
+            ),
+            # allow smaller splits again
+            min_child_weight=trial.suggest_int("regression_min_child_weight", 1, 8),
+            # keep regularization but allow near-zero
+            reg_alpha=trial.suggest_float("regression_reg_alpha", 1e-6, 1.0, log=True),
+            reg_lambda=trial.suggest_float(
+                "regression_reg_lambda", 1e-3, 5.0, log=True
+            ),
+            # same idea
+            gamma=trial.suggest_float("regression_gamma", 1e-6, 3.0, log=True),
+            # early_stopping_rounds=trial.suggest_int("early_stopping_rounds", 5, 75),
+        )
+
+    return dict(
+        **params,
+        objective="reg:squarederror",
+        n_jobs=-1,
+        random_state=42,
     )

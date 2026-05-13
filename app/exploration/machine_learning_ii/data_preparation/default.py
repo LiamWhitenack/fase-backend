@@ -40,6 +40,9 @@ def build_default_preprocessor(
         column for column in features.columns if column not in numeric_columns
     ]
 
+    def safe_columns(columns: list[str], available: list[str]) -> list[str]:
+        return [c for c in columns if c in available]
+
     return ColumnTransformer(
         transformers=[
             (
@@ -53,34 +56,37 @@ def build_default_preprocessor(
                                 sparse_output=False,
                             ),
                         ),
-                        ("imputer", SimpleImputer(strategy="most_frequent")),
+                        # ("imputer", SimpleImputer(strategy="most_frequent")),
                     ]
                 ),
                 categorical_columns,
             ),
             (
                 "numeric",
-                Pipeline(
-                    steps=[
-                        ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
-                        ("scaler", RobustScaler()),
-                    ]
-                ),
+                "passthrough",
                 numeric_columns,
             ),
+            # (
+            #     "prism",
+            #     Pipeline(
+            #         steps=[
+            #             # ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
+            #             ("prism", PcaPrismTransformer()),
+            #         ]
+            #     ),
+            #     numeric_columns,
+            # ),
             (
-                "prism",
-                Pipeline(
-                    steps=[
-                        ("imputer", SimpleImputer(strategy="constant", fill_value=0)),
-                        ("prism", PcaPrismTransformer()),
-                    ]
+                "passthrough",
+                "passthrough",
+                safe_columns(
+                    ["validation", "contract_type"],
+                    features.columns.to_list(),
                 ),
-                numeric_columns,
             ),
         ],
-        remainder="drop",
-    )
+        verbose_feature_names_out=False,
+    ).set_output(transform="pandas")
 
 
 def prepare_data(df: DataFrame) -> PreparedPipelineData:

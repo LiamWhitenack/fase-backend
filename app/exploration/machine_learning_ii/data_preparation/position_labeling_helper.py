@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -23,9 +24,11 @@ class PcaPrismTransformer(BaseEstimator, TransformerMixin):
     fitted_apex: tuple[float, float] | None = field(init=False, default=None)
     selected_columns_: list[str] = field(init=False, default_factory=list)
 
-    def fit(
-        self, X: DataFrame | ndarray, y: ndarray | None = None
-    ) -> PcaPrismTransformer:
+    # 🔥 REQUIRED for set_output compatibility
+    def set_output(self, transform=None):
+        return self
+
+    def fit(self, X, y=None):
         X_array = self._get_fit_array(X)
 
         self.pca_model = PCA(n_components=2, random_state=self.random_state)
@@ -40,6 +43,7 @@ class PcaPrismTransformer(BaseEstimator, TransformerMixin):
             else:
                 cutoff = np.quantile(x_values, self.apex_quantile)
                 left_mask = x_values <= cutoff
+
                 if np.sum(left_mask) < 3:
                     left_mask = x_values <= np.sort(x_values)[min(len(x_values) - 1, 4)]
 
@@ -54,9 +58,7 @@ class PcaPrismTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X: DataFrame | ndarray) -> ndarray:
         if self.pca_model is None or self.fitted_apex is None:
-            raise ValueError(
-                "PcaPrismTransformer must be fitted before calling transform()."
-            )
+            raise ValueError("Transformer must be fitted before transform().")
 
         X_array = self._get_transform_array(X)
 
@@ -70,6 +72,9 @@ class PcaPrismTransformer(BaseEstimator, TransformerMixin):
 
         values = equal_size_bins(angle, self.n_bins) if self.use_angle_bins else angle
         return values.reshape(-1, 1)
+
+    def get_feature_names_out(self, input_features=None) -> ndarray:
+        return np.array(["pca_prism"])
 
     def transform_to_pca_space(self, X: DataFrame | ndarray) -> ndarray:
         if self.pca_model is None:
