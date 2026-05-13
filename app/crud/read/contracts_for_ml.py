@@ -18,6 +18,10 @@ def contracts_for_ml() -> DataFrame:
     ]
     df = df.drop(columns=contract_columns)
 
+    return df
+
+
+def drop_leakage_columns(df: DataFrame) -> DataFrame:
     leakage_columns = [
         "buyout",
         "team",

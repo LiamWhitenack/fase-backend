@@ -41,6 +41,7 @@ def optimize_classification_pipeline(
     df: DataFrame,
     model_builder: ModelBuilder,
     scoring_function: Callable[[Series, Series], float] = accuracy_score,
+    get_feature_importance: bool,
 ) -> dict[str, Any]:
     if n_trials < 1:
         raise ValueError("n_trials must be >= 1")
@@ -61,12 +62,13 @@ def optimize_classification_pipeline(
 
     evaluation: ClassificationResults = prepared_data.score_pipeline(pipeline)  # ty:ignore[invalid-assignment]
 
-    print("evaluating feature importance...")
-    feature_importance = prepared_data.get_permutation_feature_importance(
-        pipeline=pipeline,
-        scoring_function=scoring_function,
-        random_state=random_state,
-    )
+    if get_feature_importance:
+        print("evaluating feature importance...")
+        feature_importance = prepared_data.get_permutation_feature_importance(
+            pipeline=pipeline,
+            scoring_function=scoring_function,
+            random_state=random_state,
+        )
 
     # save_multiclass_confusion_matrices(
     #     prepared_data=prepared_data,
@@ -101,7 +103,7 @@ def optimize_classification_pipeline(
         "train_auc": evaluation.train.auc,
         "validation_auc": evaluation.validation.auc,
         "test_auc": evaluation.test.auc,
-        "feature_importance": feature_importance,
+        "feature_importance": feature_importance if get_feature_importance else None,
         "pipeline": pipeline,
         "model": pipeline.named_steps["model"],
         "preprocessor": pipeline.named_steps["preprocessor"],
@@ -117,6 +119,7 @@ def optimize_regression_pipeline(
     df: DataFrame,
     model_builder: ModelBuilder = regression.build_xgboost_model,
     scoring_function: Callable[[Series, Series], float] = r2_score,
+    get_feature_importance: bool,
 ) -> dict[str, Any]:
     if n_trials < 1:
         raise ValueError("n_trials must be >= 1")
@@ -141,12 +144,13 @@ def optimize_regression_pipeline(
     #     prepared_data=prepared_data,
     # )
 
-    print("evaluating feature importance...")
-    feature_importance = prepared_data.get_permutation_feature_importance(
-        pipeline=pipeline,
-        scoring_function=scoring_function,
-        random_state=random_state,
-    )
+    if get_feature_importance:
+        print("evaluating feature importance...")
+        feature_importance = prepared_data.get_permutation_feature_importance(
+            pipeline=pipeline,
+            scoring_function=scoring_function,
+            random_state=random_state,
+        )
 
     return {
         "best_params": None if study is None else study.best_params,
@@ -162,7 +166,7 @@ def optimize_regression_pipeline(
         "train_r2": evaluation.train.r2,
         "validation_r2": evaluation.validation.r2,
         "test_r2": evaluation.test.r2,
-        "feature_importance": feature_importance,
+        "feature_importance": feature_importance if get_feature_importance else None,
         "pipeline": pipeline,
         "model": pipeline.named_steps["model"],
         "preprocessor": pipeline.named_steps["preprocessor"],
@@ -204,30 +208,38 @@ def find_best_hyperparameters(
 
 
 def classify_contracts(
-    n_trials: int = 30,
-    test_season: int = 2026,
+    n_trials: int = 30, test_season: int = 2026, feature_importance: bool = False
 ) -> None:
     # warnings.filterwarnings("error", category=UserWarning)
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
     for name, model in {
-        "Decision Tree": classification.build_decision_tree_model,
-        "Extra Trees": classification.build_extra_trees_model,
-        "KNN": classification.build_knn_model,
-        "Random Forest": classification.build_random_forest_model,
+        # "Decision Tree": classification.build_decision_tree_model,
+        # "Extra Trees": classification.build_extra_trees_model,
+        # "KNN": classification.build_knn_model,
+        # "Random Forest": classification.build_random_forest_model,
         "XGBoost": classification.build_xgboost_model,
         # "logistic_regression": classification.build_logistic_regression_model,
     }.items():
         df = df_original.copy()
         print(f"starting {name} ...")
         res[name] = optimize_classification_pipeline(
-            test_season=test_season, model_builder=model, n_trials=n_trials, df=df
+            test_season=test_season,
+            model_builder=model,
+            n_trials=n_trials,
+            df=df,
+            get_feature_importance=feature_importance,
         )
 
-    for table, name in (
-        (build_feature_importance_dataframe(res), "feature_importance"),
-        (build_performance_dataframe_classification(res), "performance"),
-    ):
+    tables_names: list[tuple[DataFrame, str]] = [
+        (build_performance_dataframe_classification(res), "performance")
+    ]
+    if feature_importance:
+        tables_names.append(
+            (build_feature_importance_dataframe(res), "feature_importance")
+        )
+
+    for table, name in tables_names:
         if test_season != 2026:
             name += f"_{test_season}"
         table.to_latex(
@@ -242,6 +254,7 @@ def main(
     filter_to_only_mid_contracts: bool = False,
     n_trials: int = 30,
     test_season: int = 2026,
+    feature_importance: bool = False,
 ) -> None:
     res: dict[str, dict] = {}
     df_original = default_feature_builder()
@@ -260,13 +273,21 @@ def main(
             df = df[df["contract_type"].apply(lambda x: x is None or x != x)]
         print(f"starting {name} ...")
         res[name] = optimize_regression_pipeline(
-            test_season=test_season, model_builder=model, n_trials=n_trials, df=df
+            test_season=test_season,
+            model_builder=model,
+            n_trials=n_trials,
+            df=df,
+            get_feature_importance=feature_importance,
         )
 
-    for table, name in (
-        (build_feature_importance_dataframe(res), "feature_importance"),
-        (build_performance_dataframe(res), "performance"),
-    ):
+    tables_names: list[tuple[DataFrame, str]] = [
+        (build_performance_dataframe(res), "performance")
+    ]
+    if feature_importance:
+        tables_names.append(
+            (build_feature_importance_dataframe(res), "feature_importance")
+        )
+    for table, name in tables_names:
         if filter_to_only_mid_contracts:
             name += "_filtered"
         if test_season != 2026:
@@ -281,4 +302,5 @@ def main(
 
 
 if __name__ == "__main__":
-    main(n_trials=1)
+    main(n_trials=5)
+    classify_contracts(n_trials=5)

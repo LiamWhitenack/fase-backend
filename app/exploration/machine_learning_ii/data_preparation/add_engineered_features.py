@@ -1,5 +1,5 @@
 import numpy as np
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 
 narrow_locales = {
     "USA": "USA",
@@ -57,7 +57,22 @@ narrow_locales = {
 }
 
 
-from pandas import DataFrame, concat
+def add_lag_features(df: DataFrame) -> DataFrame:
+    working = df.copy()
+
+    for col in ("buyout", "ascending", "duration", "relative_dollars"):
+        working[f"prev_{col}"] = (
+            working.groupby(level="player_id")[col].shift(1).fillna(0)
+        )
+    working["prev_team_id"] = (
+        working.groupby(level="player_id")["team_id"].shift(1).fillna(0)
+    ).astype(str)
+
+    working["any_prev_buyout"] = working.groupby(level="player_id")["buyout"].transform(
+        lambda s: s.fillna(False).astype(bool).shift().astype(bool).cummax()
+    )
+
+    return working
 
 
 def add_engineered_features(df: DataFrame) -> DataFrame:

@@ -4,9 +4,10 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, RobustScaler
 
-from app.crud.read.contracts_for_ml import contracts_for_ml
+from app.crud.read.contracts_for_ml import contracts_for_ml, drop_leakage_columns
 from app.exploration.machine_learning_ii.data_preparation.add_engineered_features import (
     add_engineered_features,
+    add_lag_features,
     add_position_ordinal,
     add_season_deltas,
 )
@@ -25,9 +26,10 @@ from app.exploration.machine_learning_ii.data_preparation.transformation import 
 def default_feature_builder() -> DataFrame:
     working = contracts_for_ml()
     working = add_engineered_features(working)
+    working = add_lag_features(working)
     working = add_position_ordinal(working)
     working = add_season_deltas(working)
-    return working
+    return drop_leakage_columns(working)
 
 
 def build_default_preprocessor(
