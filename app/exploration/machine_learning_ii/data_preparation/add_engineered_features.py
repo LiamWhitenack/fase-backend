@@ -13,6 +13,10 @@ narrow_locales = {
     "Argentina": "New World (Not USA)",
     "Brazil": "New World (Not USA)",
     "Venezuela": "New World (Not USA)",
+    "Mexico": "New World (Not USA)",
+    "Puerto Rico": "New World (Not USA)",
+    "Antigua and Barbuda": "New World (Not USA)",
+    "Saint Lucia": "New World (Not USA)",
     # Europe
     "Serbia": "Europe",
     "Croatia": "Europe",
@@ -35,6 +39,11 @@ narrow_locales = {
     "Germany": "Europe",
     "Austria": "Europe",
     "Italy": "Europe",
+    "Denmark": "Europe",
+    "Netherlands": "Europe",
+    "Estonia": "Europe",
+    "North Macedonia": "Europe",
+    "Russia": "Europe",
     # Africa
     "Senegal": "Africa",
     "Egypt": "Africa",
@@ -46,11 +55,17 @@ narrow_locales = {
     "Sudan": "Africa",
     "Cameroon": "Africa",
     "Angola": "Africa",
+    "Gabon": "Africa",
+    "Tunisia": "Africa",
+    "Guinea": "Africa",
+    "Cabo Verde": "Africa",
     # Asia
     "Israel": "Asia",
     "Georgia": "Asia",
     "Turkey": "Asia",
     "Japan": "Asia",
+    "Iran": "Asia",
+    "China": "Asia",
     # Oceania
     "Australia": "Oceania",
     "New Zealand": "Oceania",
@@ -199,5 +214,5 @@ def add_season_deltas(df: DataFrame) -> DataFrame:
 
 
 def safe_divide(numerator: Series, denominator: Series) -> Series:
-    denominator_safe = denominator.replace(0, np.nan)
+    denominator_safe = denominator.replace(0, 1)
     return numerator / denominator_safe
