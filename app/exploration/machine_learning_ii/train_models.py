@@ -34,7 +34,7 @@ from app.exploration.machine_learning_ii.training.table_results import (
 )
 
 
-def optimize_hybrid_regression_pipeline(
+def regression_pipeline(
     *,
     df: DataFrame,
     test_season: int,
@@ -159,16 +159,16 @@ def find_best_hybrid_hyperparameters(
     return study
 
 
-def main(n_trials: int = 100, feature_importance: bool = False) -> None:
+def main(n_trials: int = 100, feature_importance: bool = True) -> None:
     res: dict[int, dict] = {}
     df_original = default_feature_builder()
-    for year in range(2016, 2027):
+    for year in range(2026, 2027):
         df = df_original.copy()
-        res[year] = optimize_hybrid_regression_pipeline(
+        res[year] = regression_pipeline(
             test_season=year,
             n_trials=n_trials,
             df=df,
-            get_feature_importance=False,
+            get_feature_importance=feature_importance,
         )
         print(res[year]["test_rmse"])
 

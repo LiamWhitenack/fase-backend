@@ -127,7 +127,9 @@ class XGBHybridModel(BaseEstimator, RegressorMixin):
         regression_alpha = regression_predictions * (1 - self.alpha)
         # print(r2_score(hybrid_predictions, regression_predictions))
 
-        return hybrid_alpha + regression_alpha
+        return (
+            hybrid_alpha + regression_alpha
+        )  # replace with regression_predictions to use pure regression
 
     def _to_xgb_params(self, sk_model: XGBClassifier | XGBRegressor, task: str) -> dict:
         sk_params = sk_model.get_params()
