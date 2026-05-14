@@ -23,8 +23,8 @@ class ContractSupportingInformation:
     player: Player
     season_id: int
     contract_number: int
-    min_garunteed: float
-    max_garunteed: float
+    min_eligibility: float
+    max_eligibility: float
     salary: TeamPlayerSalary | TeamPlayerBuyout | None
     contract: Contract | None
     contract_season: PlayerSeason | None
@@ -61,6 +61,8 @@ class ContractSupportingInformation:
                     "ascending": None
                     if self.contract is None or self.is_buyout()
                     else self.is_ascending(),
+                    "max_eligibility": self.max_eligibility,
+                    "min_eligibility": self.min_eligibility,
                 }
             )
             | (
@@ -131,12 +133,12 @@ class ContractSupportingInformation:
             return "unsigned"
         if self.contract.start_year == self.first_season:
             return "rookie"
-        if value < self.min_garunteed // tolerance:
-            self.relative_dollars = self.min_garunteed
+        if value < self.min_eligibility // tolerance:
+            self.relative_dollars = self.min_eligibility
             return "minimum"
-        if value == self.min_garunteed // tolerance:
+        if value == self.min_eligibility // tolerance:
             return "minimum"
-        if value == self.max_garunteed // tolerance:
+        if value == self.max_eligibility // tolerance:
             return "maximum"
         else:
             return None

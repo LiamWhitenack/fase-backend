@@ -330,12 +330,10 @@ class Player(Base):
                 self,
                 season_id,
                 contract_num,
-                MIN_SALARIES.eligibility(season_id - first_season),
-                MAX_SALARIES.eligibility(
+                *self.min_max_salaries(
                     season_id,
-                    season_id - first_season,
+                    first_season,
                     len({s.team_id for s in player_seasons.values()}),
-                    {a.season_id for a in self.awards},
                 ),
                 salary,
                 contract,
@@ -374,6 +372,21 @@ class Player(Base):
 
             yield contract_supporting_info()
             contract_num += 1
+
+    def min_max_salaries(
+        self, season_id: int, first_season: int, num_teams: int
+    ) -> tuple[float, float]:
+        min_max = (
+            MIN_SALARIES.eligibility(season_id - first_season),
+            MAX_SALARIES.eligibility(
+                season_id,
+                season_id - first_season,
+                num_teams,
+                {a.season_id for a in self.awards},
+            ),
+        )
+
+        return min_max
 
     def ask_voided(self, contract: Contract) -> bool:
         keep = input(
