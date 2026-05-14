@@ -26,18 +26,18 @@
 \maketitle
 
 \begin{abstract}
-    Each professional basketball player's contract-based salary reflects their perceived value and can be viewed as a quantitative measure of their impact, skill, and contribution in the NBA. Accurately estimating salary therefore provides a mechanism for comparing and ranking players according to their theoretical value, offering a data-driven perspective on player quality. In this study, I develop a nonlinear framework that leverages performance metrics and related factors to estimate player salaries. By modeling the relationship between on-court performance and compensation, I construct a system that enables players to be evaluated on a common scale of inferred value. Additionally, I examine the relative importance of different features in shaping these estimates, providing further insight into the attributes most closely associated with high-value players. I's approach reframes salary prediction as a tool for player evaluation, allowing for the systematic ranking of athletes based on their projected worth. This perspective highlights how statistical performance translates into perceived value, offering a quantitative foundation for comparing players across the league.
+    Each professional basketball player's contract-based salary reflects their perceived value and can be viewed as a quantitative measure of their impact, skill, and contribution in the NBA. Accurately estimating salary therefore provides a mechanism for comparing and ranking players according to their theoretical value, offering a data-driven perspective on player quality. In this study, I develop a nonlinear framework that leverages performance metrics and related factors to estimate player salaries. By modeling the relationship between on-court performance and compensation, I construct a system that enables players to be evaluated on a common scale of inferred latent value. Additionally, I examine the relative importance of different features in shaping these estimates, providing further insight into the attributes most closely associated with high-value players. My approach reframes salary prediction as a tool for player evaluation, allowing for the systematic ranking of athletes based on their projected worth. This perspective highlights how statistical performance translates into perceived value, offering a quantitative foundation for comparing players across the league.
 \end{abstract}
 
 
 \section{Introduction}
 
-This project investigates the prediction of player contract value in the National Basketball Association (NBA) using machine learning, with a specific focus on estimating a contract's value relative to the league salary cap. Rather than predicting raw salary, this study models \textit{relative dollars}—defined as the percentage of the salary cap that a player's contract occupies in its first year. This formulation normalizes financial values across seasons with varying cap sizes and allows for more meaningful comparisons of player value over time. Accurately predicting this quantity provides insight into how teams translate on-court performance, player characteristics, and contextual factors into financial decisions, effectively treating salary as a proxy for perceived player value.
+This project investigates the prediction of player contract value in the National Basketball Association (NBA) using machine learning, with a specific focus on estimating a contract's value relative to the league salary cap. Rather than predicting raw salary, this study models \textit{relative dollars} defined as the percentage of the salary cap that a player's contract occupies in its first year. This formulation normalizes financial values across seasons with varying cap sizes and allows for more meaningful comparisons of player value over time. Accurately predicting this quantity provides insight into how teams translate on-court performance, player characteristics, and contextual factors into financial decisions, effectively treating salary as a proxy for perceived player value.
 
-Prior work in sports analytics has explored salary prediction and player valuation using a variety of machine learning techniques. Jain et al. \cite{10041664} demonstrate that nonlinear models such as random forests and gradient boosting outperform traditional linear regression when predicting NBA salaries, highlighting the complex relationships between performance metrics and compensation. More broadly, ensemble learning methods such as gradient boosting \cite{xgboost} and general-purpose machine learning frameworks \cite{sklearn} have been shown to be effective in modeling high-dimensional, nonlinear datasets. Additionally, earlier analytical work by Barzilai \cite{barzilai2007nba} emphasizes the importance of contextual factors—such as draft position—in determining player value, reinforcing the need for comprehensive feature sets. However, much of the existing literature focuses on predicting absolute salary values or relies on limited subsets of features. This project extends prior work by incorporating a more extensive feature space and by reframing the prediction target to account for salary cap dynamics.
+Prior work in sports analytics has explored salary prediction and player valuation using a variety of machine learning techniques. Jain et al. \cite{10041664} demonstrate that nonlinear models such as random forests and gradient boosting outperform traditional linear regression when predicting NBA salaries, highlighting the complex relationships between performance metrics and compensation. More broadly, ensemble learning methods such as gradient boosting \cite{xgboost} and general-purpose machine learning frameworks \cite{sklearn} have been shown to be effective in modeling high-dimensional, nonlinear datasets. Additionally, earlier analytical work by Barzilai \cite{barzilai2007nba} emphasizes the importance of contextual factors such as draft position in determining player value, reinforcing the need for comprehensive feature sets. However, much of the existing literature focuses on predicting absolute salary values or relies on limited subsets of features. This project extends prior work by incorporating a more extensive feature space and by reframing the prediction target to account for salary cap dynamics.
 
 
-The model design emphasizes flexibility and the ability to capture nonlinear relationships. Multiple regression-based approaches are considered, including linear regression as a baseline and more advanced models such as random forests, gradient boosting machines, and neural networks. Feature engineering plays a significant role, including the aggregation of career and recent-season statistics, normalization of performance metrics, and encoding of categorical variables. The target variable—relative dollars in the first contract year—is computed by dividing the player's first-year salary by the corresponding league salary cap, ensuring consistency across seasons.
+The model design emphasizes flexibility and the ability to capture nonlinear relationships. Multiple regression-based approaches are considered, including linear regression as a baseline and more advanced models such as random forests, gradient boosting machines, and neural networks. Feature engineering plays a significant role, including the aggregation of career and recent-season statistics, normalization of performance metrics, and encoding of categorical variables. The target variable relative dollars in the first contract year is computed by dividing the player's first-year salary by the corresponding league salary cap, ensuring consistency across seasons.
 
 Overall, this project aims to provide a data-driven framework for understanding how NBA player value is quantified in financial terms. By leveraging a comprehensive dataset (from 2012 and going forward) and modern machine learning techniques, the study seeks not only to improve predictive performance but also to identify the key factors that most strongly influence contract valuation.
 
@@ -45,6 +45,9 @@ Overall, this project aims to provide a data-driven framework for understanding 
 The dataset used in this study is constructed by combining data from the NBA API and Spotrac. The NBA API provides detailed player performance statistics across seasons, including both traditional box score metrics and advanced analytics. Spotrac contributes contract-level financial data, including salary, contract length, and timing. These sources are merged to create a rich dataset containing a wide range of features relevant to player valuation, including age, position, experience, historical performance trends, and prior contract information. The resulting dataset captures both performance-based and contextual factors that influence contract negotiations.
 
 Because rookie-scale contracts are trivial to calculate as they have a low max salary, the first contract of every NBA player is excluded from the data, reducing the number of trainable contracts from roughly 6,000 to roughly 1,700.
+
+The inclusion of a “no-contract” signal is motivated by selection effects inherent in contract-based datasets. Because the data only contains players who have successfully secured contracts, it systematically omits individuals who were not retained or who exited the league. This creates a form of survivorship bias, where observed outcomes disproportionately reflect players who met a minimum performance threshold. Explicitly incorporating information about the absence of subsequent contracts helps the model recover part of this missing structure by distinguishing between continued participation and dropout from the league. In doing so, the model gains additional context about player retention and league selection dynamics, rather than relying solely on observed contract outcomes that are conditioned on survival in the dataset.
+
 \section{Data Exploration}
 
 To better understand the structure of the dataset and inform model selection, I performed an extensive exploratory data analysis focused on the target variable, \textit{relative\_dollars}, and its relationship with player performance, position, and temporal trends.
@@ -55,7 +58,7 @@ Figure~\ref{fig:rel_dist} shows the distribution of \textit{relative\_dollars}. 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/relative-dollars-distribution.png}
+    \includegraphics[width=0.48\textwidth]{plots/relative_dollars_distribution.png}
     \caption{Distribution of relative dollars.}
     \label{fig:rel_dist}
 \end{figure}
@@ -66,7 +69,7 @@ Figure~\ref{fig:time_trend} illustrates the average relative value over time. A 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/average-relative-value-over-time.png}
+    \includegraphics[width=0.48\textwidth]{plots/average_relative_value_over_time.png}
     \caption{Average relative dollars over time.}
     \label{fig:time_trend}
 \end{figure}
@@ -75,7 +78,7 @@ This trend is further supported by the distributional changes shown in Figure~\r
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-season.png}
+    \includegraphics[width=0.48\textwidth]{plots/relative_dollars_by_season.png}
     \caption{Relative dollars distribution by season.}
     \label{fig:season_box}
 \end{figure}
@@ -86,7 +89,7 @@ Figure~\ref{fig:position_box} shows the distribution of relative dollars across 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-position.png}
+    \includegraphics[width=0.48\textwidth]{plots/relative_dollars_by_position.png}
     \caption{Relative dollars by position.}
     \label{fig:position_box}
 \end{figure}
@@ -95,7 +98,7 @@ To further examine positional trends over time, Figure~\ref{fig:clustered_trends
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/clustered-relative-value-trends.png}
+    \includegraphics[width=0.48\textwidth]{plots/clustered_relative_value_trends.png}
     \caption{Clustered relative value trends by position.}
     \label{fig:clustered_trends}
 \end{figure}
@@ -106,14 +109,14 @@ Figures~\ref{fig:points_scatter} and~\ref{fig:assists_scatter} illustrate the re
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-points-pg.png}
+    \includegraphics[width=0.48\textwidth]{plots/relative_dollars_by_contract_season_points_pg.png}
     \caption{Relative dollars by points per game.}
     \label{fig:points_scatter}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/relative-dollars-by-assists-pg.png}
+    \includegraphics[width=0.48\textwidth]{plots/relative_dollars_by_contract_season_assists_pg.png}
     \caption{Relative dollars by assists per game.}
     \label{fig:assists_scatter}
 \end{figure}
@@ -122,7 +125,7 @@ To better capture nonlinear effects, Figure~\ref{fig:points_binned} shows the av
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/average-relative-dollars-across-points-pg.png}
+    \includegraphics[width=0.48\textwidth]{plots/average_relative_dollars_across_contract_season_points_pg.png}
     \caption{Average relative dollars across points per game.}
     \label{fig:points_binned}
 \end{figure}
@@ -133,7 +136,7 @@ Finally, Figure~\ref{fig:corr_heatmap} presents the correlation matrix for the m
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{plots/top-correlations-with-relative-dollars.png}
+    \includegraphics[width=0.48\textwidth]{plots/top_correlations_with_relative_dollars.png}
     \caption{Top correlations with relative dollars.}
     \label{fig:corr_heatmap}
 \end{figure}
@@ -164,7 +167,7 @@ Categorical information, particularly player position, was preserved and further
 
 \subsection{Preprocessing Pipeline}
 
-This project follows the standard knowledge discovery process, with each stage reflected in the current pipeline. Data cleaning involves removing observations with missing target values and filtering out rookie-scale contracts that do not reflect true market valuation. Data integration is performed by merging performance statistics from the NBA API with contract and financial data from Spotrac, producing a unified dataset. Data selection includes the exclusion of leakage-prone monetary variables (e.g., salary, cash totals, and luxury tax) that are highly correlated with the target. Data transformation, such as distributional adjustments, has been considered but is intentionally deferred at this stage in order to preserve interpretability and evaluate model behavior on the original scale. Finally, data mining—the application of machine learning models—has begun in a preliminary capacity and will be expanded in subsequent stages of the project.
+This project follows the standard knowledge discovery process, with each stage reflected in the current pipeline. Data cleaning involves removing observations with missing target values and filtering out rookie-scale contracts that do not reflect true market valuation. Data integration is performed by merging performance statistics from the NBA API with contract and financial data from Spotrac, producing a unified dataset. Data selection includes the exclusion of leakage-prone monetary variables (e.g., salary, cash totals, and luxury tax) that are highly correlated with the target. Data transformation, such as distributional adjustments, has been considered but is intentionally deferred at this stage in order to preserve interpretability and evaluate model behavior on the original scale. Finally, data mining the application of machine learning models has begun in a preliminary capacity and will be expanded in subsequent stages of the project.
 
 A structured preprocessing pipeline was implemented using a column-wise transformation approach. Numerical features were imputed using median values to mitigate the effect of outliers, followed by robust scaling to normalize distributions without being overly sensitive to extreme values. Categorical features were imputed using the most frequent category and encoded using one-hot encoding, enabling their inclusion in numerical models.
 
@@ -205,17 +208,17 @@ This demonstrates that the prism fan clustering method effectively encodes a con
 Additionally, the visualization supports optional opacity scaling using the target variable (\textit{relative\_dollars}), allowing higher-value players to appear more prominently. This further reinforces the relationship between cluster position and economic value.
 
 Overall, the prism fan clustering approach provides a more interpretable and structurally aligned representation of the data compared to traditional clustering methods, capturing both directional and magnitude-based variation in player performance.
-\section{Preliminary Results}
+\section{Baseline Models}
 
-Model performance was evaluated using multiple metrics, including mean absolute error (MAE), root mean squared error (RMSE), and coefficient of determination ($R^2$). Among these, $R^2$ was selected as the primary evaluation criterion. Unlike MAE or RMSE, which are difficult to interpret in this setting due to the relative nature of the target variable, $R^2$ measures the proportion of variance explained by the model and expresses it on a normalized scale approaching 1. This makes it particularly well-suited for the present task, where the goal is to accurately estimate the value of mid-level players rather than to precisely predict minimum or maximum contracts. In practice, minimum and maximum contracts are both highly predictable and often governed by external constraints (e.g., league minimums or maximum salary rules), making them less suitable targets for regression-based optimization.
+Model performance was evaluated using multiple metrics, including mean absolute error (MAE), root mean squared error (RMSE), and coefficient of determination ($R^2$). In practice, minimum and maximum contracts are both highly predictable and often governed by external constraints (e.g., league minimums or maximum salary rules), making them less suitable targets for regression-based optimization.
 
 \begin{table*}[htbp]
     \centering
     \caption{Model Performance Comparison}
-    \input{tables/performance.tex}
+    \input{tables/baselines_performance.tex}
 \end{table*}
 
-Across models, tree-based methods such as XGBoost and ensemble approaches achieved the highest test $R^2$, with XGBoost performing best overall. Linear models (ridge, lasso, and elastic net) performed competitively but were consistently outperformed in terms of variance explained, suggesting the presence of nonlinear relationships in the data, which aligns with preconcieved notions.
+Across models, tree-based methods such as XGBoost and ensemble approaches achieved the highest test $R^2$, with XGBoost performing best overall. Linear models (ridge, lasso, and elastic net) performed competitively but were consistently outperformed in terms of variance explained, suggesting the presence of nonlinear relationships in the data, which aligns with preconceived notions.
 
 \begin{table*}[htbp]
     \centering
@@ -269,14 +272,75 @@ Across models, tree-based methods such as XGBoost and ensemble approaches achiev
     \end{tabular}
 \end{table*}
 
-Feature importance analysis, however, raises several concerns. Across models, a small subset of features—particularly previous season scoring metrics and contract-year performance indicators—dominates the importance rankings. While these features are intuitively relevant, their overwhelming influence suggests potential redundancy and multicollinearity within the feature space. Additionally, the prominence of closely related variables (e.g., points per game and field goals made) may indicate that the model is capturing overlapping signals rather than distinct explanatory factors. This concentration of importance also raises the risk of instability, where small changes in the data could lead to large shifts in model behavior. Further feature engineering, dimensionality reduction, or regularization may be necessary to ensure robustness and interpretability.
+Feature importance analysis, however, raises several concerns. Across models, a small subset of features particularly previous season scoring metrics and contract-year performance indicators dominates the importance rankings. While these features are intuitively relevant, their overwhelming influence suggests potential redundancy and multicollinearity within the feature space. Additionally, the prominence of closely related variables (e.g., points per game and field goals made) may indicate that the model is capturing overlapping signals rather than distinct explanatory factors. This concentration of importance also raises the risk of instability, where small changes in the data could lead to large shifts in model behavior. Further feature engineering, dimensionality reduction, or regularization may be necessary to ensure robustness and interpretability.
 
-Additionally, the presence of features like ``age'' or ``contract\_number'', which intuitively decrease a player's theoretical value over time, appearing as positive influences on contract value implies that survivorship bias is influencing the results, as low-quality players are not often re-signed at older ages.
+
+
+\section{Model Selection}
+After evaluating a range of baseline models and identifying XGBoost as the most consistently strong performer, the training procedure was updated to incorporate an explicit validation set for model selection and early stopping. Unlike the baseline experiments, which primarily relied on fixed train-test splits for comparison, the final XGBoost pipeline reserves a dedicated validation portion of the data to monitor out-of-sample performance during training. This allows hyperparameters to be selected based on generalization behavior rather than training loss alone, and provides a more reliable signal for preventing overfitting through mechanisms such as early stopping and regularization tuning. In practice, this adjustment ensures that the reported test performance reflects a model that has been tuned with explicit feedback from unseen data, rather than one optimized solely on training objectives.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{lc}
+        \toprule
+        Parameter          & Search Space / Value              \\
+        \midrule
+        max\_depth         & $\{4,5,6,7,8\}$                   \\
+        learning\_rate     & $\mathrm{logUniform}(0.01, 0.2)$  \\
+        subsample          & $[0.7, 1.0]$                      \\
+        colsample\_bytree  & $[0.5, 0.9]$                      \\
+        min\_child\_weight & $\{1,\dots,8\}$                   \\
+        reg\_alpha         & $\mathrm{logUniform}(10^{-6}, 1)$ \\
+        reg\_lambda        & $\mathrm{logUniform}(10^{-3}, 5)$ \\
+        gamma              & $\mathrm{logUniform}(10^{-6}, 3)$ \\
+        objective          & reg:squarederror                  \\
+        n\_jobs            & -1                                \\
+        random\_state      & 42                                \\
+        \bottomrule
+    \end{tabular}
+    \caption{Optuna search space used for XGBoost regression hyperparameter tuning.}
+    \label{tab:optuna_search_space}
+\end{table}
+
+The final hyperparameter configuration for the XGBoost regression model was obtained through systematic optimization using Optuna, which efficiently explores the predefined search space in a guided, probabilistic manner. Instead of manual tuning, Optuna iteratively evaluates candidate configurations and prioritizes regions of the search space that yield improved validation performance. This process enables coordinated tuning of interdependent parameters such as tree depth, learning rate, and regularization strengths, which jointly influence model complexity and generalization. The full hyperparameter search space is provided in Table~\ref{tab:optuna_search_space}, which defines the bounds and distributions used during optimization. The final model corresponds to the best-performing trial identified across this search process, ensuring that the selected configuration reflects strong out-of-sample performance rather than overfitting to the training data.
+
+\section{Model Evaluation Strategy}
+
+To properly account for temporal structure in NBA contracts, a rolling forward validation scheme is used. Let the dataset be ordered by season $t_1 < t_2 < \dots < t_T$. For each evaluation fold $k$, the model is trained on all seasons $\{t_1, \dots, t_k\}$ and evaluated on season $t_{k+1}$. This procedure is repeated sequentially across all available seasons, ensuring that all predictions are made strictly on future, unseen data relative to the training set.
+
+Unlike random train-test splits, this approach preserves temporal causality and prevents information leakage from future seasons into past observations. The final reported performance is aggregated across all held-out seasons.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{plots/residuals_vs_predicted.png}
+    \caption{Residuals versus predicted values for the XGBoost regression model across training, validation, and test sets.}
+    \label{fig:residuals_vs_predicted}
+\end{figure}
+
+Figure~\ref{fig:residuals_vs_predicted} presents the residuals as a function of the predicted values for the training, validation, and test sets. Ideally, residuals should be randomly scattered around zero with no discernible pattern, indicating that the model has captured the underlying structure of the data. While the residuals are generally centered near zero, a clear pattern emerges as predicted values increase: the variance of the residuals grows, suggesting heteroscedasticity. In particular, the model tends to underpredict at higher predicted values, as evidenced by the increasing number of positive residuals in that region. Additionally, the clustering of points at lower predicted values indicates that the model performs more consistently in that range. The similar spread across training, validation, and test sets suggests that this behavior is not due to overfitting, but rather reflects a systematic limitation of the model in capturing higher value outcomes.
+
+An attempt was made to enhance the regression model using a hybrid formulation that blends continuous regression outputs with a class-probability weighted mixture of outcome anchors (0, minimum eligibility, regression estimate, and maximum eligibility). The motivation behind this approach was the observed structure in the data, where a large fraction of samples concentrate into a small number of discrete regimes. This suggested that a purely continuous model might be missing useful ``mode'' information that a classification model could capture. In theory, combining these signals could allow the model to better respect boundary heavy behavior while still preserving the smooth interpolation power of regression.
+
+In practice, however, the hybrid approach did not yield a consistent improvement over the regression only baseline. As shown in Table~\ref{tab:xgboost_hybrid_performance} and Table~\ref{tab:xgboost_performance}, test RMSE is mixed across seasons: the hybrid model improves performance in several years (notably 2020, 2024, and 2026), remains comparable in others, and is slightly worse in a number of early and mid period seasons. This pattern indicates that the hybridization introduces both gains and losses depending on how well the class model aligns with the underlying regime structure in each year. Overall, while the class model does appear to capture meaningful structural information, its integration into a weighted averaging scheme does not reliably improve predictive accuracy. The result is best interpreted as a useful but ultimately non dominant signal informative in certain regimes, but insufficiently stable to outperform the simpler regression only formulation on a consistent basis.
+
+\begin{table}[h]
+    \centering
+    \input{tables/xgboost_hybrid_performance.tex}
+    \caption{XGBoost Hybrid Model Performance Across Evaluation Seasons}
+    \label{tab:xgboost_hybrid_performance}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \input{tables/xgboost_performance.tex}
+    \caption{XGBoost Regression Only Model Performance Across Evaluation Seasons}
+    \label{tab:xgboost_performance}
+\end{table}
+
+The regression-only results should be interpreted in the context of a substantial limitation in historical coverage of the underlying dataset. Although the model is evaluated across multiple seasonal splits, contract records only begin in 2011, which significantly constrains the amount of long-term training data available. As a result, early-season behavior is underrepresented relative to later years, and the effective sample size for capturing temporal dynamics is limited. This sparsity is particularly important for the regression component, which relies on learning stable relationships between contract features and target outcomes; with fewer observed seasons, the model is more susceptible to variance in year-to-year patterns and may not fully generalize to structurally different periods. Consequently, the regression-only table should be viewed not as a fully data-saturated performance estimate, but as a best-effort evaluation under constrained historical depth, where performance variability is partially driven by the relatively short temporal horizon rather than model capacity alone.
 
 \section{Next Steps}
-Given the distinct nature of minimum and maximum contracts, a hybrid modeling approach will be explored to improve predictive performance. Specifically, a classification model will first be trained to identify players likely to fall into minimum or maximum contract categories. For these players, contract values can be assigned directly using known thresholds rather than relying on regression estimates. This allows the regression model to focus on the intermediate range, where predictive uncertainty is highest and where $R^2$-based optimization is most meaningful. This decomposition aligns the modeling approach with the heterogeneous structure of the target distribution and is expected to reduce overall error.
-
-In addition to predicting relative dollars, the project will be extended to model contract length as a secondary target. This task provides complementary insight into team decision-making, as contract duration reflects long-term confidence and risk tolerance.
 
 A further extension will involve predicting player retention outcomes, such as whether a player is likely to receive an extension or have team options exercised. This introduces a classification component that captures organizational behavior and player trajectory beyond raw performance metrics.
 
@@ -284,13 +348,70 @@ Model development will continue to prioritize a balance between predictive accur
 
 Most importantly, the modeling framework will be expanded beyond single-contract prediction to a career-level valuation approach. Rather than limiting predictions to players guaranteed to sign contracts, the model will be adapted to generate estimates across all players and over multiple future seasons. This reframes the task from short-term estimation to long-term valuation, incorporating factors such as aging curves, development trajectories, and uncertainty.
 
-This broader formulation is expected to improve generalization by reducing selection bias inherent in focusing only on active contract signings. By including players at all career stages—including marginal and developing players—the model will better capture the full distribution of outcomes.
+This broader formulation is expected to improve generalization by reducing selection bias inherent in focusing only on active contract signings. By including players at all career stages including marginal and developing players the model will better capture the full distribution of outcomes.
 
-Overall, these extensions aim to produce a more comprehensive and realistic valuation framework. By integrating classification and regression tasks, incorporating temporal dynamics, and expanding the prediction horizon, the final system will more closely reflect how teams evaluate players and make long-term roster decisions.
+\section{Conclusion}
 
-\section{Anticipated Results}
-I doubt that the results are capable of being improved far beyond the point that they are at already. Although more data can be added, there will always be intangible and unexplainable qualities that influence a player's league value. However, a significant increase in performance may be observed by ensuring that a contract adheres to leage rules.
+This study explores the feasibility of estimating NBA player value through the prediction of contract salary as a proportion of the league salary cap. By framing salary in terms of relative dollars, the approach provides a normalized perspective that allows for comparisons across seasons and offers a proxy for how teams may translate performance into financial decisions.
 
+The results suggest that nonlinear models, particularly XGBoost, are capable of capturing meaningful structure in the data and generally outperform simpler linear approaches. However, the degree to which these models truly reflect underlying player value remains uncertain. Feature importance patterns indicate a heavy reliance on scoring-related variables, which, while intuitive, raises concerns about redundancy and whether the model is capturing a broad representation of player contributions.
+
+This work also introduces the prism fan representation as a novel way to interpret player roles in a reduced-dimensional space. While the approach appears to produce visually meaningful structure and aligns with positional tendencies, it should be viewed as exploratory. Additional validation is needed to determine whether this representation provides consistent and actionable insights beyond descriptive visualization.
+
+Several limitations constrain the reliability of the current results. The dataset is relatively limited in historical scope, which restricts the model's ability to learn stable long-term patterns. Observed issues such as heteroscedasticity and underprediction of higher-value contracts further suggest that the model does not fully capture the complexity of contract valuation. Additionally, the hybrid modeling approach produced inconsistent results, indicating that the integration of classification-based signals requires further refinement.
+
+Overall, this project demonstrates a promising direction for modeling player value using machine learning, but it should be interpreted as an initial investigation rather than a definitive solution. While the methodology shows potential and introduces several novel ideas, further research, expanded data, and more rigorous validation are necessary before such a system could be reliably used for player evaluation or decision-making.
+
+A key next step in improving the model lies in deeper interpretation at the individual player level. Given the relatively small size of the dataset, it is feasible to directly examine model predictions for specific players, particularly those with large residuals or counterintuitive valuations. By analyzing these cases, it becomes possible to identify systematic gaps in the feature set, such as missing contextual factors (e.g., injury history, team role, or defensive impact) or misrepresented signals within existing variables. This case-by-case approach allows for a more targeted form of feature engineering, where new variables can be introduced specifically to address observed shortcomings rather than added generically. Additionally, interpreting predictions for well-known players provides a qualitative sanity check, helping to determine whether the model's behavior aligns with domain knowledge. Over time, this iterative process of inspecting individual outcomes, diagnosing errors, and refining the feature space is likely to be one of the most effective strategies for improving both the accuracy and credibility of the model.
+
+\section{Feature Set Summary}
+
+To improve interpretability, we summarize the model inputs by feature family rather than listing all individual variables. One-hot encoded identifiers (e.g., team IDs, categorical encodings, and constant indicators) are excluded. The remaining features primarily represent player performance, contract year statistics, career aggregates, and year-over-year changes.
+
+\begin{table}[ht]
+    \centering
+    \caption{Summary of Model Feature Families}
+    \begin{tabular}{p{4cm} p{10cm}}
+        \toprule
+        Feature Family                      & Representative Features                                                                                                                                                      \\
+        \midrule
+
+        Contract Season Performance         &
+        contract\_season\_points\_pg, contract\_season\_possessions\_pg, contract\_season\_rebounds\_pg, contract\_season\_field\_goals\_made\_pg, contract\_season\_minutes\_pg, contract\_season\_usage\_pct             \\
+
+        Previous Season Performance         &
+        previous\_season\_points\_pg, previous\_season\_field\_goals\_made\_pg, previous\_season\_assists\_pg, previous\_season\_rebounds\_pg, previous\_season\_net\_rating, previous\_season\_pace                       \\
+
+        Career Aggregates                   &
+        career\_points\_pg, career\_assists\_pg, career\_rebounds\_pg, career\_steals\_pg, career\_minutes\_pg, career\_turnovers\_pg                                                                                      \\
+
+        Delta (Year-over-Year Change)       &
+        delta\_points\_pg, delta\_assists\_pg, delta\_rebounds\_pg, delta\_usage\_pct, delta\_net\_rating, delta\_minutes\_pg, delta\_turnovers\_pg                                                                        \\
+
+        Efficiency Metrics                  &
+        contract\_season\_field\_goal\_pct, contract\_season\_free\_throw\_pct, previous\_season\_field\_goal\_pct, career\_field\_goal\_pct                                                                               \\
+
+        Advanced / Estimated Metrics        &
+        contract\_season\_estimated\_offensive\_rating, contract\_season\_estimated\_defensive\_rating, contract\_season\_estimated\_net\_rating, previous\_season\_offensive\_rating, previous\_season\_defensive\_rating \\
+
+        Possession / Pace Context           &
+        contract\_season\_possessions\_pg, previous\_season\_estimated\_pace, contract\_season\_estimated\_pace                                                                                                            \\
+
+        Eligibility / Contract Structure    &
+        min\_eligibility, max\_eligibility, contract\_number                                                                                                                                                               \\
+
+        Draft / Player Entry                &
+        draft\_number, draft\_year                                                                                                                                                                                         \\
+
+        Physical / Demographic Controls     &
+        age, height\_inches, weight\_pounds                                                                                                                                                                                \\
+
+        Game Availability / Sample Controls &
+        previous\_season\_games\_played, contract\_season\_low\_sample\_size                                                                                                                                               \\
+
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}

@@ -1,0 +1,15 @@
+\begin{tabular}{lc}
+    \toprule
+    Parameter          & Value / Search Space              \\
+    \midrule
+    max\_depth         & $\{4,5,6,7,8\}$                   \\
+    learning\_rate     & $\mathrm{logUniform}(0.01, 0.2)$  \\
+    subsample          & $[0.7, 1.0]$                      \\
+    colsample\_bytree  & $[0.5, 0.9]$                      \\
+    min\_child\_weight & $\{1,\dots,8\}$                   \\
+    reg\_alpha         & $\mathrm{logUniform}(10^{-6}, 1)$ \\
+    reg\_lambda        & $\mathrm{logUniform}(10^{-3}, 5)$ \\
+    gamma              & $\mathrm{logUniform}(10^{-6}, 3)$ \\
+    objective          & reg:squarederror                  \\
+    \bottomrule
+\end{tabular}
