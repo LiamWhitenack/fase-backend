@@ -217,8 +217,8 @@ class PreparedData:
         return RegressionResults(
             *[
                 RegressionResult(
-                    inverse_transform_target(transformed_predictions(X, y)),
-                    inverse_transform_target(y),
+                    transformed_predictions(X, y),
+                    y,
                 )
                 for X, y in (self.train, self.validation, self.test)
             ]
@@ -278,10 +278,22 @@ class RegressionResult:
     actual: Series
 
     def __post_init__(self) -> None:
-        self.mae = mean_absolute_error(self.predictions, self.actual)
-        self.mse = mean_squared_error(self.predictions, self.actual)
-        self.rmse = root_mean_squared_error(self.predictions, self.actual)
-        self.r2 = r2_score(self.predictions, self.actual)
+        self.mae = mean_absolute_error(
+            inverse_transform_target(self.predictions),
+            inverse_transform_target(self.actual),
+        )
+        self.mse = mean_squared_error(
+            inverse_transform_target(self.predictions),
+            inverse_transform_target(self.actual),
+        )
+        self.rmse = root_mean_squared_error(
+            inverse_transform_target(self.predictions),
+            inverse_transform_target(self.actual),
+        )
+        self.r2 = r2_score(
+            inverse_transform_target(self.predictions),
+            inverse_transform_target(self.actual),
+        )
 
 
 @dataclass

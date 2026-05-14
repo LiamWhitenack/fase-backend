@@ -20,9 +20,12 @@ def build_performance_dataframe(
     for key, res in results.items():
         data[key] = {
             "Evaluation Season": res["test_season"],
-            r"Train $R^2$": res["train_r2"],
-            r"Validation $R^2$": res["validation_r2"],
-            r"Test $R^2$": res["test_r2"],
+            r"Train RMSE": res["train_rmse"],
+            r"Validation RMSE": res["validation_rmse"],
+            r"Test RMSE": res["test_rmse"],
+            # r"Train $R^2$": res["train_r2"],
+            # r"Validation $R^2$": res["validation_r2"],
+            # r"Test $R^2$": res["test_r2"],
         }
 
     df = DataFrame.from_dict(data, "index")

@@ -9,15 +9,22 @@ from numpy.typing import NDArray
 from optuna import Trial
 from pandas import DataFrame, Series
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.metrics import r2_score
 from sklearn.utils.validation import check_is_fitted
+from sqlalchemy import select
 from xgboost import XGBClassifier, XGBRegressor
 
 import app.exploration.machine_learning_ii.training.classification_models as classification
 import app.exploration.machine_learning_ii.training.regression_models as regression
+from app.data.connection import get_session
+from app.data.league import Player
 from app.exploration.machine_learning_ii.custom_types import (
     ModelBuilder,
     XGBClassifierParams,
     XGBRegressorParams,
+)
+from app.exploration.machine_learning_ii.data_preparation.transformation import (
+    transform_target,
 )
 
 
@@ -44,6 +51,9 @@ class XGBHybridModel(BaseEstimator, RegressorMixin):
         self.classifier_builder = classifier
         self.regressor_builder = regressor
         self.trial = trial
+        self.alpha = (
+            trial.suggest_float("hybrid_alpha", 0.0, 1.0) if trial is not None else 0.5
+        )
         self.uncertain_class_index = uncertain_class_index
 
     def fit(
@@ -103,20 +113,21 @@ class XGBHybridModel(BaseEstimator, RegressorMixin):
             class_proba = np.column_stack([1 - class_proba, class_proba])
 
         # You must store this during fit if you want it dynamic
-        class_values = np.array([0, 1, 2, 3])  # <-- adjust or store on self
+        regression_predictions = self.regressor.predict(dmatrix)
+        class_values = np.array(
+            [
+                [0] * len(X),
+                transform_target(X["min_eligibility"]),
+                regression_predictions,
+                transform_target(X["max_eligibility"]),
+            ]
+        ).T
+        hybrid_predictions = (class_values * class_proba).sum(axis=1)
+        hybrid_alpha = hybrid_predictions * self.alpha
+        regression_alpha = regression_predictions * (1 - self.alpha)
+        # print(r2_score(hybrid_predictions, regression_predictions))
 
-        class_expected: NDArray = class_proba @ class_values
-
-        # ---- Regression ----
-        reg_pred: NDArray = self.regressor.predict(dmatrix)
-
-        # ---- Blend ----
-        p_uncertain: NDArray = class_proba[:, self.uncertain_class_index]
-        p_confident: NDArray = 1 - p_uncertain
-
-        return reg_pred
-
-        return p_confident * class_expected + p_uncertain * reg_pred
+        return hybrid_alpha + regression_alpha
 
     def _to_xgb_params(self, sk_model: XGBClassifier | XGBRegressor, task: str) -> dict:
         sk_params = sk_model.get_params()

@@ -176,7 +176,8 @@ def build_xgboost_model_params(
     if trial is None:
         params = {}
     else:
-        params = dict(
+        params = {}
+        dict(
             # Slightly higher upper bound; classification often benefits from more rounds
             # n_estimators=trial.suggest_int("n_estimators", 200, 1200),
             # Keep trees controlled
